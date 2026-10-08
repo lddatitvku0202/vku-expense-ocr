@@ -264,12 +264,12 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] Gate: analyze + test mặc định + build debug.
 
 ### Phase 1 — Nền tảng: models, theme, router, cấu trúc thư mục
-- [ ] Thêm dependencies: `flutter_riverpod` (^2.x), `go_router`, `intl`, `sqflite`, `path`, `path_provider`, `google_mlkit_text_recognition`, `camera`, `image_picker`, `image_cropper`, `image`; dev: `sqflite_common_ffi`, `mocktail`, `integration_test` (sdk). Cấu hình Android: `minSdkVersion`, quyền camera, activity của `image_cropper` theo README từng gói; iOS: `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`.
-- [ ] Tạo cấu trúc `lib/core|models|services|state|widgets|screens`.
-- [ ] `models/`: `ExpenseCategory` (enum 5 giá trị + label tiếng Việt + icon + màu, dùng switch expression), `Expense` (immutable, `const` constructor, `copyWith`, `toMap/fromMap`, `amount` là `int`), `OcrLine`, `ParsedReceipt`, `FieldConfidence`.
-- [ ] `core/`: `app_theme.dart` (M3 light/dark từ seed VKU Navy), `formatters.dart` (VND, ngày), `router.dart` (GoRouter + ShellRoute 3 tab, các màn hình placeholder), `text_normalizer.dart` (bỏ dấu tiếng Việt).
-- [ ] `main.dart`: `ProviderScope` + `MaterialApp.router`; `initializeDateFormatting('vi_VN')`.
-- [ ] Test: `toMap/fromMap` round-trip, formatter VND (`150000 → "150.000 đ"`), bỏ dấu (`"Tổng Tiền Thanh Toán" → "tong tien thanh toan"`, `"Đ" → "d"`), switch danh mục đủ 5 nhánh, router khởi động không lỗi (widget test).
+- [x] Thêm dependencies: `flutter_riverpod` (^2.x), `go_router`, `intl`, `sqflite`, `path`, `path_provider`, `google_mlkit_text_recognition`, `camera`, `image_picker`, `image_cropper`, `image`; dev: `sqflite_common_ffi`, `mocktail`, `integration_test` (sdk). Cấu hình Android: `minSdkVersion`, quyền camera, activity của `image_cropper` theo README từng gói; iOS: `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`.
+- [x] Tạo cấu trúc `lib/core|models|services|state|widgets|screens`.
+- [x] `models/`: `ExpenseCategory` (enum 5 giá trị + label tiếng Việt + icon + màu, dùng switch expression), `Expense` (immutable, `const` constructor, `copyWith`, `toMap/fromMap`, `amount` là `int`), `OcrLine`, `ParsedReceipt`, `FieldConfidence`.
+- [x] `core/`: `app_theme.dart` (M3 light/dark từ seed VKU Navy), `formatters.dart` (VND, ngày), `router.dart` (GoRouter + ShellRoute 3 tab, các màn hình placeholder), `text_normalizer.dart` (bỏ dấu tiếng Việt).
+- [x] `main.dart`: `ProviderScope` + `MaterialApp.router`; `initializeDateFormatting('vi_VN')`.
+- [x] Test: `toMap/fromMap` round-trip, formatter VND (`150000 → "150.000 đ"`), bỏ dấu (`"Tổng Tiền Thanh Toán" → "tong tien thanh toan"`, `"Đ" → "d"`), switch danh mục đủ 5 nhánh, router khởi động không lỗi (widget test).
 
 ### Phase 2 — ReceiptParser (TDD, phần quan trọng nhất)
 - [ ] Viết test **trước**, sau đó mới viết code.
@@ -349,16 +349,16 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [ ] FR-1.6 — bằng chứng: _chưa có_
 - [ ] FR-1.7 — bằng chứng: _chưa có_
 - [ ] FR-2.1 — bằng chứng: _chưa có_
-- [ ] FR-2.2 — bằng chứng: _chưa có_
+- [ ] FR-2.2 — một phần: model `OcrLine` (`lib/models/ocr_line.dart`, test `test/models/parsed_receipt_test.dart`); adapter ML Kit → Phase 3
 - [ ] FR-2.3 — bằng chứng: _chưa có_
 - [ ] FR-2.4 — bằng chứng: _chưa có_
 - [ ] FR-2.5 — bằng chứng: _chưa có_
-- [ ] FR-3.1 — bằng chứng: _chưa có_
+- [ ] FR-3.1 — một phần: `TextNormalizer` bỏ dấu/đ/NFD, lowercase, gộp khoảng trắng (`test/core/text_normalizer_test.dart`, 10 test); dùng trong parser → Phase 2
 - [ ] FR-3.2 — bằng chứng: _chưa có_
 - [ ] FR-3.3 — bằng chứng: _chưa có_
 - [ ] FR-3.4 — bằng chứng: _chưa có_
 - [ ] FR-3.5 — bằng chứng: _chưa có_
-- [ ] FR-3.6 — bằng chứng: _chưa có_
+- [ ] FR-3.6 — một phần: model `ParsedReceipt` + `FieldConfidence` (test `test/models/parsed_receipt_test.dart`); parser trả về → Phase 2
 - [ ] FR-3.7 — bằng chứng: _chưa có_
 - [ ] FR-4.1 — bằng chứng: _chưa có_
 - [ ] FR-4.2 — bằng chứng: _chưa có_
@@ -373,24 +373,24 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [ ] FR-5.2 — bằng chứng: _chưa có_
 - [ ] FR-5.3 — bằng chứng: _chưa có_
 - [ ] FR-5.4 — bằng chứng: _chưa có_
-- [ ] FR-5.5 — bằng chứng: _chưa có_
+- [x] FR-5.5 — bằng chứng: `lib/models/expense_category.dart` (switch expression), `test/models/expense_category_test.dart` (đủ 5 nhánh label/icon/màu, round-trip DB)
 - [ ] FR-6.1 — bằng chứng: _chưa có_
 - [ ] FR-6.2 — bằng chứng: _chưa có_
 - [ ] FR-6.3 — bằng chứng: _chưa có_
 - [ ] FR-6.4 — bằng chứng: _chưa có_
 - [ ] FR-6.5 — bằng chứng: _chưa có_
 - [ ] FR-6.6 — bằng chứng: _chưa có_
-- [ ] FR-7.1 — bằng chứng: _chưa có_
-- [ ] FR-7.2 — bằng chứng: _chưa có_
+- [ ] FR-7.1 — một phần: `StatefulShellRoute.indexedStack` + `NavigationBar` 3 tab (`test/app_router_test.dart`); nội dung Dashboard → Phase 8–9
+- [x] FR-7.2 — bằng chứng: `lib/core/router.dart` (`/expense/:id`, `/review` + `extra`), `test/app_router_test.dart` (path param, extra, id sai → trang lỗi)
 - [ ] FR-7.3 — bằng chứng: _chưa có_
-- [ ] FR-8.1 — bằng chứng: _chưa có_
+- [ ] FR-8.1 — một phần: `AppTheme` M3 light/dark từ seed `0xFF2C4570` (`test/core/app_theme_test.dart`); nút chuyển + lưu themeMode → Phase 5/10
 - [ ] FR-8.2 — bằng chứng: _chưa có_
-- [ ] FR-8.3 — bằng chứng: _chưa có_
+- [ ] FR-8.3 — một phần: `Formatters.vnd` / `Formatters.date` (`test/core/formatters_test.dart`), `SafeArea` ở các màn hiện có; áp dụng toàn app → Phase 7–10
 - [ ] FR-8.4 — bằng chứng: _chưa có_
 - [ ] NFR-1 — bằng chứng: _chưa có_
 - [ ] NFR-2 — bằng chứng: _chưa có_
 - [ ] NFR-3 — bằng chứng: _chưa có_
-- [ ] NFR-4 — bằng chứng: _chưa có_
+- [x] NFR-4 — bằng chứng: `lib/core`, `lib/models`, `lib/services`, `lib/state`, `lib/widgets`, `lib/screens` (Phase 1)
 - [ ] NFR-5 — bằng chứng: _chưa có_
 - [ ] NFR-6 — bằng chứng: _chưa có_
 
@@ -401,7 +401,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 | Phase | Trạng thái | Commit cuối | Kết quả test | Ghi chú |
 |---|---|---|---|---|
 | 0 — Khởi tạo & môi trường | ✅ Xong | tag `phase-0` | format ✔ · analyze 0 issue · test 1/1 · build debug ✔ | B-001 đã giải quyết (cài Flutter 3.47.6). Chưa test trên thiết bị (chưa cắm máy) |
-| 1 — Nền tảng | ⬜ Chưa bắt đầu | — | — | |
+| 1 — Nền tảng | ✅ Xong | tag `phase-1` | format ✔ · analyze 0 · test 48/48 · coverage 85.3% · build debug ✔ | Chưa test trên thiết bị (chưa cắm máy) |
 | 2 — ReceiptParser | ⬜ Chưa bắt đầu | — | — | |
 | 3 — Dịch vụ OCR | ⬜ Chưa bắt đầu | — | — | |
 | 4 — CSDL & lưu ảnh | ⬜ Chưa bắt đầu | — | — | |
@@ -433,6 +433,14 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 | D-009 | Cài NDK 28.2.13676358 thủ công bằng `android.exe ... sdk install ndk/28.2.13676358` | AGP tự cài NDK thất bại vì `sdkmanager.bat` (shim của Android CLI 2026) để `cmd` tách tên gói tại dấu `;`. Gọi trực tiếp Android CLI với tên gói dạng `/`. Chi tiết: `docs/SETUP_ENV.md` mục 8.1. |
 | D-010 | `org.gradle.jvmargs=-Xmx3G ...`, `kotlin.daemon.jvmargs=-Xmx1G` | Template mặc định `-Xmx8G` = toàn bộ RAM máy (8 GB) → Windows phình `pagefile.sys` trên ổ C:. Build vẫn thành công với 3 GB. |
 | D-011 | Lint: bật `strict-casts`, `strict-inference`, `strict-raw-types` + rule bổ sung; **bỏ** `unnecessary_await_in_return` | Rule này đã bị deprecate trong Dart 3.13 (`flutter analyze` báo `deprecated_lint`). Không dùng `// ignore`. |
+| D-012 | Phiên bản gói thực tế (Phase 1, `flutter pub add`): flutter_riverpod **2.6.1**, go_router 18.0.2, intl 0.20.3, sqflite 2.4.4+1, path 1.9.1, path_provider 2.1.6, google_mlkit_text_recognition 0.17.1 (commons 0.13.0), camera 0.12.1 (camera_android_camerax 0.7.5+1), image_picker 1.2.4, image_cropper 12.2.1, image 4.10.1; dev: sqflite_common_ffi 2.4.3, mocktail 1.0.5, integration_test (sdk) | Brief mục 5.8. `flutter_riverpod` có bản 3.4.3 nhưng giữ 2.x (D-002). Lưu ý: `^` bị `cmd` nuốt khi gọi `flutter pub add` từ Git Bash nên ràng buộc riverpod được sửa tay thành `^2.6.1`. |
+| D-013 | ML Kit dùng model **bundled** (`com.google.mlkit:text-recognition:16.0.1`), chỉ script Latin | Đã kiểm tra `android/build.gradle` của plugin: model đóng gói trong APK, không tải qua Google Play Services → chạy offline ngay lần đầu (NFR-1). Không thêm gói Chinese/Japanese/Korean/Devanagari để APK nhỏ. |
+| D-014 | `minSdk = 24` cố định; gỡ quyền `RECORD_AUDIO` bằng `tools:node="remove"`; khai báo `UCropActivity` | camera_android_camerax cần 23, ML Kit cần 21, Flutter 3.47 mặc định 24. App chỉ chụp ảnh tĩnh (`enableAudio: false`) nên không xin quyền micro. `UCropActivity` theo README image_cropper 12.2.1. |
+| D-015 | Thêm `flutter_localizations`, `locale: vi_VN` | `showDatePicker` (FR-4.2) và chuỗi Material (OK/Hủy…) hiển thị tiếng Việt; `initializeDateFormatting('vi_VN')` trước `runApp`. |
+| D-016 | Router: `StatefulShellRoute.indexedStack` tạo trong `routerProvider` (Riverpod) | Mỗi tab giữ stack riêng; router không bị tạo lại trong `build()` (W7 s30); test override được router. |
+| D-017 | `ExpenseCategory` lưu DB bằng `name` (`food`, `study`…); giá trị lạ → `FormatException` | Ổn định khi đổi nhãn tiếng Việt; dữ liệu hỏng không bị gán nhầm danh mục. |
+| D-018 | `Formatters.vnd` giữ khoảng trắng **không ngắt** (U+00A0) giữa số và `đ` | Là dữ liệu chuẩn của locale vi_VN; tránh xuống dòng tách `đ`. Test so sánh chính xác `'150.000\u00A0đ'`. |
+| D-019 | `copyWith` dùng `ValueGetter<String?>?` cho trường nullable | Phân biệt "không đổi" (bỏ qua tham số) với "xóa về null" (`() => null`), cần khi xóa ảnh hóa đơn. |
 
 ---
 

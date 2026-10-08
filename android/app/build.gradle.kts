@@ -19,7 +19,9 @@ android {
         applicationId = "vn.edu.vku.vku_expense_ocr"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // camera_android_camerax needs API 23+, google_mlkit_text_recognition 21+.
+        // Pin 24 (the Flutter 3.47 default) so a future SDK change cannot lower it.
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)

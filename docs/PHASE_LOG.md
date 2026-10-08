@@ -89,3 +89,89 @@ c297ebd docs: add CLAUDE.md with frozen requirements and phase plan
 ```
 
 Commit gốc trên `main` trước khi tách nhánh: `16f40ff docs: add original project brief`.
+
+---
+
+## Phase 1 — Nền tảng: models, theme, router, cấu trúc thư mục
+
+**Trạng thái:** ✅ hoàn tất (merge vào `main`, tag `phase-1`).
+
+### Mục tiêu phase
+
+Dựng "khung xương" của app: thư viện, cấu trúc thư mục, các model dữ liệu, theme, định dạng tiền/ngày, hàm bỏ dấu tiếng Việt và điều hướng 3 tab. Chưa có tính năng nghiệp vụ; các màn hình mới là placeholder.
+
+FR/NFR liên quan: **NFR-4** (cấu trúc thư mục), **FR-5.5** (5 danh mục), **FR-7.1/7.2** (router), một phần **FR-3.1** (bỏ dấu), **FR-2.2** (model `OcrLine`), **FR-3.6** (model `ParsedReceipt`), **FR-8.1** (theme M3), **FR-8.3** (định dạng tiền/ngày).
+
+### Đã làm gì
+
+| File | Class / hàm | Vai trò |
+|---|---|---|
+| `pubspec.yaml` | — | Thêm 11 gói runtime + `flutter_localizations`, 3 gói dev. Phiên bản thực tế ghi ở Decisions Log D-012. |
+| `android/app/src/main/AndroidManifest.xml` | — | Quyền `CAMERA`, gỡ `RECORD_AUDIO`, khai báo `UCropActivity` cho `image_cropper`. |
+| `android/app/build.gradle.kts` | — | `minSdk = 24` (camera cần ≥ 23, ML Kit ≥ 21). |
+| `ios/Runner/Info.plist` | — | Chuỗi xin quyền camera / thư viện ảnh / micro (bằng tiếng Việt). |
+| `lib/core/text_normalizer.dart` | `TextNormalizer.removeDiacritics`, `.normalize` | Bỏ dấu tiếng Việt (kể cả `đ/Đ`, dấu kết hợp NFD), chữ thường, gộp khoảng trắng. |
+| `lib/core/formatters.dart` | `Formatters.vnd`, `.groupDigits`, `.date` | `150000 → "150.000 đ"`, `dd/MM/yyyy`. |
+| `lib/core/app_theme.dart` | `AppTheme.light/.dark` | `ColorScheme.fromSeed(Color(0xFF2C4570))` cho cả sáng và tối. |
+| `lib/core/router.dart` | `createAppRouter`, `AppRoutes` | GoRouter: 3 tab trong `StatefulShellRoute.indexedStack`, `/review` (nhận `extra`), `/expense/:id`, trang 404. |
+| `lib/state/router_provider.dart` | `routerProvider` | Tạo router **một lần** cho mỗi `ProviderScope`. |
+| `lib/models/expense_category.dart` | `enum ExpenseCategory` | 5 danh mục + nhãn tiếng Việt + icon + màu (switch expression). |
+| `lib/models/expense.dart` | `Expense` | Giao dịch bất biến, `amount` là `int`, `toMap/fromMap`, `copyWith`. |
+| `lib/models/ocr_line.dart` | `OcrLine` | Dòng chữ + `Rect boundingBox`: model riêng, không phụ thuộc ML Kit. |
+| `lib/models/parsed_receipt.dart`, `field_confidence.dart` | `ParsedReceipt`, `FieldConfidence` | Kết quả parse: mọi trường nullable + độ tin cậy `high/low/missing`. |
+| `lib/widgets/state_message.dart` | `StateMessage` | Khối icon + tiêu đề + mô tả dùng chung cho trạng thái rỗng/lỗi. |
+| `lib/screens/...` | `HomeShell`, `DashboardScreen`, `ScanScreen`, `HistoryScreen`, `ReviewScreen` | Khung màn hình. `HomeShell` chứa `NavigationBar` M3. |
+| `lib/app.dart`, `lib/main.dart` | `VkuExpenseApp`, `main()` | `ProviderScope` → `MaterialApp.router`, locale `vi_VN`, `initializeDateFormatting`. |
+
+### Vì sao làm vậy (liên hệ slide)
+
+- **`amount` là `int`, không phải `double` (lỗi slide số 7):** tiền Việt không có phần lẻ. `double` biểu diễn số nhị phân nên `0.1 + 0.2 != 0.3`; cộng dồn nhiều giao dịch sẽ lệch vài đồng. `int` luôn chính xác.
+- **Enum + switch expression (W7 s14):** `label`, `icon`, `color` viết bằng `switch (this) { food => ..., ... }`. Switch expression trên enum là *exhaustive*: nếu ai đó thêm danh mục thứ 6 mà quên một nhánh, chương trình **không biên dịch được**. Nhờ vậy ràng buộc "đúng 5 danh mục" được trình biên dịch kiểm tra.
+- **Model bất biến + `const` constructor + initializer list (W7 s15):** `ParsedReceipt` dùng `assert` trong initializer list để bảo đảm "giá trị `null` ⇔ độ tin cậy `missing`". Ghép nhầm (ví dụ có số tiền mà vẫn đánh dấu missing) sẽ bị báo ngay khi chạy debug/test.
+- **Null safety (W7 s12):** mọi trường của `ParsedReceipt` đều nullable vì parser có thể không tìm thấy. Màn Review sẽ dùng `??` để điền giá trị mặc định.
+- **Records + patterns (W7 s13–14):** `ReviewScreen` chọn câu mô tả bằng `switch ((expenseId, receipt)) { (final int id, _) => ..., (null, final ParsedReceipt _) => ..., (null, null) => ... }`, tức là so khớp trên một record 2 phần tử.
+- **`OcrLine` riêng thay vì dùng thẳng `TextLine` của ML Kit (FR-2.2):** parser chỉ biết `OcrLine`, nên unit test tự tạo dữ liệu với tọa độ giả mà không cần điện thoại hay ML Kit.
+- **Router nằm trong provider (W8 s14–18, W7 s30):** nếu tạo `GoRouter(...)` trong `build()`, mỗi lần rebuild sẽ có router mới và mất lịch sử điều hướng. Đặt trong `Provider` thì router được tạo một lần, có `ref.onDispose(router.dispose)` để giải phóng.
+- **`StatefulShellRoute.indexedStack` thay vì `ShellRoute` (W8 s20–24):** mỗi tab giữ stack và trạng thái riêng (ví dụ vị trí cuộn trong Lịch sử) khi chuyển qua lại.
+- **Gỡ quyền micro:** plugin camera tự khai báo `RECORD_AUDIO` để quay video. App chỉ chụp ảnh, nên dùng `tools:node="remove"` để không xin quyền thừa.
+- **Lựa chọn đã cân nhắc:** dùng `freezed` để sinh `copyWith/==` tự động. **Không chọn** vì cần `build_runner` (code sinh tự động có thể phải `// ignore`, trái quy tắc 2.2) và viết tay giúp hiểu rõ hơn.
+
+### Khái niệm cần hiểu
+
+- **Bỏ dấu & NFC/NFD:** chữ "ế" có thể lưu thành **1 ký tự** (dạng dựng sẵn, NFC) hoặc **3 ký tự** "e" + dấu mũ + dấu sắc (dạng tách, NFD). `TextNormalizer` xử lý cả hai: tra bảng cho dạng NFC, xóa các ký tự dấu kết hợp U+0300–U+036F cho dạng NFD.
+- **NBSP:** `NumberFormat` của locale vi_VN đặt **khoảng trắng không ngắt** (U+00A0) giữa số và `đ`, trông như dấu cách thường nhưng không cho xuống dòng ở đó. Test so sánh đúng ký tự này.
+- **`ValueGetter` trong `copyWith`:** `copyWith(imagePath: null)` không phân biệt được "giữ nguyên" với "xóa". Truyền hàm `() => null` thì rõ ràng là "đặt về null".
+- **Provider override trong test:** `ProviderScope(overrides: [routerProvider.overrideWithValue(router)])` cho test tự chọn trang bắt đầu (ví dụ `/expense/42`) mà không sửa code app.
+- **`tools:node="remove"`:** chỉ thị cho *manifest merger* của Android: khi gộp manifest của app với manifest của các plugin, xóa phần tử này.
+
+### Kết quả kiểm thử
+
+| Bước | Kết quả |
+|---|---|
+| `dart format --set-exit-if-changed lib test` | ✔ 0 thay đổi |
+| `flutter analyze` | ✔ No issues found |
+| `flutter test` | ✔ **48/48** pass |
+| `flutter test --coverage` | 85.3% dòng (214/251) |
+| `flutter build apk --debug` | ✔ (lần đầu 12.5 phút do tải ML Kit/CameraX/uCrop; Gradle tự cài CMake 3.22.1 vào `D:\Android\SDK\cmake`) |
+| Thiết bị | ⚠ **Chưa test trên thiết bị**: chưa cắm máy. Checklist ở `docs/TEST_REPORT.md` |
+
+Phân bổ test: `app_router_test` 7 · `text_normalizer_test` 10 · `formatters_test` 6 · `app_theme_test` 3 · `expense_test` 9 · `expense_category_test` 7 · `parsed_receipt_test` 6.
+
+Test counter mặc định của template đã được **thay** bằng `app_router_test.dart`: app counter không còn tồn tại nên test cũ không còn ứng với yêu cầu nào. Lý do ghi trong commit `feat(router)`.
+
+### Cách tự kiểm tra bằng tay
+
+1. `flutter run` trên điện thoại: app mở ở tab **Tổng quan**, thanh dưới có 3 tab *Tổng quan / Quét / Lịch sử*.
+2. Bấm từng tab: tiêu đề AppBar đổi theo.
+3. Bật dark mode của điện thoại: app chuyển sang nền tối (theme theo hệ thống).
+4. Xoay ngang: không có sọc vàng-đen báo tràn (overflow).
+
+### Danh sách commit
+
+```
+87f6864 feat(router): add go_router shell with three tabs and placeholder screens
+4cdf6f3 feat(models): add expense, category, OCR line and parsed receipt models
+0c6c4a9 feat(core): add theme, formatters and Vietnamese text normalizer
+c912023 build: add phase 1 dependencies and native platform config
+docs(phase-1): record phase 1 results   (commit cuối của phase)
+```

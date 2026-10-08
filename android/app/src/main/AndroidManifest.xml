@@ -1,4 +1,14 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Live viewfinder for receipt capture (FR-1.1). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- camera_android_camerax declares RECORD_AUDIO for video recording.
+         This app only takes still photos with audio disabled, so never ask
+         the user for microphone access. -->
+    <uses-permission
+        android:name="android.permission.RECORD_AUDIO"
+        tools:node="remove" />
+
     <application
         android:label="vku_expense_ocr"
         android:name="${applicationName}"
@@ -25,6 +35,11 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Manual crop adjustment screen used by image_cropper (FR-1.5). -->
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
