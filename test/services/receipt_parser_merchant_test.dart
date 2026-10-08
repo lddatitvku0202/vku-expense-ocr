@@ -40,6 +40,21 @@ void main() {
     }
   });
 
+  test('skips founding-year taglines', () {
+    expect(
+      merchant(['BOOKWORM BOOKSTORE', 'Books & Stationery since 2001']),
+      'BOOKWORM BOOKSTORE',
+    );
+    expect(
+      merchant(['BÁNH MÌ PHƯỢNG', 'Est. 1990 - Original Hoi An Recipe']),
+      'BÁNH MÌ PHƯỢNG',
+    );
+    expect(
+      merchant(['PHÚC LONG', 'Thành lập từ năm 1968 tại Bảo Lộc']),
+      'PHÚC LONG',
+    );
+  });
+
   test('skips label: value rows', () {
     expect(merchant(['Thu ngân: Nguyễn Thị Thu Hương', 'KFC']), 'KFC');
   });

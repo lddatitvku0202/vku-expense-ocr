@@ -193,6 +193,13 @@ const notNameKeywords = [
   'thu ngan',
   'cashier',
   'nhan vien',
+  // Founding-year taglines ("since 2001", "Est. 1990", "thành lập từ năm").
+  'since',
+  'est',
+  'established',
+  'founded',
+  'thanh lap',
+  'tu nam',
   // Unambiguous address words.
   'thanh pho',
   'huyen',
