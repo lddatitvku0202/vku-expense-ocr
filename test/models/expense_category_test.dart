@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vku_expense_ocr/core/category_style.dart';
 import 'package:vku_expense_ocr/models/expense_category.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'dart:ui' show Rect;
 
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 /// One line of recognized text with its position on the image (FR-2.2).
 ///

@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
-
 /// The five fixed spending categories (FR-3.5, FR-5.5).
+///
+/// Pure Dart so the receipt parser can return it without depending on
+/// Flutter. Icon and colour live in `ExpenseCategoryStyle`
+/// (`lib/core/category_style.dart`).
 ///
 /// Display data is derived with Dart 3 switch expressions (W7 s14): the
 /// compiler checks that every category is handled, so adding a sixth value
@@ -19,23 +21,6 @@ enum ExpenseCategory {
     travel => 'Di chuyển',
     gear => 'Thiết bị',
     entertainment => 'Giải trí',
-  };
-
-  IconData get icon => switch (this) {
-    food => Icons.restaurant,
-    study => Icons.menu_book,
-    travel => Icons.two_wheeler,
-    gear => Icons.devices_other,
-    entertainment => Icons.movie,
-  };
-
-  /// Chart and badge colour, readable in both light and dark themes.
-  Color get color => switch (this) {
-    food => const Color(0xFFEF6C00),
-    study => const Color(0xFF1E88E5),
-    travel => const Color(0xFF43A047),
-    gear => const Color(0xFF8E24AA),
-    entertainment => const Color(0xFFE53935),
   };
 
   /// Value stored in the `category` column of the database.

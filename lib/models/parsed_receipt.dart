@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 import 'package:vku_expense_ocr/models/expense_category.dart';
 import 'package:vku_expense_ocr/models/field_confidence.dart';
 
