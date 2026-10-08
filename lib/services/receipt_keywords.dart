@@ -149,3 +149,71 @@ const contactKeywords = [
   'stk',
   'so tai khoan',
 ];
+
+/// Header rows that are not the shop name (FR-3.4). Address words that are
+/// also common in names ("phường", "kiệt", "tầng") are left out on purpose;
+/// street addresses are caught by their house number instead.
+const notNameKeywords = [
+  // FR-3.4 list.
+  'dia chi',
+  'd/c',
+  'dc',
+  'dt',
+  'tel',
+  'hotline',
+  'mst',
+  'www',
+  'http',
+  'https',
+  'hoa don',
+  // Other contact details.
+  'dien thoai',
+  'sdt',
+  'phone',
+  'fax',
+  'email',
+  'website',
+  'zalo',
+  'tong dai',
+  'ma so thue',
+  'tax code',
+  // Document titles.
+  'phieu',
+  'bien nhan',
+  'bien lai',
+  'receipt',
+  'invoice',
+  'bill',
+  'ticket',
+  've xem phim',
+  // Date and staff labels.
+  'ngay',
+  'date',
+  'thoi gian',
+  'thu ngan',
+  'cashier',
+  'nhan vien',
+  // Unambiguous address words.
+  'thanh pho',
+  'huyen',
+  'tttm',
+  'street',
+  'ward',
+  'district',
+];
+
+/// Legal entity lines ("CÔNG TY CỔ PHẦN …"): a shop name only as a fallback.
+const companyKeywords = [
+  'cong ty',
+  'cty',
+  'tnhh',
+  'co phan',
+  'cp',
+  'jsc',
+  'ltd',
+  'llc',
+  'corp',
+  'corporation',
+  'company',
+  'inc',
+];

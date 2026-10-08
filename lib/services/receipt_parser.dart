@@ -128,9 +128,48 @@ class ReceiptParser {
   }
 
   /// Shop name from the header rows (FR-3.4).
+  ///
+  /// Looks at the first five non-empty rows, drops rows that are not a
+  /// name (contact keywords, "label: value", street addresses, prices,
+  /// mostly digits) and returns the row with the most letters, keeping its
+  /// original spelling; ties go to the upper row. A legal entity line
+  /// ("CÔNG TY TNHH …") is only used, with low confidence, when nothing
+  /// else qualifies. Returns `null` when no row looks like a name.
   (String merchant, FieldConfidence confidence)? extractMerchant(
     List<String> rows,
-  ) => null;
+  ) {
+    String? name;
+    var nameLetters = 0;
+    String? company;
+    var companyLetters = 0;
+    final header = rows
+        .map((row) => row.trim())
+        .where((row) => row.isNotEmpty)
+        .take(_merchantRows);
+    for (final row in header) {
+      final letters = _unicodeLetter.allMatches(row).length;
+      if (letters < _minNameLetters || _isNotName(row, letters)) continue;
+      if (_companyLine.hasMatch(TextNormalizer.ocrKey(row))) {
+        if (letters > companyLetters) {
+          (company, companyLetters) = (row, letters);
+        }
+      } else if (letters > nameLetters) {
+        (name, nameLetters) = (row, letters);
+      }
+    }
+    if (name != null) return (name, FieldConfidence.high);
+    if (company != null) return (company, FieldConfidence.low);
+    return null;
+  }
+
+  static bool _isNotName(String row, int letters) {
+    if (row.contains(':')) return true; // "Hotline: …", "Ngày: …"
+    if (_digit.allMatches(row).length > letters) return true;
+    final norm = TextNormalizer.normalize(row);
+    return _notNameKeyword.hasMatch(TextNormalizer.ocrKey(norm)) ||
+        _houseNumber.hasMatch(norm) ||
+        _price.hasMatch(norm);
+  }
 
   /// Category guessed from the shop name or the receipt content (FR-3.5).
   (ExpenseCategory category, FieldConfidence confidence)? suggestCategory({
@@ -202,6 +241,26 @@ final RegExp _dateLabel = _keywordPattern([
   'thoi gian',
   'time',
 ]);
+
+/// FR-3.4: the shop name is searched in the first five rows only.
+const int _merchantRows = 5;
+
+/// Fewer letters than this is not enough to trust a row as a name.
+const int _minNameLetters = 3;
+
+final RegExp _unicodeLetter = RegExp(r'\p{L}', unicode: true);
+final RegExp _digit = RegExp(r'\d');
+final RegExp _notNameKeyword = _keywordPattern(notNameKeywords);
+final RegExp _companyLine = _keywordPattern(companyKeywords);
+
+/// A street address: house number followed by a word ("50A Hùng Vương").
+/// Not "GS25" (digits glued to letters) nor "Phở 24" (no word after).
+final RegExp _houseNumber = RegExp(r'(?<![a-z0-9])\d+[a-z]?\s+[a-z]');
+
+/// A price with thousands separators or a currency mark: an item row.
+final RegExp _price = RegExp(
+  r'(?<![a-z0-9.,])(?:\d{1,3}(?:[.,]\d{3})+(?![.,]?\d)|\d{4,9}\s*(?:d|vnd|dong|₫)(?![a-z]))',
+);
 
 /// "2 x 15.000", "2,5 giờ x 180.000": the amount after "x" is a unit price.
 final RegExp _unitPrice = RegExp(
