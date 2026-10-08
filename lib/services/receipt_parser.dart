@@ -82,8 +82,50 @@ class ReceiptParser {
   }
 
   /// Transaction date (FR-3.3).
-  (DateTime date, FieldConfidence confidence)? extractDate(List<String> rows) =>
-      null;
+  ///
+  /// Accepts DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY and DD/MM/YY, with or
+  /// without a time; two-digit years mean 20YY and impossible dates such as
+  /// 45/13/2026 or 31/04/2026 are rejected. A date on a row labelled
+  /// "Ngày", "Date" or "Thời gian" wins over unlabelled ones (e.g. a cinema
+  /// showtime); otherwise the first date is used, with low confidence when
+  /// the receipt shows several different dates.
+  (DateTime date, FieldConfidence confidence)? extractDate(List<String> rows) {
+    final found = <({DateTime date, bool labelled})>[];
+    for (final row in rows) {
+      final norm = TextNormalizer.normalize(TextNormalizer.repairDigits(row));
+      final labelled = _dateLabel.hasMatch(TextNormalizer.ocrKey(norm));
+      for (final match in _datePattern.allMatches(norm)) {
+        if (_validDate(match) case final date?) {
+          found.add((date: date, labelled: labelled));
+        }
+      }
+    }
+    if (found.isEmpty) return null;
+
+    for (final candidate in found) {
+      if (candidate.labelled) return (candidate.date, FieldConfidence.high);
+    }
+    final distinct = found.map((candidate) => candidate.date).toSet();
+    return (
+      found.first.date,
+      distinct.length == 1 ? FieldConfidence.high : FieldConfidence.low,
+    );
+  }
+
+  /// Builds the date of a [_datePattern] match, or `null` if it does not
+  /// exist. `DateTime(2026, 4, 31)` silently becomes 1 May, so the day and
+  /// month are compared after construction.
+  static DateTime? _validDate(RegExpMatch match) {
+    final day = int.parse(match[1]!);
+    final month = int.parse(match[3]!);
+    final yearText = match[4]!;
+    final year = int.parse(yearText) + (yearText.length == 2 ? 2000 : 0);
+    if (year < 2000 || year > 2099 || month < 1 || month > 12 || day < 1) {
+      return null;
+    }
+    final date = DateTime(year, month, day);
+    return date.month == month && date.day == day ? date : null;
+  }
 
   /// Shop name from the header rows (FR-3.4).
   (String merchant, FieldConfidence confidence)? extractMerchant(
@@ -146,6 +188,20 @@ final RegExp _dateLike = RegExp(
 final RegExp _timeLike = RegExp(
   r'(?<!\d)\d{1,2}\s*[:h]\s*\d{2}(?:\s*:\s*\d{2})?(?!\d)',
 );
+
+/// Day, separator, month, the same separator again, 4- or 2-digit year.
+/// The back-reference `\2` rejects mixed separators such as "14/09-2026".
+final RegExp _datePattern = RegExp(
+  r'(?<!\d)(\d{1,2})\s*([/.\-])\s*(\d{1,2})\s*\2\s*(\d{4}|\d{2})(?!\d)',
+);
+
+/// Rows whose date is the transaction date.
+final RegExp _dateLabel = _keywordPattern([
+  'ngay',
+  'date',
+  'thoi gian',
+  'time',
+]);
 
 /// "2 x 15.000", "2,5 giờ x 180.000": the amount after "x" is a unit price.
 final RegExp _unitPrice = RegExp(
