@@ -49,4 +49,46 @@ abstract final class TextNormalizer {
   /// "  Tổng   Tiền Thanh Toán " becomes "tong tien thanh toan".
   static String normalize(String input) =>
       removeDiacritics(input).toLowerCase().replaceAll(_whitespace, ' ').trim();
+
+  /// Look-alike characters folded to one representative by [ocrKey].
+  static const Map<String, String> _ocrFold = {
+    '0': 'o',
+    '1': 'i',
+    'l': 'i',
+    '|': 'i',
+  };
+
+  /// Key for matching keywords in noisy OCR text.
+  ///
+  /// [normalize] plus folding of characters OCR confuses (0 → o and
+  /// 1, l, | → i), so "Tong tlen" and "T0NG TIEN" both become "tong tien".
+  /// Keywords must go through the same function before comparison:
+  /// "total" becomes "totai" on both sides.
+  static String ocrKey(String input) {
+    final buffer = StringBuffer();
+    for (final char in normalize(input).split('')) {
+      buffer.write(_ocrFold[char] ?? char);
+    }
+    return buffer.toString();
+  }
+
+  /// A number-like token: digits mixed with letters that look like digits,
+  /// not glued to other letters ("1O5.OOO", "24/10/2O26").
+  static final RegExp _numberLike = RegExp(
+    r'(?<![A-Za-z])[0-9OoIl|][0-9OoIl|.,/:\-]*[0-9OoIl|](?![A-Za-z])',
+  );
+
+  /// Replaces O/o with 0 and I/l/| with 1 inside number-like tokens that
+  /// already contain at least two real digits, e.g. "139.5OO" → "139.500".
+  ///
+  /// Words ("LOTTE"), short codes ("A2", "1L") and plain text are untouched.
+  static String repairDigits(String input) =>
+      input.replaceAllMapped(_numberLike, (match) {
+        final token = match[0]!;
+        final digits = token.codeUnits.where((c) => c >= 0x30 && c <= 0x39);
+        if (digits.length < 2) return token;
+        return token
+            .replaceAll(RegExp('[Oo]'), '0')
+            .replaceAll(RegExp('[Il|]'), '1');
+      });
 }
