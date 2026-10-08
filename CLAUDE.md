@@ -12,8 +12,14 @@ của phase đang dở. Không làm lại từ đầu.
 Môi trường máy hiện tại (cập nhật ở Phase 0):
 
 - Thư mục dự án: `D:\Start Github\Projects\vku-ocr-expense` (repo git riêng, nhánh chính `main`).
-- Android SDK: `D:\Android\SDK`. JDK cho Gradle: Temurin 21 (`C:\Program Files\Eclipse Adoptium\jdk-21.0.6.7-hotspot`).
-- Flutter SDK: xem mục **Blockers / Deviations**.
+- Flutter SDK: `D:\flutter` (stable **3.47.6**, Dart **3.13.5**). Đã thêm `D:\flutter\bin` vào PATH của User,
+  nhưng các tiến trình mở **trước** khi cài vẫn chưa thấy → gọi bằng đường dẫn đầy đủ `D:\flutter\bin\flutter`.
+- **Bắt buộc** trước mọi lệnh pub/build (đã đặt ở cấp User; trong phiên cũ phải tự export):
+  `GRADLE_USER_HOME=D:\dev-cache\gradle`, `PUB_CACHE=D:\dev-cache\pub` (ổ C: gần đầy).
+- Android SDK: `D:\Android\SDK` (NDK 28.2.13676358 đã cài tay). JDK cho Gradle: Temurin 21
+  (`flutter config --jdk-dir`). Không đổi `java` 1.8 trên PATH hệ thống.
+- Không đụng tới repo git ở gốc `D:\`.
+- Chi tiết cài đặt: `docs/SETUP_ENV.md`.
 
 ---
 
@@ -250,12 +256,12 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 
 ### Phase 0 — Khởi tạo & môi trường
 - [x] Kiểm tra: `flutter --version` (phải là 3.x, Dart 3), `dart --version`, `flutter doctor -v`, `git --version`, `java -version`/`keytool`. Thiếu thì ghi BLOCKER kèm lệnh khắc phục cụ thể.
-- [ ] Nếu thư mục chưa có `pubspec.yaml`: `flutter create --org vn.edu.vku --project-name vku_expense_ocr --platforms android,ios .` (giữ nguyên file brief). Nếu đã có project thì kiểm tra lại cấu hình.
+- [x] Nếu thư mục chưa có `pubspec.yaml`: `flutter create --org vn.edu.vku --project-name vku_expense_ocr --platforms android,ios .` (giữ nguyên file brief). Nếu đã có project thì kiểm tra lại cấu hình.
 - [x] `git init -b main`; `.gitignore` chuẩn Flutter, bổ sung `*.jks`, `*.keystore`, `android/key.properties`, `*.apk`, `*.aab`, `.env`, `coverage/`.
 - [x] Tạo `CLAUDE.md` (mục 1), `docs/PROJECT_BRIEF.md`, `docs/PHASE_LOG.md`, `docs/TEST_REPORT.md`, `README.md` khung.
-- [ ] Bật lint chặt hơn trong `analysis_options.yaml` (ví dụ `prefer_const_constructors`, `prefer_final_locals`, `always_declare_return_types`, `avoid_print`, `use_build_context_synchronously`).
-- [ ] Commit gợi ý: `chore: scaffold flutter project`, `docs: add CLAUDE.md with frozen requirements and phase plan`, `chore(lint): enable stricter analysis options`.
-- [ ] Gate: analyze + test mặc định + build debug.
+- [x] Bật lint chặt hơn trong `analysis_options.yaml` (ví dụ `prefer_const_constructors`, `prefer_final_locals`, `always_declare_return_types`, `avoid_print`, `use_build_context_synchronously`).
+- [x] Commit gợi ý: `chore: scaffold flutter project`, `docs: add CLAUDE.md with frozen requirements and phase plan`, `chore(lint): enable stricter analysis options`.
+- [x] Gate: analyze + test mặc định + build debug.
 
 ### Phase 1 — Nền tảng: models, theme, router, cấu trúc thư mục
 - [ ] Thêm dependencies: `flutter_riverpod` (^2.x), `go_router`, `intl`, `sqflite`, `path`, `path_provider`, `google_mlkit_text_recognition`, `camera`, `image_picker`, `image_cropper`, `image`; dev: `sqflite_common_ffi`, `mocktail`, `integration_test` (sdk). Cấu hình Android: `minSdkVersion`, quyền camera, activity của `image_cropper` theo README từng gói; iOS: `NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`.
@@ -394,7 +400,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 
 | Phase | Trạng thái | Commit cuối | Kết quả test | Ghi chú |
 |---|---|---|---|---|
-| 0 — Khởi tạo & môi trường | 🟥 Blocked | — | Chưa chạy (thiếu Flutter) | Đã làm phần tài liệu + git; chờ cài Flutter (B-001) |
+| 0 — Khởi tạo & môi trường | ✅ Xong | tag `phase-0` | format ✔ · analyze 0 issue · test 1/1 · build debug ✔ | B-001 đã giải quyết (cài Flutter 3.47.6). Chưa test trên thiết bị (chưa cắm máy) |
 | 1 — Nền tảng | ⬜ Chưa bắt đầu | — | — | |
 | 2 — ReceiptParser | ⬜ Chưa bắt đầu | — | — | |
 | 3 — Dịch vụ OCR | ⬜ Chưa bắt đầu | — | — | |
@@ -421,13 +427,22 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 | D-003 | Repo git riêng tại thư mục dự án (`git init -b main`) | Ổ `D:\` có sẵn một repo git ở gốc (thuộc Administrators, bị git báo *dubious ownership*). Repo lồng bên trong giúp lịch sử dự án độc lập, không dính repo ở `D:\`. |
 | D-004 | Thêm `.gitattributes` (`* text=auto eol=lf`, `*.bat`/`*.cmd` giữ CRLF) | Git for Windows đang bật `core.autocrlf=true` ở cấp hệ thống. Ép LF giúp `dart format --set-exit-if-changed` ổn định và diff trên GitHub sạch. |
 | D-005 | Tạo project với `--platforms android,ios` (không có thư mục windows/linux/macos) | Brief mục 7 Phase 0. Phụ: Flutter chỉ cần symlink (Developer Mode của Windows) khi project có nền tảng desktop; máy này **chưa bật Developer Mode** nên không thêm nền tảng desktop. |
-| D-006 | Gradle dùng JDK **Temurin 21** (`flutter config --jdk-dir`) | `java` trên PATH là 1.8 (quá cũ cho AGP 8); JBR của Android Studio là Java 25 (có thể chưa được bản Gradle trong template hỗ trợ). JDK 21 là LTS được AGP/Gradle hỗ trợ ổn định. Áp dụng khi Flutter đã cài. |
+| D-006 | Gradle dùng JDK **Temurin 21** (`flutter config --jdk-dir`) | `java` trên PATH là 1.8 (quá cũ cho AGP 9); JBR của Android Studio là Java 25. Template Flutter 3.47 dùng AGP 9.1 + Gradle 9.3.1; JDK 21 (LTS) là lựa chọn ổn định. Không đổi `java` 1.8 trên PATH hệ thống. |
+| D-007 | Flutter **3.47.6** stable (Dart **3.13.5**), clone đầy đủ (không `--depth`) vào `D:\flutter` | Đúng major 3.x theo brief nên giữ nhánh `stable`, không checkout tag khác. Clone đầy đủ để `flutter upgrade`/checkout tag hoạt động. |
+| D-008 | `GRADLE_USER_HOME=D:\dev-cache\gradle`, `PUB_CACHE=D:\dev-cache\pub` (biến cấp User) | Ổ C: chỉ còn ~9.5 GB; cache Gradle/pub có thể lên nhiều GB. Đặt trước lần chạy `flutter` đầu tiên. |
+| D-009 | Cài NDK 28.2.13676358 thủ công bằng `android.exe ... sdk install ndk/28.2.13676358` | AGP tự cài NDK thất bại vì `sdkmanager.bat` (shim của Android CLI 2026) để `cmd` tách tên gói tại dấu `;`. Gọi trực tiếp Android CLI với tên gói dạng `/`. Chi tiết: `docs/SETUP_ENV.md` mục 8.1. |
+| D-010 | `org.gradle.jvmargs=-Xmx3G ...`, `kotlin.daemon.jvmargs=-Xmx1G` | Template mặc định `-Xmx8G` = toàn bộ RAM máy (8 GB) → Windows phình `pagefile.sys` trên ổ C:. Build vẫn thành công với 3 GB. |
+| D-011 | Lint: bật `strict-casts`, `strict-inference`, `strict-raw-types` + rule bổ sung; **bỏ** `unnecessary_await_in_return` | Rule này đã bị deprecate trong Dart 3.13 (`flutter analyze` báo `deprecated_lint`). Không dùng `// ignore`. |
 
 ---
 
 ## Blockers / Deviations
 
-### B-001 — Chưa cài Flutter SDK (🟥 đang mở, chờ quyết định)
+### B-001 — Chưa cài Flutter SDK (✅ đã giải quyết 2026-10-08)
+
+- **Quyết định của bạn:** phương án 1, Claude Code tự cài với các điều kiện: clone đầy đủ, cache ra ổ D:, PATH User, JDK 21, không đụng repo `D:\`, ghi lại vào `docs/SETUP_ENV.md`.
+- **Kết quả:** Flutter 3.47.6 / Dart 3.13.5 tại `D:\flutter`; `flutter doctor -v` → Android toolchain ✔ (SDK 36, JDK 21, all licenses accepted). Visual Studio thiếu → bỏ qua (chỉ build Android). Phát sinh thêm: NDK phải cài tay (D-009), giảm heap Gradle (D-010).
+- **Lịch sử:** phần dưới giữ nguyên mô tả lúc mở blocker.
 
 - **Mô tả:** `flutter` và `dart` không có trong PATH. Đã tìm `flutter.bat`/`dart.exe` trên ổ `C:` và `D:` (độ sâu 5–6 thư mục, gồm `C:\flutter`, `C:\src\flutter`, `D:\flutter`, `D:\src\flutter`, `~\flutter`, `~\development\flutter`): **không có**. Đây là BLOCKER loại "thiếu công cụ" (mục 2.3).
 - **Đã kiểm tra được (2026-10-08):**

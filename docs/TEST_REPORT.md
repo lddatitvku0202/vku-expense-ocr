@@ -4,7 +4,7 @@
 
 | Phase | Số test | Pass / Fail | Coverage | Format | Analyze | Build debug | Test trên thiết bị |
 |---|---|---|---|---|---|---|---|
-| 0 | — | Chưa chạy | — | Chưa chạy | Chưa chạy | Chưa chạy | Chưa test trên thiết bị (B-001: chưa cài Flutter; chưa có thiết bị kết nối) |
+| 0 | 1 | 1 / 0 | — | ✔ | ✔ 0 issue | ✔ | ⚠ Chưa test trên thiết bị (chưa có máy kết nối) |
 
 ## Độ chính xác parser trên bộ fixture
 
@@ -12,4 +12,12 @@ _Sẽ bổ sung ở Phase 2._
 
 ## Checklist test thủ công trên thiết bị
 
-_Mỗi phase có UI sẽ thêm checklist tại đây để bạn tự kiểm tra trên máy Android thật._
+> Đánh dấu `[x]` khi bạn đã tự kiểm tra trên máy Android thật. Ghi tên máy và phiên bản Android.
+
+### Phase 0 — Khởi tạo
+
+Thiết bị: `__________` · Android `____`
+
+- [ ] `flutter devices` liệt kê được điện thoại.
+- [ ] `flutter run` cài và mở app không lỗi (màn hình đếm số mặc định của Flutter).
+- [ ] Bấm nút `+` thì số tăng (app phản hồi bình thường).
