@@ -172,10 +172,74 @@ class ReceiptParser {
   }
 
   /// Category guessed from the shop name or the receipt content (FR-3.5).
+  ///
+  /// A keyword in the merchant name ("Highlands", "Nhà sách", "Grab")
+  /// gives high confidence; the longest matching keyword decides. Otherwise
+  /// every row votes for the categories whose keywords it contains and a
+  /// clear winner gets low confidence. A tie or no match returns `null`, so
+  /// the user must choose on the Review screen.
   (ExpenseCategory category, FieldConfidence confidence)? suggestCategory({
     String? merchant,
     required List<String> rows,
-  }) => null;
+  }) {
+    final byName = merchant == null
+        ? null
+        : _categoryOf(TextNormalizer.ocrKey(merchant));
+    return switch ((byName, _categoryFromContent(rows))) {
+      (final ExpenseCategory category, _) => (category, FieldConfidence.high),
+      (null, final ExpenseCategory category) => (category, FieldConfidence.low),
+      (null, null) => null,
+    };
+  }
+
+  /// Category of the longest keyword found in [key], if any.
+  static ExpenseCategory? _categoryOf(String key) {
+    ExpenseCategory? best;
+    var bestLength = 0;
+    for (final category in ExpenseCategory.values) {
+      for (final match in _categoryPattern(category).allMatches(key)) {
+        final length = match.end - match.start;
+        if (length > bestLength) {
+          best = category;
+          bestLength = length;
+        }
+      }
+    }
+    return best;
+  }
+
+  /// Category named by the most rows; `null` on a tie or without votes.
+  static ExpenseCategory? _categoryFromContent(List<String> rows) {
+    final votes = {for (final category in ExpenseCategory.values) category: 0};
+    for (final row in rows) {
+      final key = TextNormalizer.ocrKey(row);
+      for (final category in ExpenseCategory.values) {
+        if (_categoryPattern(category).hasMatch(key)) {
+          votes.update(category, (count) => count + 1);
+        }
+      }
+    }
+    final ranked = votes.entries.where((entry) => entry.value > 0).toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return switch (ranked) {
+      [] => null,
+      [final only] => only.key,
+      [final first, final second, ...] when first.value > second.value =>
+        first.key,
+      _ => null,
+    };
+  }
+
+  /// Exhaustive switch: adding a sixth category without a keyword list
+  /// does not compile.
+  static RegExp _categoryPattern(ExpenseCategory category) =>
+      switch (category) {
+        ExpenseCategory.food => _foodPattern,
+        ExpenseCategory.study => _studyPattern,
+        ExpenseCategory.travel => _travelPattern,
+        ExpenseCategory.gear => _gearPattern,
+        ExpenseCategory.entertainment => _entertainmentPattern,
+      };
 }
 
 /// What a row is about, decided by its first keyword.
@@ -241,6 +305,21 @@ final RegExp _dateLabel = _keywordPattern([
   'thoi gian',
   'time',
 ]);
+
+/// Category keyword patterns. A dot before a keyword also counts as part of
+/// a word, so "com" in "www.fahasa.com" is not "cơm".
+RegExp _categoryKeywords(List<String> keywords) {
+  final folded = keywords.map(TextNormalizer.ocrKey).toList()
+    ..sort((a, b) => b.length.compareTo(a.length));
+  final body = folded.map(RegExp.escape).join('|');
+  return RegExp('(?<![a-z0-9.])(?:$body)(?![a-z0-9])');
+}
+
+final RegExp _foodPattern = _categoryKeywords(foodKeywords);
+final RegExp _studyPattern = _categoryKeywords(studyKeywords);
+final RegExp _travelPattern = _categoryKeywords(travelKeywords);
+final RegExp _gearPattern = _categoryKeywords(gearKeywords);
+final RegExp _entertainmentPattern = _categoryKeywords(entertainmentKeywords);
 
 /// FR-3.4: the shop name is searched in the first five rows only.
 const int _merchantRows = 5;
