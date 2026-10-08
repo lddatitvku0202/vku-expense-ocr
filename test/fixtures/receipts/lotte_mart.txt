@@ -1,0 +1,19 @@
+# Hypermarket. Weighed produce (decimal quantity), "Tổng số lượng" trap,
+# loyalty points, subtotal + discount + final total, card payment.
+LOTTE Mart
+LOTTE MART ĐÀ NẴNG
+06 Nại Nam, Q. Hải Châu, TP. Đà Nẵng
+Tel: (0236) 3611 999 | MST: 0304741634-004
+HÓA ĐƠN BÁN LẺ
+POS: 12 | Số HĐ: 01200458712
+Ngày bán: 12/10/2026 | Giờ: 16:20
+Bánh Choco-pie hộp 12 | 1 | 58.900
+Sữa chua Vinamilk lốc 4 | 2 | 26.500 | 53.000
+Táo Envy (kg) | 0,85 | 189.000 | 160.650
+Nước giặt Omo 3.6kg | 1 | 219.000
+Tổng số lượng | 5
+Tổng tiền hàng | 491.550
+Giảm giá khuyến mãi | -40.000
+Tổng thanh toán | 451.550
+Điểm tích lũy | 451
+Thẻ ATM/Visa | 451.550

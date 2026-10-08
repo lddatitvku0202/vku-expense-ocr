@@ -1,0 +1,15 @@
+# skew: 0.08
+# Bakery photographed at an angle (~4.6 degrees): right-hand amounts sit
+# 20-30 px lower than their labels and drift towards the next row.
+BÁNH MÌ MADAM KHÁNH
+12 Nguyễn Văn Linh, Đà Nẵng
+ĐT: 0905 888 112
+Ngày: 25/10/2026 07:05
+Bánh mì thập cẩm | 2 | 30.000 | 60.000
+Bánh mì trứng | 1 | 20.000
+Sữa đậu nành | 2 | 10.000 | 20.000
+Tổng tiền hàng | 100.000
+Giảm giá | -10.000
+Thanh toán | 90.000
+Tiền khách đưa | 100.000
+Tiền thối | 10.000

@@ -1,0 +1,17 @@
+# Bookshop (Study). Student discount, "Cần thanh toán" as the final
+# amount, hotline and tax code above the items, cash tendered and change.
+FAHASA
+NHÀ SÁCH FAHASA HUẾ
+131 Trần Hưng Đạo, TP. Huế
+Hotline: 1900 636 467
+MST: 0304132047
+HÓA ĐƠN BÁN HÀNG
+Ngày: 13/10/2026 09:41 | Số: 0045871
+Giáo trình Lập trình Flutter | 1 | 145.000
+Vở kẻ ngang Campus 200 trang | 5 | 18.000 | 90.000
+Bút bi Thiên Long TL-027 | 10 | 4.000 | 40.000
+Tổng tiền | 275.000
+Chiết khấu thẻ HSSV 10% | -27.500
+Cần thanh toán | 247.500
+Tiền khách trả | 300.000
+Tiền thừa trả khách | 52.500

@@ -1,0 +1,17 @@
+# English receipt (Study). Tagline with more letters than the shop name,
+# "Amount due", discount in parentheses, VAT number below the total.
+BOOKWORM BOOKSTORE
+Books & Stationery since 2001
+44 Chau Long, Ba Dinh, Hanoi
+Phone: +84 24 3715 3711
+SALES RECEIPT
+Date: 19/10/2026 14:22 | Receipt No: BW-559012
+Clean Code - R. Martin | 1 | 520,000
+Moleskine Notebook A5 | 1 | 385,000
+Highlighter set | 2 | 45,000 | 90,000
+Subtotal | 995,000
+Member discount 5% | (49,750)
+Amount due | 945,250
+Paid by card | 945,250
+VAT Reg. No: 0101234567
+Thank you for reading with us!

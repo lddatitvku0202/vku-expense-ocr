@@ -1,0 +1,14 @@
+# Ride hailing e-receipt (Travel). Short brand name, long document title,
+# "₫" currency sign, cash payment line repeating the total.
+Grab
+Biên nhận chuyến đi GrabBike
+Mã đặt xe: A-7KQ2P9WX3TL1
+Ngày 14/10/2026 07:32
+Điểm đón: Ký túc xá VKU, 470 Trần Đại Nghĩa
+Điểm đến: Ga Đà Nẵng, 791 Hải Phòng
+Quãng đường: 9,6 km | Thời gian: 24 phút
+Cước phí | 46.000₫
+Phí nền tảng | 3.000₫
+Khuyến mãi | -5.000₫
+Tổng cộng | 44.000₫
+Thanh toán bằng tiền mặt | 44.000₫

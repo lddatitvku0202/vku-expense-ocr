@@ -1,0 +1,16 @@
+# Coffee chain. Dash-separated date without a label, "Thành tiền" as a
+# subtotal, VAT included line, "TỔNG CỘNG" as the total, cash and change.
+HIGHLANDS COFFEE
+Highlands Coffee Vincom Huế
+50A Hùng Vương, P. Phú Nhuận, TP. Huế
+Tel: 1900 1755
+Order: #A-2041 | Bàn: 12
+05-10-2026 08:12
+Phin Sữa Đá (M) | 1 | 39.000
+Bánh Mì Thịt Nướng | 1 | 25.000
+Trà Sen Vàng (L) | 1 | 55.000
+Thành tiền | 119.000
+VAT 8% (đã bao gồm) | 8.815
+TỔNG CỘNG | 119.000
+Tiền mặt | 200.000
+Tiền thừa | 81.000

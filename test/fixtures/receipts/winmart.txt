@@ -1,0 +1,17 @@
+# Convenience supermarket. Brand line above the long legal company name,
+# comma thousands separators, uppercase final total.
+WinMart+
+CÔNG TY CỔ PHẦN DỊCH VỤ THƯƠNG MẠI TỔNG HỢP WINCOMMERCE
+WM+ HUE 25 Lê Lợi
+Hotline: 1900 6750
+PHIẾU THANH TOÁN
+Mã HĐ: 10250930001278
+Ngày: 30/09/2026 07:15:22
+Mì Hảo Hảo tôm chua cay | 5 | 4,500 | 22,500
+Nước suối Lavie 500ml | 6 | 5,000 | 30,000
+Bánh mì sandwich | 1 | 16,000 | 16,000
+Tổng tiền hàng: | 68,500
+Tổng chiết khấu: | 0
+TỔNG THANH TOÁN: | 68,500
+Tiền mặt | 100,000
+Tiền trả lại | 31,500

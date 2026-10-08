@@ -1,0 +1,16 @@
+# Electronics store (Gear). Long tagline under a short brand, label and
+# amount in one OCR line, deposit and remaining balance after the total.
+CellphoneS
+Hệ thống bán lẻ điện thoại, laptop
+CS Huế: 10 Trần Hưng Đạo, TP Huế
+Hotline: 1800 2097
+PHIẾU XUẤT BÁN
+Ngày 23/10/2026 11:05
+Bàn phím cơ AKKO 3068B | 1 | 1.590.000
+Chuột Logitech G304 | 1 | 590.000
+Lót chuột XL | 1 | 150.000
+Tổng tiền hàng: 2.330.000đ
+Giảm giá HSSV: -100.000đ
+Khách cần trả: 2.230.000đ
+Đã cọc: 500.000đ
+Còn lại: 1.730.000đ

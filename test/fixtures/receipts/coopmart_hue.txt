@@ -1,0 +1,19 @@
+# Supermarket. Subtotal + member discount + final total in two blocks,
+# phone and tax code near the header, cash tendered larger than the total.
+SAIGON CO.OP
+CO.OPMART HUẾ
+Đ/c: 6 Trần Hưng Đạo, P. Phú Hòa, TP. Huế
+ĐT: (0234) 3588 555 | MST: 0301175691-031
+HÓA ĐƠN BÁN HÀNG
+Số HĐ: 000123456 | Quầy: 05
+Ngày: 14/09/2026 18:42 | NV: Lê Thị Hoa
+Mặt hàng | SL | Đơn giá | T.Tiền
+Sữa tươi Vinamilk 1L | 2 | 32.500 | 65.000
+Gạo ST25 túi 5kg | 1 | 165.000 | 165.000
+Trứng gà 10 quả | 1 | 30.000 | 30.000
+Tổng tiền hàng | 260.000
+Giảm giá thành viên | -15.000
+Tổng thanh toán | 245.000
+Tiền khách đưa | 500.000
+Tiền thối lại | 255.000
+Cảm ơn quý khách. Hẹn gặp lại!
