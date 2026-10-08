@@ -1,0 +1,15 @@
+# Tea chain. OCR misread "tiền" as "tlen" and dropped all diacritics,
+# two-digit year, comma separators, discount without a minus sign.
+PHUC LONG
+Phúc Long Coffee & Tea
+Lô A2 Big C Huế, 174 Bà Triệu
+ĐT: 0234.3933.668
+HD: PL-HUE-0071542
+Ngay: 07/10/26 15:30
+Tra Sua Phuc Long (L) | x1 | 65,000
+Tra Dao Cam Sa (M) | x1 | 55,000
+Banh Croissant | x1 | 35,000
+Tong tlen | 155,000
+Giam gia | 15,500
+TONG TIEN THANH TOAN | 139,500
+The (VISA) | 139,500

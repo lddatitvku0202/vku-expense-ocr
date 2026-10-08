@@ -1,0 +1,14 @@
+# Cinema (Entertainment). Show date differs from the transaction date,
+# "VNĐ" suffix, long ticket title in the header.
+CGV Cinemas
+CGV Vincom Huế
+Tầng 5, TTTM Vincom, 50A Hùng Vương, Huế
+Hotline: 1900 6017
+VÉ XEM PHIM / MOVIE TICKET
+Phim: Lật Mặt 9 (T13)
+Suất chiếu: 20:15 17/10/2026 | Rạp 3 | Ghế G7, G8
+Ngày giao dịch: 16/10/2026 19:02
+Vé 2D người lớn | 2 | 90.000 | 180.000
+Combo bắp nước | 1 | 109.000
+Tổng cộng / Total | 289.000 VNĐ
+Thanh toán ZaloPay | 289.000 VNĐ

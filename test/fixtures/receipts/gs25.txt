@@ -1,0 +1,15 @@
+# Convenience store. Total label and amount on two separate rows,
+# "Khách thanh toán" is the cash tendered, date as DD-MM-YY.
+GS25
+CÔNG TY TNHH GS RETAIL VIỆT NAM
+GS25 Lý Thường Kiệt
+76 Lý Thường Kiệt, P. Phú Nhuận, Huế
+MST: 0315000519
+Số CT: 00019922 | 11-10-26 21:04
+Kimbap cá ngừ | 1 | 29.000
+Trà xanh 0 độ | 2 | 10.000 | 20.000
+Tteokbokki ly | 1 | 35.000
+Tổng cộng:
+84.000
+Khách thanh toán | 100.000
+Tiền thối | 16.000

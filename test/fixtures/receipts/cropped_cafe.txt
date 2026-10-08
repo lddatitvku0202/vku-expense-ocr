@@ -1,0 +1,7 @@
+# Badly framed photo: only the bottom of a cafe receipt was captured.
+# No shop name and no date are visible.
+Cà phê sữa đá | 2 | 25.000 | 50.000
+Bạc xỉu | 1 | 29.000
+Tổng cộng | 79.000
+Tiền mặt | 100.000
+Tiền thừa | 21.000

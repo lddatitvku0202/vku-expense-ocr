@@ -1,0 +1,15 @@
+# Ride hailing (Travel). "150,000 VND" format, promo code row,
+# long trip code with digits, legal company name under the brand.
+beCar
+CÔNG TY CỔ PHẦN BE GROUP
+Hóa đơn chuyến đi
+Mã chuyến: BE-15102026-88213
+Thời gian: 15/10/2026 18:05
+Từ: Trường ĐH CNTT&TT Việt - Hàn (VKU)
+Đến: Sân bay Quốc tế Đà Nẵng
+Khoảng cách: 11.2 km
+Giá cước | 98,000 VND
+Phụ phí sân bay | 10,000 VND
+Mã giảm giá BEVKU | -15,000 VND
+Tổng tiền thanh toán | 93,000 VND
+Phương thức: Tiền mặt

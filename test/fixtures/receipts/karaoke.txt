@@ -1,0 +1,16 @@
+# Karaoke (Entertainment). "Tổng cộng" printed twice: before and after
+# service charge and VAT. Hourly rate written as "2,5 giờ x 180.000".
+KARAOKE NICE
+Karaoke Nice - 99 Lê Duẩn, Đà Nẵng
+ĐT: 0236 3888 999
+PHIẾU TÍNH TIỀN - Phòng VIP 3
+Giờ vào: 19:30 | Giờ ra: 22:00
+Ngày: 22/10/2026
+Tiền giờ hát (2,5 giờ x 180.000) | 450.000
+Bia Tiger lon | 12 | 25.000 | 300.000
+Trái cây đĩa lớn | 1 | 120.000
+Khăn lạnh | 6 | 2.000 | 12.000
+Tổng cộng | 882.000
+Phí dịch vụ 5% | 44.100
+VAT 10% | 92.610
+Tổng cộng | 1.018.710

@@ -1,0 +1,13 @@
+# Milk tea shop. Heavy OCR noise: no diacritics at all, zero read instead
+# of the letter O ("T0NG THANH T0AN"), "đ" read as "d".
+TRA SUA MAYCHA
+Maycha - 35 Phan Boi Chau, Hue
+Hotline 0909 888 247
+Ngay: 21/10/2026 20:41
+Tra sua tran chau duong den | 2 | 29.000 | 58.000
+Topping thach dua | 2 | 6.000 | 12.000
+T0NG CONG | 70.000d
+Giam gia 10% | 7.000d
+T0NG THANH T0AN | 63.000d
+Tien khach dua | 100.000d
+Tien thoi | 37.000d

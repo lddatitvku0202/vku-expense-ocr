@@ -1,0 +1,11 @@
+# Small eatery, hand-written style bill. No total keyword, plain digits
+# without separators, no date, phone number printed below the total.
+QUÁN CƠM BÀ NĂM
+Kiệt 42 Nguyễn Lương Bằng, Liên Chiểu
+Cơm gà xối mỡ | 35000
+Cơm sườn trứng | 40000
+Canh chua | 15000
+Trà đá x2 | 4000
+= 94000
+ĐT đặt cơm: 0905 123 456
+Cám ơn quý khách!

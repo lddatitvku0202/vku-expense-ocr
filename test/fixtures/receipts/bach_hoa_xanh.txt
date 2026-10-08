@@ -1,0 +1,18 @@
+# Grocery chain. Amounts with "đ" suffix, OCR lost some diacritics,
+# "Khách phải trả" as the final amount, cash equal to the total.
+BÁCH HÓA XANH
+CTY CP THƯƠNG MẠI BÁCH HÓA XANH
+128 Nguyễn Sinh Cung, P. Vỹ Dạ, TP Huế
+Website: www.bachhoaxanh.com
+PHIẾU TÍNH TIỀN
+Số: 2610-0874512
+Thoi gian: 02/10/2026 19:05
+Rau muống 500g | 12.000đ
+Thịt ba chỉ 300g | 45.000đ
+Cà chua 1kg | 22.000đ
+Nước mắm Nam Ngư | 28.000đ
+Tong tien hang | 107.000đ
+Khuyen mai | -7.000đ
+Khách phải trả | 100.000đ
+Khách đưa | 100.000đ
+Tiền thừa | 0đ

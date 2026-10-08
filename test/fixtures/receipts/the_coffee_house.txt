@@ -1,0 +1,15 @@
+# Coffee chain. Bilingual labels, dot-separated date, "150.000 đ" format,
+# quantity x unit price row, e-wallet payment line after the total.
+THE COFFEE HOUSE
+The Coffee House - 12 Nguyễn Huệ, Huế
+Hotline: 1800 6936
+www.thecoffeehouse.com
+Hóa đơn: TCH-HUE12-000812
+Thời gian: 09.10.2026 - 10:47
+Cà Phê Sữa Đá | 1 | 35.000 đ
+Cold Brew Cam Sả | 1 | 49.000 đ
+Bánh Mì Que Pate | 2 | 15.000 đ | 30.000 đ
+Tạm tính / Subtotal | 114.000 đ
+Ưu đãi / Discount | -20.000 đ
+Tổng cộng / Total | 94.000 đ
+Thanh toán MoMo | 94.000 đ
