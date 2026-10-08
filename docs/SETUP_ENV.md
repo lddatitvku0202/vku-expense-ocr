@@ -164,6 +164,10 @@ Sau đó `flutter build apk --debug` thành công (lần đầu mất ~9.5 phút
 
 Cảnh báo `This version only understands SDK XML versions up to 3 but an SDK XML file of version 4 was encountered` là do AGP và cmdline-tools phát hành ở hai thời điểm khác nhau. Cảnh báo này **vô hại**.
 
+### 8.1b. CMake (tự cài ở Phase 1)
+
+Khi thêm các plugin native ở Phase 1, Gradle tự cài **CMake 3.22.1** vào `D:\Android\SDK\cmake\3.22.1`. Lần này tự cài thành công (AGP dùng trình tải riêng, không qua shim `sdkmanager.bat`). Không cần làm gì thêm, và CMake cũng nằm trên ổ D:.
+
 ### 8.2. Ổ C: bị hụt ~1.8 GB trong lúc build: do pagefile
 
 Sau build đầu, ổ C: giảm từ 9.5 GB còn 7.7 GB. Đã kiểm tra:
