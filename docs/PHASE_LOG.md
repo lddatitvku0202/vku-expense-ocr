@@ -175,3 +175,145 @@ Test counter mặc định của template đã được **thay** bằng `app_rou
 c912023 build: add phase 1 dependencies and native platform config
 docs(phase-1): record phase 1 results   (commit cuối của phase)
 ```
+
+---
+
+## Phase 2 — ReceiptParser (TDD)
+
+**Trạng thái:** ✅ hoàn tất (merge vào `main`, tag `phase-2`).
+
+### Mục tiêu phase
+
+Viết "bộ não" đọc hóa đơn, phần nặng điểm nhất của rubric (3.5đ). Đầu vào là các dòng chữ OCR kèm vị trí. Đầu ra là tên cửa hàng, tổng tiền, ngày, gợi ý danh mục, mỗi trường kèm độ tin cậy.
+
+FR liên quan: **FR-2.3** (ghép hàng), **FR-3.1 → FR-3.7** (chuẩn hóa, tổng tiền, ngày, tên cửa hàng, danh mục, `ParsedReceipt`, bảng regex).
+
+### TDD hiện rõ trong lịch sử Git
+
+TDD (Test-Driven Development) = **viết test trước, code sau**. Vòng lặp: 🔴 *Red* (test fail vì chưa có code) → 🟢 *Green* (viết vừa đủ code cho test pass) → 🔵 *Refactor* (dọn code, test vẫn xanh).
+
+| # | Commit | Trạng thái test sau commit |
+|---|---|---|
+| 1 | `test(parser): add 23 receipt fixtures with expected fields and tests` | 🔴 mọi test mới **không biên dịch được** (chưa có `ReceiptParser`, `RowGrouper`) |
+| 2 | `refactor(models): keep parser-facing models free of Flutter imports` | 🔵 48 test cũ vẫn xanh |
+| 3 | `feat(core): add OCR-tolerant keyword key and digit repair` | 🟢 6 test chuẩn hóa OCR xanh |
+| 4 | `feat(parser): group OCR lines into rows by vertical overlap` | 🟢 11 test row grouper xanh |
+| 5 | `feat(parser): extract totals with keyword tiers and exclusions` | 🟢 34 test tổng tiền xanh; ngày, tên, danh mục còn 🔴 |
+| 6 | `feat(parser): extract and validate receipt dates` | 🟢 20 test ngày xanh |
+| 7 | `feat(parser): pick the merchant name from the header rows` | 🟢 22 test tên cửa hàng xanh |
+| 8 | `feat(parser): suggest a category with Dart 3 pattern matching` | 🟢 28 test danh mục xanh; benchmark: merchant 22/23 |
+| 9 | `fix(parser): skip founding-year taglines when picking the merchant` | 🔴→🟢 thêm test mới trước, rồi sửa; benchmark 23/23 |
+| 10 | `docs(parser): add regex table generated from the parser source` | — |
+
+**Không có giá trị kỳ vọng nào bị sửa sau commit 1.** Có hai thay đổi ở file test cũ, đều ghi rõ trong commit: thêm một dòng `import` cho `expense_category_test.dart` (commit 2, assertion giữ nguyên) và thêm test slogan (commit 9, chỉ thêm, không sửa).
+
+### Đã làm gì
+
+| File | Vai trò |
+|---|---|
+| `test/fixtures/receipts/*.txt` (23 file) | Hóa đơn tổng hợp: Co.op Mart, WinMart, Bách Hóa Xanh, Lotte Mart, Highlands, Phúc Long, The Coffee House, Circle K, GS25, Fahasa, Grab, Be, CGV, Thế Giới Di Động, CellphoneS, quán cơm, hóa đơn tiếng Anh, tiệm photo, trà sữa (OCR nhiễu), ảnh bị cắt, karaoke, Phở 24 (OCR đọc 0 thành O), bánh mì (ảnh nghiêng). |
+| `test/fixtures/receipts/expected.dart` | Kết quả đúng của từng hóa đơn, viết **trước** khi có parser. |
+| `test/fixtures/receipts/known_limitations.dart` | Sổ ghi các trường parser chắc chắn sai, kèm lý do. Hiện **rỗng**. |
+| `test/support/receipt_fixture.dart` | Biến file `.txt` thành danh sách `OcrLine` có tọa độ giả lập, trả về theo **từng cột** giống ML Kit. |
+| `lib/services/row_grouper.dart`, `lib/models/receipt_row.dart` | `RowGrouper`: ghép các dòng cùng độ cao thành một hàng (FR-2.3). |
+| `lib/services/receipt_parser.dart` | `ReceiptParser`: `extractTotal`, `extractDate`, `extractMerchant`, `suggestCategory`, `parse`. |
+| `lib/services/receipt_keywords.dart` | Toàn bộ bảng từ khóa (tổng tiền, loại trừ, tên, 5 danh mục). Tách riêng để dễ đọc và dễ bổ sung. |
+| `lib/core/text_normalizer.dart` | Thêm `ocrKey` (gộp ký tự OCR hay nhầm) và `repairDigits` (sửa O/l trong số). |
+| `lib/core/category_style.dart` | Icon và màu danh mục, chuyển ra khỏi model để parser không phụ thuộc Flutter. |
+| `test/services/parser_purity_test.dart` | Test kiến trúc: dò toàn bộ chuỗi `import` của parser và row grouper, bảo đảm không có `package:flutter` hay ML Kit. |
+| `docs/REGEX_TABLE.md`, `tool/regex_table/` | Bảng 29 regex cho báo cáo, sinh tự động từ mã nguồn. |
+
+### Vì sao làm vậy (liên hệ slide)
+
+- **Ghép hàng theo bounding box thay vì `split('\n')` (sửa lỗi slide W8 s42):** ML Kit trả chữ theo *khối*. Cột nhãn bên trái ("Tổng tiền hàng", "Tổng thanh toán") là một khối, cột số bên phải ("260.000", "245.000") là khối khác. Tách theo `\n` sẽ thấy "Tổng thanh toán" và "245.000" ở hai dòng xa nhau. `RowGrouper` dựa vào tọa độ Y để ghép lại.
+- **Bỏ dấu trước khi so khớp (sửa lỗi slide W8 s42):** regex `tong tien|thanh toan` của slide không khớp "Tổng tiền". Mọi so khớp đều chạy trên chữ đã bỏ dấu, nhưng giá trị trả về giữ nguyên chữ gốc (FR-3.1).
+- **Records làm kết quả trung gian (W7 s13):** mỗi hàm trả về `(int amount, FieldConfidence confidence)?`, tức là một cặp giá trị không cần tạo class riêng. Records so sánh bằng giá trị, nên test viết gọn: `expect(total(rows), (150000, high))`.
+- **Pattern matching (W7 s14):** `suggestCategory` dùng `switch ((byName, byContent))` trên record, *list pattern* `[final first, final second, ...] when first.value > second.value` để phát hiện hòa, và một `switch` *exhaustive* trên enum (thêm danh mục thứ 6 mà quên từ điển là lỗi biên dịch).
+- **Null safety (W7 s12):** không chắc thì trả `null` chứ không đoán bừa. Ví dụ không có ngày thì `date = null`, và màn Review sẽ gợi ý ngày hôm nay.
+- **Parser là Dart thuần:** chỉ làm việc với chuỗi, nên ~150 test chạy trong vài giây, không cần điện thoại hay ML Kit. Đây là lý do FR-2.2 yêu cầu model `OcrLine` riêng.
+- **Lựa chọn đã cân nhắc nhưng không dùng:**
+  - *So khớp mờ bằng khoảng cách Levenshtein* cho lỗi OCR: mạnh hơn nhưng khó giải thích và dễ khớp nhầm. Bảng gộp ký tự (`ocrKey`) đơn giản và đủ cho các lỗi hay gặp (l↔i, 0↔o).
+  - *Lấy số lớn nhất làm tổng* (cách đơn giản nhất): sai ngay với hóa đơn có "Tiền khách đưa 500.000" lớn hơn tổng. Vì vậy chỉ dùng làm phương án dự phòng (fallback), với độ tin cậy thấp.
+  - *Học máy (ML) để phân loại hàng:* cần dữ liệu lớn, không giải thích được, vượt phạm vi môn học.
+
+### Khái niệm cần hiểu
+
+- **Row grouping theo bounding box:** mỗi dòng OCR có hình chữ nhật bao quanh (`Rect`). Hai dòng cùng một hàng nếu phần **chồng lấp theo chiều dọc** ≥ 50% chiều cao của dòng thấp hơn:
+
+  ```
+  y=100 ┌──────────────┐            ┌─────────┐ y=102
+        │ Tổng thanh   │            │ 245.000 │        chồng lấp 18/20 px = 90% → cùng hàng
+  y=120 └──────────────┘            └─────────┘ y=122
+  ```
+
+  Dòng mới được so với **dải trung bình** của hàng chứ không so với dòng vừa thêm. Nhờ vậy ba dòng xếp kiểu bậc thang (A chạm B, B chạm C) không bị dồn hết vào một hàng.
+- **Phân loại hàng theo từ khóa đầu tiên:** mỗi hàng được gán một loại (thanh toán cuối / tổng / tạm tính / tiền khách đưa / không phải tổng / liên hệ) theo từ khóa **xuất hiện sớm nhất**. Nếu cùng vị trí thì từ khóa **dài hơn** thắng: "Tổng chiết khấu" là giảm giá chứ không phải tổng, dù bắt đầu bằng "tổng".
+- **Ưu tiên tổng tiền (FR-3.2):** thanh toán cuối > tổng > tạm tính. Cùng mức thì lấy hàng **thấp hơn** trên hóa đơn. Nhãn nằm một mình thì lấy hàng chỉ có số ngay bên dưới. Không có từ khóa nào thì lấy số lớn nhất, độ tin cậy thấp.
+- **Lookbehind / lookahead trong regex:** `(?<![a-z0-9])` nghĩa là "ký tự đứng trước không phải chữ/số". Ví dụ `(?<![a-z0-9])tel(?![a-z0-9])` khớp "Tel:" nhưng không khớp "Hotel".
+- **Back-reference `\2`:** trong regex ngày, `\2` bắt dấu phân cách thứ hai phải giống dấu thứ nhất, nên "14/09/2026" khớp còn "14/09-2026" thì không.
+- **Kiểm tra ngày có thật:** `DateTime(2026, 4, 31)` không báo lỗi mà tự đổi thành 01/05/2026. Vì vậy parser dựng `DateTime` rồi so lại tháng/ngày; lệch là ngày không tồn tại.
+- **Sổ known limitations:** bộ benchmark so khớp **chính xác** tập trường sai với sổ. Trường sai mà chưa có trong sổ thì test fail (regression). Trường trong sổ mà đã đúng thì test cũng fail, buộc phải gỡ khỏi sổ. Cơ chế này không `skip` test nào.
+
+### Kết quả kiểm thử
+
+| Bước | Kết quả |
+|---|---|
+| `dart format --set-exit-if-changed lib test` | ✔ 0 thay đổi |
+| `flutter analyze` | ✔ No issues found |
+| `flutter test` | ✔ **201/201** (48 cũ + 153 mới) |
+| `flutter test --coverage` | **94.9%** dòng (461/486); `receipt_parser.dart` 99.4%, `row_grouper.dart` 94.3% |
+| `flutter build apk --debug` | ✔ |
+| Thiết bị | ⚠ **Chưa test trên thiết bị** (Phase 2 không có giao diện mới) |
+
+Phân bổ 153 test mới: tổng tiền 34 · ngày 20 · tên cửa hàng 23 · danh mục 28 · parse 4 · row grouper 11 · kiến trúc 2 · chuẩn hóa OCR 6 · benchmark fixture 25.
+
+**Độ chính xác trên bộ 23 fixture** (`build/reports/receipt_parser_accuracy.md`):
+
+| Trường | Đúng | Ghi chú |
+|---|---|---|
+| Tổng tiền | **23/23** | Lần chạy benchmark đầu tiên đã 23/23 |
+| Ngày | **23/23** | Lần chạy đầu 23/23 |
+| Danh mục | **23/23** | Lần chạy đầu 23/23 |
+| Tên cửa hàng | **23/23** | Lần chạy đầu **22/23** (sai `bookworm_english.txt`: chọn slogan "Books & Stationery since 2001"); sửa bằng commit `fix(parser)` |
+
+Không fixture nào phải ghi vào sổ known limitations.
+
+⚠️ **Đọc con số này cho đúng:**
+1. Fixture là hóa đơn **tổng hợp** do chính người viết parser soạn. Dù kỳ vọng được viết trước, người viết vẫn biết các quy tắc sẽ làm, nên 23/23 là con số **lạc quan**. Độ chính xác thật phải đo bằng hóa đơn thật ở Phase 3 (có điện thoại).
+2. `banh_mi_skewed.txt` (ảnh nghiêng ~4.6°) pass phần tổng tiền nhưng các hàng đã bị **xô lệch**: "Tổng tiền hàng" bị ghép với "10.000 20.000" của hàng trên. Tổng thanh toán vẫn đúng chỉ vì nhãn "Thanh toán" đứng một mình và số "90.000" rơi xuống hàng ngay dưới. **Không** nên kết luận parser chịu được ảnh nghiêng.
+3. `cellphones.txt` pass phần tên cửa hàng một phần nhờ may: slogan "Hệ thống bán lẻ điện thoại, laptop" bị loại vì chứa "điện thoại" (vốn là từ khóa nhãn số điện thoại). Slogan không chứa từ khóa nào vẫn có thể thắng dòng thương hiệu ngắn.
+
+### Hạn chế đã biết
+
+- **Ảnh nghiêng** > ~3°: số tiền trôi sang hàng dưới. Hướng khắc phục: khung căn chỉnh ở Phase 6, hoặc ước lượng góc nghiêng từ các dòng rồi xoay lại (chưa làm).
+- **Slogan dài hơn tên thương hiệu** (không chứa từ khóa loại trừ): FR-3.4 chọn hàng nhiều chữ cái nhất nên chọn nhầm slogan.
+- **Số bị OCR chèn dấu cách** ("245 000"), **"k"** ("45k"), **phần thập phân** ("150.000,00"): chưa đọc được.
+- **Ngày kiểu Mỹ** MM/DD/YYYY, **ISO** YYYY-MM-DD, **"ngày 14 tháng 9 năm 2026"**: chưa hỗ trợ (FR-3.3 không yêu cầu).
+- **Từ điển danh mục** chỉ chứa các thương hiệu và từ phổ biến. Cửa hàng lạ không có từ khóa → `null`, người dùng tự chọn ở Review (đúng FR-3.5).
+
+### Cách tự kiểm tra bằng tay
+
+1. Chạy riêng bộ benchmark rồi mở báo cáo:
+   ```powershell
+   flutter test test/services/receipt_fixtures_test.dart
+   notepad build/reports/receipt_parser_accuracy.md
+   ```
+2. Thử nghiệm: mở một fixture, ví dụ `test/fixtures/receipts/gs25.txt`, sửa "Tổng cộng:" thành "Tong cong" rồi chạy lại. Test vẫn pass nhờ bỏ dấu. Hoàn tác bằng `git checkout -- test/fixtures`.
+3. Thêm hóa đơn của chính bạn: tạo file `.txt` mới (định dạng trong `test/fixtures/receipts/README.md`), thêm một `ReceiptExpectation` vào `expected.dart`, rồi chạy benchmark.
+4. Xem bảng regex: `docs/REGEX_TABLE.md`. Sau khi sửa regex, sinh lại bằng `python tool/regex_table/gen_regex_table.py`.
+
+### Danh sách commit
+
+```
+865904c docs(parser): add regex table generated from the parser source
+a532b39 fix(parser): skip founding-year taglines when picking the merchant
+1ddc7a0 feat(parser): suggest a category with Dart 3 pattern matching
+3706551 feat(parser): pick the merchant name from the header rows
+ac514b2 feat(parser): extract and validate receipt dates
+96e3502 feat(parser): extract totals with keyword tiers and exclusions
+c4ddb5e feat(parser): group OCR lines into rows by vertical overlap
+09d44ff feat(core): add OCR-tolerant keyword key and digit repair
+6ad465e refactor(models): keep parser-facing models free of Flutter imports
+794a4e4 test(parser): add 23 receipt fixtures with expected fields and tests
+docs(phase-2): record phase 2 results   (commit cuối của phase)
+```

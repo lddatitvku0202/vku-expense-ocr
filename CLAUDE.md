@@ -272,13 +272,13 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] Test: `toMap/fromMap` round-trip, formatter VND (`150000 → "150.000 đ"`), bỏ dấu (`"Tổng Tiền Thanh Toán" → "tong tien thanh toan"`, `"Đ" → "d"`), switch danh mục đủ 5 nhánh, router khởi động không lỗi (widget test).
 
 ### Phase 2 — ReceiptParser (TDD, phần quan trọng nhất)
-- [ ] Viết test **trước**, sau đó mới viết code.
-- [ ] Tạo **≥ 15 fixture** văn bản hóa đơn tổng hợp mô phỏng hóa đơn thật ở Việt Nam, đặt tại `test/fixtures/receipts/*.txt` hoặc dưới dạng danh sách `OcrLine` kèm bounding box: Co.op Mart, WinMart, Bách Hóa Xanh, Highlands Coffee, Phúc Long, The Coffee House, Circle K, GS25, Lotte Mart, nhà sách Fahasa, Grab/Be (Travel), rạp CGV (Entertainment), cửa hàng điện tử (Gear), quán cơm nhỏ, hóa đơn tiếng Anh. Fixture phải gồm các ca khó: có cả "Tổng tiền hàng" và "Tổng thanh toán" sau giảm giá, nhãn và số tiền nằm ở 2 block khác nhau, số điện thoại hoặc MST gần số tiền, ngày có giờ, năm 2 chữ số, chữ OCR mất dấu hoặc sai ký tự nhẹ (`TONG TIEN`, `Tong tlen`), số tiền dạng `150,000`, `150.000đ`, `1.250.000 VNĐ`.
-- [ ] Mỗi fixture có kết quả kỳ vọng (merchant, total, date, category) viết **trước khi** chạy parser. Không chỉnh kỳ vọng để khớp với output.
-- [ ] Triển khai `lib/services/receipt_parser.dart`: các hàm nhỏ thuần Dart (`extractTotal`, `extractDate`, `extractMerchant`, `suggestCategory`, `parse`), không phụ thuộc Flutter UI hay ML Kit.
-- [ ] Triển khai `lib/services/row_grouper.dart` (FR-2.3) cùng test với bounding box giả.
-- [ ] Viết `docs/REGEX_TABLE.md`.
-- [ ] Báo cáo **độ chính xác trên bộ fixture** cho từng trường (ví dụ total 14/15) trong PHASE_LOG và TEST_REPORT. Fixture nào fail thì phải được ghi rõ là "known limitation" kèm lý do. Chỉ được phép làm vậy sau khi đã thực sự cố gắng sửa, và không được xóa fixture đó.
+- [x] Viết test **trước**, sau đó mới viết code.
+- [x] Tạo **≥ 15 fixture** văn bản hóa đơn tổng hợp mô phỏng hóa đơn thật ở Việt Nam, đặt tại `test/fixtures/receipts/*.txt` hoặc dưới dạng danh sách `OcrLine` kèm bounding box: Co.op Mart, WinMart, Bách Hóa Xanh, Highlands Coffee, Phúc Long, The Coffee House, Circle K, GS25, Lotte Mart, nhà sách Fahasa, Grab/Be (Travel), rạp CGV (Entertainment), cửa hàng điện tử (Gear), quán cơm nhỏ, hóa đơn tiếng Anh. Fixture phải gồm các ca khó: có cả "Tổng tiền hàng" và "Tổng thanh toán" sau giảm giá, nhãn và số tiền nằm ở 2 block khác nhau, số điện thoại hoặc MST gần số tiền, ngày có giờ, năm 2 chữ số, chữ OCR mất dấu hoặc sai ký tự nhẹ (`TONG TIEN`, `Tong tlen`), số tiền dạng `150,000`, `150.000đ`, `1.250.000 VNĐ`.
+- [x] Mỗi fixture có kết quả kỳ vọng (merchant, total, date, category) viết **trước khi** chạy parser. Không chỉnh kỳ vọng để khớp với output.
+- [x] Triển khai `lib/services/receipt_parser.dart`: các hàm nhỏ thuần Dart (`extractTotal`, `extractDate`, `extractMerchant`, `suggestCategory`, `parse`), không phụ thuộc Flutter UI hay ML Kit.
+- [x] Triển khai `lib/services/row_grouper.dart` (FR-2.3) cùng test với bounding box giả.
+- [x] Viết `docs/REGEX_TABLE.md`.
+- [x] Báo cáo **độ chính xác trên bộ fixture** cho từng trường (ví dụ total 14/15) trong PHASE_LOG và TEST_REPORT. Fixture nào fail thì phải được ghi rõ là "known limitation" kèm lý do. Chỉ được phép làm vậy sau khi đã thực sự cố gắng sửa, và không được xóa fixture đó.
 
 ### Phase 3 — Dịch vụ OCR (ML Kit)
 - [ ] `lib/services/ocr_service.dart`: interface `OcrService` + `MlKitOcrService` (InputImage từ file, recognizer latin, chuyển sang `List<OcrLine>`, đo `Stopwatch`, `close()`).
@@ -299,6 +299,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [ ] `screens/scan/camera_screen.dart`: khởi tạo camera sau (back), `CameraPreview`, nút flash, chạm lấy nét có vòng chỉ báo, overlay khung (`CustomPainter` vẽ lớp tối có lỗ hình chữ nhật), nút chụp, nút chọn từ thư viện; xử lý `AppLifecycleState`; xử lý khi không có camera hoặc bị từ chối quyền.
 - [ ] `services/image_crop_service.dart`: quy đổi khung overlay sang tọa độ ảnh (tính đến tỷ lệ preview, `BoxFit` và hướng xoay), cắt bằng gói `image` trong isolate, sau đó mở `image_cropper` để chỉnh tay.
 - [ ] Chụp hoặc chọn ảnh xong → chạy `ReceiptScanService` (hiện loading) → điều hướng sang Review.
+- [ ] `CameraController(..., enableAudio: false)` — quyền micro `RECORD_AUDIO` đã bị gỡ khỏi manifest ở Phase 1 (D-014); để `enableAudio` mặc định (`true`) sẽ khiến camera lỗi hoặc xin quyền thừa. *(Ghi chú bổ sung theo yêu cầu của bạn ở Phase 2, không thuộc brief gốc.)*
 - [ ] Test: unit test hàm quy đổi tọa độ khung → vùng cắt (nhiều tỷ lệ màn hình/ảnh); unit test cắt ảnh trả về đúng kích thước; widget test overlay painter (`shouldRepaint`). Camera thật thì đưa vào checklist test thủ công.
 
 ### Phase 7 — Màn Review & Verification
@@ -350,16 +351,16 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [ ] FR-1.7 — bằng chứng: _chưa có_
 - [ ] FR-2.1 — bằng chứng: _chưa có_
 - [ ] FR-2.2 — một phần: model `OcrLine` (`lib/models/ocr_line.dart`, test `test/models/parsed_receipt_test.dart`); adapter ML Kit → Phase 3
-- [ ] FR-2.3 — bằng chứng: _chưa có_
+- [x] FR-2.3 — bằng chứng: `lib/services/row_grouper.dart`, `test/services/row_grouper_test.dart` (11 test: 2 block trái/phải, lệch dọc, bậc thang, ngưỡng cấu hình) + benchmark 23 fixture
 - [ ] FR-2.4 — bằng chứng: _chưa có_
 - [ ] FR-2.5 — bằng chứng: _chưa có_
-- [ ] FR-3.1 — một phần: `TextNormalizer` bỏ dấu/đ/NFD, lowercase, gộp khoảng trắng (`test/core/text_normalizer_test.dart`, 10 test); dùng trong parser → Phase 2
-- [ ] FR-3.2 — bằng chứng: _chưa có_
-- [ ] FR-3.3 — bằng chứng: _chưa có_
-- [ ] FR-3.4 — bằng chứng: _chưa có_
-- [ ] FR-3.5 — bằng chứng: _chưa có_
-- [ ] FR-3.6 — một phần: model `ParsedReceipt` + `FieldConfidence` (test `test/models/parsed_receipt_test.dart`); parser trả về → Phase 2
-- [ ] FR-3.7 — bằng chứng: _chưa có_
+- [x] FR-3.1 — bằng chứng: `TextNormalizer.normalize/ocrKey` dùng để so khớp, giá trị trả về giữ nguyên bản gốc (`test/core/text_normalizer_test.dart`, `text_normalizer_ocr_test.dart`, merchant test "keeps the original spelling")
+- [x] FR-3.2 — bằng chứng: `ReceiptParser.extractTotal`, `test/services/receipt_parser_total_test.dart` (34 test: 9 định dạng, 8 từ khóa, ưu tiên, hàng thấp hơn, loại trừ, fallback, kết quả `int`); fixture total 23/23
+- [x] FR-3.3 — bằng chứng: `ReceiptParser.extractDate`, `test/services/receipt_parser_date_test.dart` (20 test: 4 định dạng, có giờ, 45/13/2026, 31/04, 29/02, 20YY, null); fixture date 23/23
+- [x] FR-3.4 — bằng chứng: `ReceiptParser.extractMerchant`, `test/services/receipt_parser_merchant_test.dart` (23 test: đủ từ khóa FR, 5 hàng đầu, tỷ lệ chữ số, null); fixture merchant 23/23
+- [x] FR-3.5 — bằng chứng: `ReceiptParser.suggestCategory` (switch trên record, list pattern + `when`, switch exhaustive), `test/services/receipt_parser_category_test.dart` (28 test); fixture category 23/23
+- [x] FR-3.6 — bằng chứng: `ReceiptParser.parse` → `ParsedReceipt` đủ trường + độ tin cậy từng trường (`test/services/receipt_parser_parse_test.dart`)
+- [x] FR-3.7 — bằng chứng: `docs/REGEX_TABLE.md` (29 pattern, sinh từ mã nguồn bằng `tool/regex_table/`, ví dụ đã chạy thử)
 - [ ] FR-4.1 — bằng chứng: _chưa có_
 - [ ] FR-4.2 — bằng chứng: _chưa có_
 - [ ] FR-4.3 — bằng chứng: _chưa có_
@@ -402,7 +403,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 |---|---|---|---|---|
 | 0 — Khởi tạo & môi trường | ✅ Xong | tag `phase-0` | format ✔ · analyze 0 issue · test 1/1 · build debug ✔ | B-001 đã giải quyết (cài Flutter 3.47.6). Chưa test trên thiết bị (chưa cắm máy) |
 | 1 — Nền tảng | ✅ Xong | tag `phase-1` | format ✔ · analyze 0 · test 48/48 · coverage 85.3% · build debug ✔ | Chưa test trên thiết bị (chưa cắm máy) |
-| 2 — ReceiptParser | ⬜ Chưa bắt đầu | — | — | |
+| 2 — ReceiptParser | ✅ Xong | tag `phase-2` | format ✔ · analyze 0 · test 201/201 · coverage 94.9% · build debug ✔ · fixture 23/23 mọi trường | Chưa test trên thiết bị; fixture là dữ liệu tổng hợp (xem PHASE_LOG) |
 | 3 — Dịch vụ OCR | ⬜ Chưa bắt đầu | — | — | |
 | 4 — CSDL & lưu ảnh | ⬜ Chưa bắt đầu | — | — | |
 | 5 — State management | ⬜ Chưa bắt đầu | — | — | |
@@ -441,6 +442,16 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 | D-017 | `ExpenseCategory` lưu DB bằng `name` (`food`, `study`…); giá trị lạ → `FormatException` | Ổn định khi đổi nhãn tiếng Việt; dữ liệu hỏng không bị gán nhầm danh mục. |
 | D-018 | `Formatters.vnd` giữ khoảng trắng **không ngắt** (U+00A0) giữa số và `đ` | Là dữ liệu chuẩn của locale vi_VN; tránh xuống dòng tách `đ`. Test so sánh chính xác `'150.000\u00A0đ'`. |
 | D-019 | `copyWith` dùng `ValueGetter<String?>?` cho trường nullable | Phân biệt "không đổi" (bỏ qua tham số) với "xóa về null" (`() => null`), cần khi xóa ảnh hóa đơn. |
+| D-020 | Parser + row grouper là **Dart thuần**: `ExpenseCategory` bỏ icon/màu (chuyển sang extension `ExpenseCategoryStyle` ở `lib/core/category_style.dart`), `@immutable` lấy từ gói `meta` thay cho `flutter/foundation` | Yêu cầu Phase 2 của bạn (không import Flutter UI/ML Kit). `test/services/parser_purity_test.dart` dò toàn bộ chuỗi import để giữ ràng buộc này. `dart:ui` chỉ được phép trong row grouper vì FR-2.2 bắt buộc `Rect`. |
+| D-021 | `ReceiptParser` nhận `List<String>` (mỗi phần tử là một hàng đã ghép), không nhận `OcrLine` | Tách hình học (RowGrouper) khỏi xử lý chữ; test parser viết bằng chuỗi thuần, dễ đọc. |
+| D-022 | Fixture dạng `.txt` + ` \| ` phân cách block; bounding box **tổng hợp** do `test/support/receipt_fixture.dart` sinh (trả theo cột như ML Kit, jitter ±4 px, `# skew:`) | Viết tay 23 hóa đơn × ~15 dòng tọa độ là không khả thi; cách này vẫn buộc dữ liệu đi qua row grouper. Hạn chế: hình học đều đặn hơn ảnh thật. |
+| D-023 | Kỳ vọng tên cửa hàng là **danh sách các dòng cùng nêu tên cửa hàng** (ví dụ "HIGHLANDS COFFEE" hoặc "Highlands Coffee Vincom Huế"), so sánh sau khi bỏ dấu/chữ hoa | Quyết định trước khi chạy parser: cả dòng thương hiệu lẫn dòng chi nhánh đều là câu trả lời đúng với người dùng; slogan, địa chỉ, pháp nhân thì không. |
+| D-024 | Sổ `known_limitations.dart` + benchmark so khớp **chính xác** tập trường sai với sổ | Cho phép ghi nhận hạn chế mà không `skip` test hay nới assertion: sửa được thì test báo phải gỡ khỏi sổ, sai thêm thì test fail. Hiện sổ rỗng. |
+| D-025 | Phân loại hàng theo **từ khóa xuất hiện sớm nhất**, cùng vị trí thì từ khóa dài hơn thắng | "Tổng chiết khấu", "Tổng đài", "Tổng số lượng" bắt đầu bằng "tổng" nhưng không phải tổng tiền; "Tổng tiền (gồm VAT)" vẫn là tổng. |
+| D-026 | `ocrKey` gộp ký tự OCR (0→o, 1/l/\|→i) và `repairDigits` sửa O/l trong số | Chịu được "Tong tlen", "T0NG", "139.5OO", "2O26" mà không cần so khớp mờ (edit distance). |
+| D-027 | Loại slogan năm thành lập ("since", "est.", "thành lập", "từ năm") khỏi ứng viên tên cửa hàng | Sửa lỗi benchmark phát hiện ở `bookworm_english.txt` mà không đổi tiêu chí "nhiều chữ cái nhất" của FR-3.4 (chỉ thêm loại trừ). |
+| D-028 | Từ điển danh mục tránh từ trùng nghĩa khi bỏ dấu (trả/trà, sửa/sữa, kèm/kem, lầu/lẩu, phố/phở, sạch/sách) | Bỏ dấu làm nhiều từ khác nghĩa trùng nhau; dùng cụm cụ thể ("trà sữa", "sữa tươi") thay cho từ đơn. |
+| D-029 | `docs/REGEX_TABLE.md` sinh bằng script Python `tool/regex_table/` | Regex trích nguyên văn từ code và ví dụ được chạy thử, nên bảng trong báo cáo luôn khớp với code. Python có sẵn trên máy; không ảnh hưởng app. |
 
 ---
 
