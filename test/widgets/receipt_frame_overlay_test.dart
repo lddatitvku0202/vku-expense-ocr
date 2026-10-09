@@ -75,10 +75,12 @@ void main() {
     await tester.pumpWidget(
       const Directionality(
         textDirection: TextDirection.ltr,
-        child: SizedBox(
-          width: 360,
-          height: 640,
-          child: CustomPaint(painter: base),
+        child: Center(
+          child: SizedBox(
+            width: 360,
+            height: 640,
+            child: CustomPaint(painter: base),
+          ),
         ),
       ),
     );
@@ -87,7 +89,7 @@ void main() {
       find.byType(CustomPaint),
       paints..path(
         color: const Color(0x99000000),
-        includes: const [Offset(10, 10), Offset(350, 630)],
+        includes: const [Offset(10, 10), Offset(350, 590)],
         excludes: const [Offset(180, 320), Offset(45, 85)],
       ),
     );
