@@ -10,7 +10,8 @@ import 'package:vku_expense_ocr/models/parsed_receipt.dart';
 import 'package:vku_expense_ocr/screens/dashboard/dashboard_screen.dart';
 import 'package:vku_expense_ocr/screens/history/history_screen.dart';
 import 'package:vku_expense_ocr/screens/review/review_screen.dart';
-import 'package:vku_expense_ocr/screens/scan/scan_screen.dart';
+import 'package:vku_expense_ocr/screens/scan/camera_screen.dart';
+import 'package:vku_expense_ocr/services/receipt_scan_service.dart';
 import 'package:vku_expense_ocr/state/router_provider.dart';
 import 'package:vku_expense_ocr/state/storage_providers.dart';
 
@@ -74,7 +75,7 @@ void main() {
 
     await tester.tap(find.text('Quét').last);
     await tester.pumpAndSettle();
-    expect(find.byType(ScanScreen), findsOneWidget);
+    expect(find.byType(CameraScreen), findsOneWidget);
     expect(router.state.uri.path, AppRoutes.scan);
 
     await tester.tap(find.text('Tổng quan').last);
@@ -102,6 +103,25 @@ void main() {
     final screen = tester.widget<ReviewScreen>(find.byType(ReviewScreen));
     expect(screen.receipt, same(receipt));
     expect(screen.expenseId, isNull);
+  });
+
+  testWidgets('/review receives a scan result (photo + parse) through extra', (
+    tester,
+  ) async {
+    final router = await pumpApp(tester);
+    const result = ScanResult(
+      imagePath: '/cache/cropped.jpg',
+      receipt: ParsedReceipt.empty(rawText: 'TOTAL'),
+      rows: ['TOTAL'],
+      ocrDuration: Duration(milliseconds: 900),
+    );
+
+    unawaited(router.push(AppRoutes.review, extra: result));
+    await tester.pumpAndSettle();
+
+    final screen = tester.widget<ReviewScreen>(find.byType(ReviewScreen));
+    expect(screen.scan, same(result));
+    expect(screen.receipt, same(result.receipt));
   });
 
   testWidgets('/review without extra opens manual entry', (tester) async {
