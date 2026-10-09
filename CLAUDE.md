@@ -293,8 +293,8 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] Test: repository với `sqflite_common_ffi` (DB in-memory), đủ CRUD và truy vấn theo khoảng ngày; image storage với thư mục tạm (ghi, tạo thumbnail đúng kích thước, xóa).
 
 ### Phase 5 — State management (Riverpod 2)
-- [ ] Providers: `expenseRepositoryProvider`, `imageStorageProvider`, `ocrServiceProvider`, `expenseListProvider` (`AsyncNotifier<List<Expense>>` với `add/update/remove/restore`), `categoryTotalsProvider` (dẫn xuất), `selectedWeekProvider`, `weeklyTotalsProvider` (7 phần tử T2 → CN), `monthTotalProvider`, `themeModeProvider`, `scanControllerProvider` (trạng thái quét: idle/processing/result/error).
-- [ ] Test với `ProviderContainer` + override bằng repository giả: thêm → danh sách và tổng cập nhật; xóa → giảm; restore (undo); tính tuần đúng biên (Chủ nhật, đổi tháng/năm); tổng theo danh mục đúng.
+- [x] Providers: `expenseRepositoryProvider`, `imageStorageProvider`, `ocrServiceProvider`, `expenseListProvider` (`AsyncNotifier<List<Expense>>` với `add/update/remove/restore`), `categoryTotalsProvider` (dẫn xuất), `selectedWeekProvider`, `weeklyTotalsProvider` (7 phần tử T2 → CN), `monthTotalProvider`, `themeModeProvider`, `scanControllerProvider` (trạng thái quét: idle/processing/result/error).
+- [x] Test với `ProviderContainer` + override bằng repository giả: thêm → danh sách và tổng cập nhật; xóa → giảm; restore (undo); tính tuần đúng biên (Chủ nhật, đổi tháng/năm); tổng theo danh mục đúng.
 
 ### Phase 6 — Camera capture
 - [ ] `screens/scan/camera_screen.dart`: khởi tạo camera sau (back), `CameraPreview`, nút flash, chạm lấy nét có vòng chỉ báo, overlay khung (`CustomPainter` vẽ lớp tối có lỗ hình chữ nhật), nút chụp, nút chọn từ thư viện; xử lý `AppLifecycleState`; xử lý khi không có camera hoặc bị từ chối quyền.
@@ -375,21 +375,21 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] FR-5.1 — bằng chứng: `DatabaseService` (`lib/services/database_service.dart`), `test/services/database_service_test.dart` (kiểu cột, NOT NULL, AUTOINCREMENT, version 1, `onUpgrade` từ v1 giữ nguyên dữ liệu, thiếu bước migration thì rollback)
 - [x] FR-5.2 — bằng chứng: `ExpenseRepository` + `SqfliteExpenseRepository` (`lib/services/expense_repository.dart`), `test/services/sqflite_expense_repository_test.dart` (22 test: CRUD, thứ tự, biên đầu/cuối ngày, tổng theo danh mục)
 - [x] FR-5.3 — bằng chứng: `ImageStorageService.save` copy vào `<documents>/receipts/`, thumbnail JPEG 256px trong `Isolate.run` (`test/services/image_storage_service_test.dart`); trên Android thật: `integration_test/storage_test.dart` (chưa chạy, xem Việc còn nợ)
-- [ ] FR-5.4 — một phần: xóa dòng + xóa ảnh/thumbnail, file đã mất không crash (`image_storage_service_test.dart`, nhóm FR-5.4); Undo qua SnackBar → Phase 5/8
+- [ ] FR-5.4 — một phần (logic xong): `ExpenseListNotifier.remove/restore/commitDeletion` giữ ảnh trong `undoWindow` 5 s rồi mới xóa, restore giữ nguyên id (`test/state/expense_list_notifier_test.dart`, `fakeAsync`); dọn ảnh mồ côi khi khởi động (`app_startup_test.dart`); xóa file đã mất không crash (Phase 4). Còn SnackBar Undo → Phase 8
 - [x] FR-5.5 — bằng chứng: `lib/models/expense_category.dart` (switch expression), `test/models/expense_category_test.dart` (đủ 5 nhánh label/icon/màu, round-trip DB)
 - [ ] FR-6.1 — bằng chứng: _chưa có_
 - [ ] FR-6.2 — bằng chứng: _chưa có_
 - [ ] FR-6.3 — bằng chứng: _chưa có_
 - [ ] FR-6.4 — bằng chứng: _chưa có_
-- [ ] FR-6.5 — bằng chứng: _chưa có_
+- [ ] FR-6.5 — một phần: `categoryTotalsProvider`, `weeklyTotalsProvider`, `monthTotalProvider` dẫn xuất từ `expenseListProvider`, cập nhật khi thêm/sửa/xóa/undo (`expense_list_notifier_test.dart`); biểu đồ + animation chạy lại → Phase 9
 - [ ] FR-6.6 — bằng chứng: _chưa có_
 - [ ] FR-7.1 — một phần: `StatefulShellRoute.indexedStack` + `NavigationBar` 3 tab (`test/app_router_test.dart`); nội dung Dashboard → Phase 8–9
 - [x] FR-7.2 — bằng chứng: `lib/core/router.dart` (`/expense/:id`, `/review` + `extra`), `test/app_router_test.dart` (path param, extra, id sai → trang lỗi)
 - [ ] FR-7.3 — bằng chứng: _chưa có_
-- [ ] FR-8.1 — một phần: `AppTheme` M3 light/dark từ seed `0xFF2C4570` (`test/core/app_theme_test.dart`); nút chuyển + lưu themeMode → Phase 5/10
+- [ ] FR-8.1 — một phần: `AppTheme` M3 light/dark từ seed `0xFF2C4570` (`test/core/app_theme_test.dart`); `themeModeProvider` lưu/đọc lại qua `shared_preferences`, `MaterialApp.themeMode` theo nó (`test/state/theme_mode_provider_test.dart`, `test/app_theme_mode_test.dart`); nút chuyển → Phase 10
 - [ ] FR-8.2 — bằng chứng: _chưa có_
 - [ ] FR-8.3 — một phần: `Formatters.vnd` / `Formatters.date` (`test/core/formatters_test.dart`), `SafeArea` ở các màn hiện có; áp dụng toàn app → Phase 7–10
-- [ ] FR-8.4 — bằng chứng: _chưa có_
+- [ ] FR-8.4 — một phần: provider dẫn xuất trả `AsyncValue` (loading/error lan từ danh sách, có test); hiển thị bằng `AsyncValue.when` ở các màn → Phase 7–10
 - [ ] NFR-1 — bằng chứng: _chưa có_
 - [ ] NFR-2 — bằng chứng: _chưa có_
 - [ ] NFR-3 — bằng chứng: _chưa có_
@@ -408,7 +408,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 | 2 — ReceiptParser | ✅ Xong | tag `phase-2` | format ✔ · analyze 0 · test 201/201 · coverage 94.9% · build debug ✔ · fixture 23/23 mọi trường | Chưa test trên thiết bị; fixture là dữ liệu tổng hợp (xem PHASE_LOG) |
 | 3 — Dịch vụ OCR | ✅ Xong | tag `phase-3` | format ✔ · analyze 0 · test 272/272 · coverage 95.6% · build debug ✔ · fixture 31/31 · hóa đơn thật (emulator, main 19): merchant 7→7 · total 10→16 · date 14→15 · category đúng 10→11 | Đánh giá trên emulator `vku_test_api33`; **chưa đánh giá trên điện thoại thật (NFR-6 còn nợ)**. Màn debug tạm xóa ở Phase 7 |
 | 4 — CSDL & lưu ảnh | ✅ Xong | tag `phase-4` | format ✔ · analyze 0 · test 321/321 · coverage 95.5% · build debug ✔ | Test DB bằng `sqflite_common_ffi`, ảnh bằng thư mục tạm; **chưa chạy trên thiết bị** (không bật emulator theo yêu cầu, `integration_test/storage_test.dart` chờ máy) |
-| 5 — State management | ⬜ Chưa bắt đầu | — | — | |
+| 5 — State management | ✅ Xong | tag `phase-5` | format ✔ · analyze 0 · test 383/383 · coverage 95.0% · build debug ✔ | Test bằng `ProviderContainer` + repository/storage giả, `fakeAsync` cho Undo; **chưa chạy trên thiết bị** (không bật emulator theo yêu cầu) |
 | 6 — Camera capture | ⬜ Chưa bắt đầu | — | — | |
 | 7 — Review & Verification | ⬜ Chưa bắt đầu | — | — | |
 | 8 — Lịch sử & Dashboard | ⬜ Chưa bắt đầu | — | — | |
@@ -428,7 +428,8 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 - [ ] **NFR-6 / Phase 3:** chạy `tool/ocr_eval/run_ocr_eval.ps1 -DeviceId <serial>` trên **điện thoại Android thật** (mới có số đo emulator), ghi thời gian OCR thật vào `docs/TEST_REPORT.md`.
 - [ ] Khi có điện thoại thật, đánh giá thêm một bộ hóa đơn MỚI (holdout), gán nhãn và khóa hash trước, chạy đúng một lần, không sửa parser trước lần chạy đó. *(Yêu cầu của bạn ở Phase 4.)*
 - [ ] **Phase 4:** chạy `flutter test integration_test/storage_test.dart -d <máy>` (sqflite thật + `path_provider` trên Android).
-- [ ] Checklist test thủ công trên thiết bị của Phase 0–4 trong `docs/TEST_REPORT.md`.
+- [ ] **Phase 5:** `flutter run` trên Android để xác nhận `main()` mở DB + `shared_preferences` và dọn ảnh mồ côi khi khởi động không lỗi (mới kiểm chứng bằng `sqflite_common_ffi` trên Windows).
+- [ ] Checklist test thủ công trên thiết bị của Phase 0–5 trong `docs/TEST_REPORT.md`.
 
 ---
 
@@ -471,6 +472,14 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 | D-033 | `ImageStorageService.delete` bỏ qua `null`, file đã mất, và **từ chối** đường dẫn nằm ngoài `receipts/` | Xóa giao dịch không bao giờ crash vì ảnh mất; một đường dẫn lạc (ví dụ ảnh gốc trong thư viện) không thể bị xóa nhầm. |
 | D-034 | Thumbnail: `bakeOrientation` → `copyResize(width: 256, Interpolation.average)` → JPEG quality 85, không phóng to ảnh nhỏ; bắt mọi lỗi giải mã (`on Object`) thành `ImageStorageException` | Ảnh điện thoại thường xoay bằng EXIF; bộ giải mã của gói `image` ném `RangeError` (là `Error`) với ảnh hỏng, có test cho trường hợp này. |
 | D-035 | DB lưu **đường dẫn tuyệt đối** của ảnh | Đúng FR-5.3 ("DB chỉ lưu đường dẫn"); ổn định trên Android. Hạn chế đã biết: trên iOS thư mục container có thể đổi sau khi cập nhật app (dự án chỉ nộp APK Android). |
+| D-036 | Lưu chế độ giao diện bằng `shared_preferences` 2.5.6 (qua interface `SettingsStore`), **không** thêm bảng `settings` bằng migration version 2 | Đây là một cặp khóa–giá trị, đúng mục đích của `shared_preferences`; giữ schema DB đúng FR-5.1 và không phải nâng version chỉ vì một cài đặt. Đọc một lần trong `main()` (có cache), nên khung hình đầu đã đúng sáng/tối, không bị nháy. Interface cho phép test bằng kho trong bộ nhớ. |
+| D-037 | `restore` chèn lại **đúng bản ghi cũ, giữ nguyên id**; không có nhánh dự phòng đổi id | `AUTOINCREMENT` không bao giờ cấp lại id của dòng đã xóa (có test ở Phase 4), nên chèn lại id cũ luôn được. Giữ id giúp `ValueKey(id)` ở danh sách ổn định khi Undo. |
+| D-038 | DB và `SharedPreferences` mở trong `main()` (`createStartupOverrides`) rồi đưa vào `ProviderScope` bằng override; dọn ảnh mồ côi chạy **trước** `runApp` | Mọi provider phía sau là đồng bộ (không phải `FutureProvider` lồng nhau). Dọn rác trước `runApp` thì không thể xóa nhầm ảnh đang lưu dở (chưa có thao tác nào của người dùng). |
+| D-039 | `remove` cập nhật state **đồng bộ** trước khi gọi DB; DB lỗi thì tải lại danh sách và ném lại lỗi | `Dismissible` (Phase 8) yêu cầu item rời cây ngay khung hình sau khi vuốt, nếu không Flutter báo lỗi "dismissed Dismissible widget is still part of the tree". |
+| D-040 | Phương thức sửa tên là `edit`, không phải `update` | `AsyncNotifier` đã có `update(...)` với chữ ký khác; đặt trùng là lỗi biên dịch. |
+| D-041 | Thêm `selectedMonthProvider`; `categoryTotalsProvider` và `monthTotalProvider` tính theo tháng đang chọn | Dashboard (FR-7.1) hiển thị "tổng tháng" và donut; cần một khoảng thời gian rõ ràng cho donut. Mặc định là tháng hiện tại, có `previous/next` để sau này xem tháng trước. |
+| D-042 | `undoWindow` = 5 s; Undo thất bại (DB lỗi) thì đặt lại hẹn giờ đủ 5 s | SnackBar ở Phase 8 dùng cùng hằng số. Đặt lại đủ 5 s chỉ làm file tồn tại lâu hơn một chút, không bao giờ xóa sớm. |
+| D-043 | Tổng theo danh mục / tuần / tháng tính bằng Dart từ `expenseListProvider`, không gọi `totalsByCategory` của SQL | Một nguồn dữ liệu duy nhất nên biểu đồ tự cập nhật sau mọi thao tác (FR-6.5); dữ liệu cá nhân nhỏ (vài trăm dòng) nên tính trong Dart rất nhanh. `totalsByCategory` của repository vẫn giữ và có test. |
 
 ---
 

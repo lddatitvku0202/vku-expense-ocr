@@ -543,3 +543,120 @@ d915528 feat(storage): save receipt photos with thumbnails made off the UI threa
 f034d34 test(db): add failing tests for database, repository and image storage
 docs(phase-4): record phase 4 results   (commit cuối của phase)
 ```
+
+---
+
+## Phase 5 — State management (Riverpod 2)
+
+**Trạng thái:** ✅ hoàn tất (merge vào `main`, tag `phase-5`). ⚠ **Chưa chạy trên thiết bị** (không bật emulator theo yêu cầu); `flutter_riverpod` giữ **2.6.1**.
+
+### Mục tiêu phase
+
+Đặt toàn bộ "app state" vào Riverpod: danh sách giao dịch, các tổng dẫn xuất cho Dashboard và biểu đồ, tuần/tháng đang chọn, chế độ sáng/tối được lưu, trạng thái quét. Hoàn tất phần logic của FR-5.4: xóa có Undo, ảnh chỉ bị xóa khi hết thời gian Undo, và dọn ảnh mồ côi khi khởi động.
+
+FR liên quan: **FR-5.4** (logic Undo + xóa ảnh), **FR-6.5** (dữ liệu tự cập nhật cho biểu đồ), **FR-8.1** (themeMode được lưu), **FR-8.4** (`AsyncValue` cho loading/lỗi).
+
+### TDD trong lịch sử Git
+
+| # | Commit | Trạng thái test |
+|---|---|---|
+| 1 | `test(state): add failing tests for Riverpod state and derived totals` | 🔴 62 test mới không biên dịch được |
+| 2 | `feat(core): add calendar ranges and weekly / category totals` | 🟢 test tuần/danh mục xanh |
+| 3 | `feat(storage): sweep orphan receipt photos and add a settings store` | 🟢 test dọn rác, kho cài đặt xanh |
+| 4 | `feat(state): add expense list notifier with an Undo window` | 🟢 18 test danh sách + Undo, 7 test tuần/tháng xanh |
+| 5 | `feat(state): save the theme mode and track scan states` | 🟢 test theme, quét xanh |
+| 6 | `feat(app): open storage and sweep orphan photos before the first frame` | 🟢 383/383 |
+
+Thay đổi ở test cũ: `test/app_router_test.dart` chỉ thêm override kho cài đặt (vì app giờ đọc chế độ sáng/tối đã lưu), không đổi assertion. `test/models/expense_totals_test.dart` được `dart fix` bỏ tham số trùng mặc định, giá trị giữ nguyên.
+
+### Đã làm gì
+
+| File | Vai trò |
+|---|---|
+| `lib/state/storage_providers.dart` | Các phụ thuộc thay được trong test: `clockProvider`, `databaseProvider` (mở trong `main()`), `expenseRepositoryProvider`, `imageStorageProvider`, `settingsStoreProvider`. |
+| `lib/state/expense_providers.dart` | `expenseListProvider` (`AsyncNotifier`): `add`, `edit`, `remove`, `restore`, `commitDeletion`. `selectedMonthProvider`, `selectedWeekProvider` (có `previous/next/select/showCurrent`). Dẫn xuất: `monthExpensesProvider`, `categoryTotalsProvider`, `monthTotalProvider`, `weeklyTotalsProvider`. |
+| `lib/state/theme_mode_provider.dart` | `themeModeProvider`: đọc lựa chọn đã lưu, `select(mode)` áp dụng ngay rồi lưu. `app.dart` truyền vào `MaterialApp.themeMode`. |
+| `lib/state/scan_controller.dart` | `scanControllerProvider`: `sealed class ScanState` gồm `ScanIdle`, `ScanProcessing`, `ScanCompleted` (result), `ScanFailed` (error). |
+| `lib/state/app_startup.dart` | `createStartupOverrides()`: mở DB, `SharedPreferences`, dọn ảnh mồ côi, trả về override cho `ProviderScope`. |
+| `lib/core/date_ranges.dart` | Đầu ngày / đầu tuần (Thứ Hai) / đầu tháng, cộng ngày/tháng theo giờ địa phương. |
+| `lib/models/weekly_totals.dart`, `category_totals.dart` | Tổng 7 ngày và tổng 5 danh mục kèm tỷ lệ; so sánh bằng giá trị (cho `shouldRepaint` ở Phase 9). |
+| `lib/services/settings_store.dart` | Interface `SettingsStore` + bản dùng `shared_preferences`. |
+| `lib/services/image_storage_service.dart` | Thêm `deleteUnreferenced()`: xóa file trong `receipts/` không còn bản ghi nào trỏ tới. |
+| `test/support/` | `FakeExpenseRepository` (trong bộ nhớ), `FakeImageStorage` (ghi lại file bị yêu cầu xóa), `MemorySettingsStore`. Chỉ nằm trong `test/`. |
+
+### Vòng đời một lần xóa (FR-5.4, D-032)
+
+```
+vuốt xóa ──► remove(id) ──► state bỏ id NGAY (đồng bộ) ──► DB xóa dòng ──► hẹn giờ 5 s
+                                                                      │
+              ┌──────────── bấm "Hoàn tác" trong 5 s ─────────────────┤
+              ▼                                                       ▼
+        restore(id): hủy hẹn giờ,                       hết 5 s / SnackBar đóng / app đóng:
+        chèn lại đúng dòng cũ (cùng id),                xóa ảnh + thumbnail
+        ảnh vẫn còn nguyên
+```
+
+Nếu app bị tắt đột ngột trong 5 s đó, ảnh thành "mồ côi". Lần mở app sau, `createStartupOverrides` xóa các ảnh này trước khi hiện giao diện.
+
+### Vì sao làm vậy (liên hệ slide)
+
+- **Ephemeral vs App state (W8 s4–6):** danh sách giao dịch, tuần/tháng đang chọn, chế độ sáng/tối là app state (nhiều màn cùng dùng) → Riverpod. Flash, vòng lấy nét ở Phase 6 vẫn là `setState`.
+- **`AsyncNotifier`, `ref.watch/read`, `AsyncValue` (W8 s14–18):** `build()` tải dữ liệu; provider dẫn xuất dùng `whenData`, nên trạng thái loading/lỗi của danh sách tự lan sang mọi tổng (FR-8.4).
+- **Declarative UI = f(state) (W7 s5):** Dashboard và biểu đồ chỉ đọc `categoryTotalsProvider`/`weeklyTotalsProvider`; thêm/sửa/xóa ở bất kỳ đâu thì chúng tự vẽ lại (FR-6.5). Không có chỗ nào phải "nhớ gọi refresh".
+- **Pattern matching / sealed class (W7 s14):** `ScanState` là `sealed`; một `switch` ở màn quét (Phase 6) thiếu trạng thái nào sẽ là lỗi biên dịch.
+- **Lựa chọn đã cân nhắc:**
+  - *Lưu theme bằng bảng `settings` (migration version 2):* thử được đường `onUpgrade` thật, nhưng một cài đặt không đáng để đổi schema FR-5.1. Chọn `shared_preferences` (D-036).
+  - *Xóa ảnh ngay khi xóa dòng:* đơn giản nhưng Undo sẽ trả về bản ghi mất ảnh.
+  - *Tổng theo danh mục bằng SQL `SUM`:* nhanh với dữ liệu lớn, nhưng phải tự gọi lại sau mỗi thao tác. Tính trong Dart từ một danh sách duy nhất thì luôn đúng (D-043).
+  - *`FutureProvider` mở DB:* mọi provider phía sau phải xử lý loading của DB. Mở trong `main()` rồi override thì gọn hơn (D-038).
+
+### Khái niệm cần hiểu
+
+- **Provider dẫn xuất:** provider tính từ provider khác. `monthTotalProvider` ← `categoryTotalsProvider` ← `monthExpensesProvider` ← (`expenseListProvider` + `selectedMonthProvider`). Đổi tháng hay thêm giao dịch thì cả chuỗi tự tính lại.
+- **Override:** thay giá trị của một provider trong một phạm vi. App thật override `databaseProvider` bằng DB đã mở; test override `expenseRepositoryProvider` bằng repository giả.
+- **`ProviderContainer`:** "ProviderScope không cần widget", dùng trong unit test để đọc provider và gọi notifier.
+- **`fakeAsync`:** chạy code trong một "đồng hồ giả". `async.elapse(Duration(seconds: 5))` cho hẹn giờ 5 s nổ ngay lập tức, nên test Undo không phải chờ thật.
+- **Khoảng nửa mở cho tuần:** `[T2 00:00, T2 tuần sau 00:00)`. CN 23:59:59.999 nằm trong, T2 00:00 tuần sau nằm ngoài.
+- **Số thế hệ (generation) trong `ScanController`:** mỗi lần quét hoặc hủy thì tăng một số đếm. Kết quả OCR trả về muộn chỉ được nhận nếu số đếm chưa đổi, nên hủy giữa chừng không bị kết quả cũ ghi đè.
+
+### Kết quả kiểm thử
+
+| Bước | Kết quả |
+|---|---|
+| `dart format --set-exit-if-changed lib test integration_test tool` | ✔ 0 thay đổi |
+| `flutter analyze` | ✔ No issues found |
+| `flutter test` | ✔ **383/383** (321 cũ + 62 mới) |
+| `flutter test --coverage` | **95.0%** dòng (1003/1056); `scan_controller.dart` 22/22, `theme_mode_provider.dart` 7/7, `date_ranges.dart` 12/12, `expense_providers.dart` 80/85 |
+| `flutter build apk --debug` | ✔ |
+| Kiểm tra test bắt lỗi | Cố ý đặt hẹn giờ Undo = 0 s → 3 test đỏ; cố ý sai biên cuối tuần → 4 test đỏ; đã khôi phục |
+| Thiết bị | ⚠ **Chưa test trên thiết bị** |
+
+Phân bổ 62 test mới: danh sách + Undo 18 · tổng tuần/danh mục 10 · mốc ngày 7 · tuần/tháng đang chọn 7 · quét 7 · theme 4 + 1 widget · dọn ảnh mồ côi 4 · kho cài đặt 2 · khởi động 2. Bảng ca biên: `docs/TEST_REPORT.md`, mục "Phase 5".
+
+### Hạn chế đã biết
+
+- Chưa chạy trên Android: `main()` giờ mở DB và `SharedPreferences` trước `runApp`, cần xác nhận trên máy thật (đã ghi vào Việc còn nợ).
+- Nếu mở DB thất bại khi khởi động, app chưa có màn hình lỗi riêng (sẽ xem lại ở Phase 10).
+- Chưa có UI dùng các provider này: SnackBar Undo (Phase 8), nút chuyển theme (Phase 10), màn quét (Phase 6).
+- Tổng được tính lại từ toàn bộ danh sách mỗi khi danh sách đổi; phù hợp dữ liệu cá nhân, không tối ưu cho hàng chục nghìn dòng.
+
+### Cách tự kiểm tra bằng tay
+
+1. Chạy riêng test state:
+   ```powershell
+   flutter test test/state
+   ```
+2. Xem `fakeAsync` hoạt động: trong `expense_providers.dart`, đổi `undoWindow` thành `Duration(seconds: 10)` rồi chạy `flutter test test/state/expense_list_notifier_test.dart`. Test vẫn dùng đúng hằng số nên vẫn xanh, và vẫn chạy tức thì. Hoàn tác bằng `git checkout -- lib`.
+3. Khi có điện thoại: `flutter run`, đổi dark mode trong cài đặt điện thoại, đóng hẳn rồi mở lại app.
+
+### Danh sách commit
+
+```
+cc8aeda feat(app): open storage and sweep orphan photos before the first frame
+e78faf4 feat(state): save the theme mode and track scan states
+240b4af feat(state): add expense list notifier with an Undo window
+2a9e914 feat(storage): sweep orphan receipt photos and add a settings store
+3f7ce51 feat(core): add calendar ranges and weekly / category totals
+2513af0 test(state): add failing tests for Riverpod state and derived totals
+docs(phase-5): record phase 5 results   (commit cuối của phase)
+```

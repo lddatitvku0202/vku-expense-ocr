@@ -9,6 +9,7 @@
 | 2 | 201 | 201 / 0 | 94.9% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ Chưa test trên thiết bị (Phase 2 không có UI mới) |
 | 3 | 272 | 272 / 0 | 95.6% dòng | ✔ | ✔ 0 issue | ✔ | 🟨 Emulator `vku_test_api33` (API 33): đánh giá 22 hóa đơn thật tự động. ⚠ **Chưa test trên điện thoại thật** |
 | 4 | 321 | 321 / 0 | 95.5% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu, máy 8 GB RAM). DB test bằng `sqflite_common_ffi`, ảnh bằng thư mục tạm |
+| 5 | 383 | 383 / 0 | 95.0% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu). State test bằng `ProviderContainer` + repository/storage giả, `fakeAsync` cho Undo |
 
 ## Độ chính xác parser trên bộ fixture
 
@@ -215,6 +216,36 @@ Chạy trên máy tính: `sqflite_common_ffi` (DB in-memory hoặc file trong th
 | Ảnh hỏng / không tồn tại → `ImageStorageException`, không để lại file dở | `image_storage_service_test.dart` › nhóm `save` | ✔ |
 | Không xóa file nằm ngoài `receipts/` (kể cả đường dẫn có `..`) | › "never deletes files outside the receipts folder" | ✔ |
 
+## Phase 5 — State management: ca biên
+
+62 test mới, tất cả pass. Thời gian Undo được điều khiển bằng `fakeAsync`, không chờ thời gian thật (18 test của danh sách giao dịch chạy dưới 1 giây).
+
+| Nhóm | Ca kiểm tra | File test |
+|---|---|---|
+| Undo (FR-5.4) | Trong 5 s ảnh **còn**; đúng 4,999 s vẫn còn, đến 5 s mới xóa | `test/state/expense_list_notifier_test.dart` |
+| | Undo trong thời gian cho phép: bản ghi quay lại **cùng id**, ảnh không bao giờ bị xóa (hẹn giờ đã hủy) | 〃 |
+| | Undo sau 5 s: trả `false`, không khôi phục bản ghi mất ảnh | 〃 |
+| | `commitDeletion` (SnackBar đóng sớm) xóa ngay, chỉ xóa một lần | 〃 |
+| | Hai lần xóa có hai hẹn giờ riêng; giao dịch nhập tay không có ảnh thì không xóa file nào | 〃 |
+| | Undo thất bại (DB lỗi): vẫn chờ xóa, file vẫn được dọn sau đó | 〃 |
+| | Hủy state (đóng app) khi đang chờ: xóa file ngay | 〃 |
+| | `remove` cập nhật danh sách **đồng bộ**, trước khi DB xong; DB lỗi thì giao dịch quay lại | 〃 |
+| | `edit` thay ảnh → xóa ảnh cũ; `edit` thất bại → không xóa gì | 〃 |
+| Dọn ảnh mồ côi | Khởi động: ảnh không còn bản ghi bị xóa, ảnh có bản ghi giữ nguyên | `test/state/app_startup_test.dart` |
+| | Không đụng file ngoài `receipts/`, thư mục con, đường dẫn viết khác dạng (`./`) vẫn được nhận ra | `test/services/image_storage_orphans_test.dart` |
+| | DB không đọc được → không xóa gì, không crash | `test/state/app_startup_test.dart` |
+| Tuần (T2 → CN) | Luôn 7 phần tử; CN 23:59:59.999 thuộc tuần cũ, T2 00:00 thuộc tuần mới | `test/models/expense_totals_test.dart`, `test/core/date_ranges_test.dart` |
+| | Tuần vắt qua 2 tháng (28/09 → 04/10/2026), qua năm mới (28/12/2026 → 03/01/2027) | 〃, `test/state/period_providers_test.dart` |
+| | Chuyển tuần trước/sau qua năm mới | `test/state/period_providers_test.dart` |
+| Danh mục | Luôn đủ 5 danh mục (0 nếu không chi), tỷ lệ cộng lại = 1 | `test/models/expense_totals_test.dart` |
+| | Tất cả = 0: tỷ lệ = 0 (không chia cho 0, không NaN), `isEmpty` cho trạng thái rỗng | 〃, `period_providers_test.dart` |
+| Tổng tháng | Đúng biên đầu/cuối tháng; đổi tháng thì mọi tổng đổi theo | `test/state/period_providers_test.dart` |
+| Dẫn xuất | Thêm / sửa / xóa / Undo → danh sách, tổng tháng, danh mục, tuần đều cập nhật; loading và lỗi DB lan sang các provider dẫn xuất | `test/state/expense_list_notifier_test.dart` |
+| Theme (FR-8.1) | Mặc định theo hệ thống; chọn → áp dụng + lưu; lần chạy sau đọc lại (qua `shared_preferences`); giá trị lạ → hệ thống; `MaterialApp.themeMode` đổi theo | `test/state/theme_mode_provider_test.dart`, `test/services/settings_store_test.dart`, `test/app_theme_mode_test.dart` |
+| Quét | idle → processing → result với pipeline thật + OCR giả; OCR ném lỗi → error (tiếng Việt, kèm đường dẫn ảnh); lỗi bất ngờ trong pipeline → error; bấm 2 lần bị bỏ qua; `reset` khi đang chạy bỏ kết quả đến muộn | `test/state/scan_controller_test.dart` |
+
+**Kiểm tra test có thật sự bắt lỗi:** đã cố ý làm hỏng code hai lần rồi chạy lại. Lần 1 đặt hẹn giờ xóa ảnh thành 0 s: 3 test Undo đỏ. Lần 2 đổi biên cuối tuần (`!isBefore(next)` thành `isAfter(next)`): 4 test tuần đỏ. Sau đó khôi phục code.
+
 ## Checklist test thủ công trên thiết bị
 
 > Đánh dấu `[x]` khi bạn đã tự kiểm tra trên máy Android thật. Ghi tên máy và phiên bản Android.
@@ -271,3 +302,12 @@ Thiết bị: `__________` · Android `____`
 
 - [ ] `flutter test integration_test/storage_test.dart -d <máy>` → pass (lưu ảnh + thumbnail vào thư mục documents thật, insert/truy vấn/xóa bằng sqflite thật, file được xóa).
 - [ ] `flutter run` → app vẫn mở bình thường ở tab **Tổng quan**.
+
+### Phase 5 — State management (chưa có giao diện mới, trừ chế độ sáng/tối)
+
+Thiết bị: `__________` · Android `____`
+
+- [ ] `flutter run` → app mở bình thường. Từ phase này `main()` mở DB và `shared_preferences` trước khung hình đầu: không màn hình đỏ, không treo ở màn hình trắng.
+- [ ] Đổi Dark mode trong cài đặt điện thoại → app đổi theo (mặc định "theo hệ thống").
+- [ ] Đóng hẳn app rồi mở lại → vẫn mở bình thường (DB mở lại được, dọn ảnh mồ côi không lỗi).
+- [ ] *(Nút chuyển sáng/tối/hệ thống có ở Phase 10; khi đó kiểm tra lựa chọn còn nguyên sau khi mở lại app.)*

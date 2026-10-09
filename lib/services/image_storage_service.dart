@@ -101,6 +101,27 @@ class ImageStorageService {
     }
   }
 
+  /// Deletes every file directly inside the receipts folder whose path is
+  /// not in [referenced], and returns how many were deleted.
+  ///
+  /// Run at startup to remove photos left behind when the app was killed
+  /// during an Undo window or between saving a photo and its database row.
+  /// Sub-folders are left alone, and deletion goes through [delete], so
+  /// nothing outside the receipts folder can be touched.
+  Future<int> deleteUnreferenced(Iterable<String?> referenced) async {
+    final dir = await receiptsDirectory();
+    if (!await dir.exists()) return 0;
+    final keep = {for (final path in referenced.nonNulls) p.canonicalize(path)};
+    final orphans = <String>[];
+    await for (final entity in dir.list(followLinks: false)) {
+      if (entity is File && !keep.contains(p.canonicalize(entity.path))) {
+        orphans.add(entity.path);
+      }
+    }
+    await delete(orphans);
+    return orphans.length;
+  }
+
   /// Deletes the photo and thumbnail of [expense] (FR-5.4).
   Future<void> deleteFilesOf(Expense expense) =>
       delete([expense.imagePath, expense.thumbPath]);
