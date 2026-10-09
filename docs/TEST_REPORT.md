@@ -8,6 +8,7 @@
 | 1 | 48 | 48 / 0 | 85.3% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ Chưa test trên thiết bị (chưa có máy kết nối) |
 | 2 | 201 | 201 / 0 | 94.9% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ Chưa test trên thiết bị (Phase 2 không có UI mới) |
 | 3 | 272 | 272 / 0 | 95.6% dòng | ✔ | ✔ 0 issue | ✔ | 🟨 Emulator `vku_test_api33` (API 33): đánh giá 22 hóa đơn thật tự động. ⚠ **Chưa test trên điện thoại thật** |
+| 4 | 321 | 321 / 0 | 95.5% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu, máy 8 GB RAM). DB test bằng `sqflite_common_ffi`, ảnh bằng thư mục tạm |
 
 ## Độ chính xác parser trên bộ fixture
 
@@ -196,6 +197,24 @@ Phần lớn lỗi còn lại bắt nguồn từ **chất lượng OCR** (logo, 
 
 ⚠️ **Chưa đánh giá trên điện thoại Android thật** (NFR-6). Thời gian OCR và độ chính xác trên máy thật, với ảnh chụp trực tiếp bằng camera, còn nợ; sẽ đo khi có máy (dùng cùng lệnh `run_ocr_eval.ps1 -DeviceId <serial>`).
 
+## Phase 4 — Ca biên CSDL & lưu ảnh
+
+Chạy trên máy tính: `sqflite_common_ffi` (DB in-memory hoặc file trong thư mục tạm) và thư mục tạm cho ảnh. 49 test mới, tất cả pass.
+
+| Ca biên | Test | Kết quả |
+|---|---|---|
+| Xóa giao dịch có file ảnh/thumbnail **đã bị mất** | `image_storage_service_test.dart` › "does not crash when the photo files were already lost" | ✔ không crash, dòng bị xóa |
+| Xóa giao dịch nhập tay (không có ảnh) | › "handles a manual expense without any photo" | ✔ |
+| Khoảng ngày: 00:00:00.000 ngày đầu **có**, 23:59:59.999 ngày cuối **có**, 23:59:59.999 hôm trước **không**, 00:00 hôm sau **không** | `sqflite_expense_repository_test.dart` › nhóm `getBetween` | ✔ |
+| Khoảng ngày qua cuối tháng/năm (31/12 → 01/01) | › "works across a month and a year boundary" | ✔ |
+| Giờ trong tham số bị bỏ qua; khoảng ngược → `ArgumentError` | › nhóm `getBetween` | ✔ |
+| `onUpgrade` từ version 1 → 2 (version 2 giả định thêm cột): mọi dòng và giá trị giữ nguyên | `database_service_test.dart` › "upgrading from version 1 keeps every row and value" | ✔ |
+| Nâng cấp nhiều bước (1 → 3) chạy đúng thứ tự | › "runs every step … in order" | ✔ |
+| Thiếu bước migration → lỗi, DB vẫn ở version 1, dữ liệu còn nguyên (rollback) | › "refuses to upgrade when a step is missing…" | ✔ |
+| `amount`, `date`, `created_at`, `updated_at` lưu kiểu INTEGER (kiểm tra bằng `typeof()` của SQLite) | › "stores amount as INTEGER and dates as epoch milliseconds" | ✔ |
+| Ảnh hỏng / không tồn tại → `ImageStorageException`, không để lại file dở | `image_storage_service_test.dart` › nhóm `save` | ✔ |
+| Không xóa file nằm ngoài `receipts/` (kể cả đường dẫn có `..`) | › "never deletes files outside the receipts folder" | ✔ |
+
 ## Checklist test thủ công trên thiết bị
 
 > Đánh dấu `[x]` khi bạn đã tự kiểm tra trên máy Android thật. Ghi tên máy và phiên bản Android.
@@ -243,3 +262,12 @@ Thiết bị: `__________` · Android `____`
 - [ ] Hủy chọn ảnh (bấm Back trong thư viện) → quay lại màn debug, không lỗi.
 - [ ] Chạy đánh giá trên máy thật và ghi kết quả vào mục độ chính xác:
       `powershell -ExecutionPolicy Bypass -File tool\ocr_eval\run_ocr_eval.ps1 -DeviceId <serial>`
+
+### Phase 4 — CSDL & lưu ảnh (chưa có giao diện mới)
+
+Phase này chưa nối DB vào màn hình nào (Phase 5 làm state, Phase 7 làm Review). Trên máy thật chỉ cần kiểm tra plugin sqflite và `path_provider` thật:
+
+Thiết bị: `__________` · Android `____`
+
+- [ ] `flutter test integration_test/storage_test.dart -d <máy>` → pass (lưu ảnh + thumbnail vào thư mục documents thật, insert/truy vấn/xóa bằng sqflite thật, file được xóa).
+- [ ] `flutter run` → app vẫn mở bình thường ở tab **Tổng quan**.
