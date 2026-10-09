@@ -11,6 +11,7 @@
 | 4 | 321 | 321 / 0 | 95.5% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu, máy 8 GB RAM). DB test bằng `sqflite_common_ffi`, ảnh bằng thư mục tạm |
 | 5 | 383 | 383 / 0 | 95.0% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu). State test bằng `ProviderContainer` + repository/storage giả, `fakeAsync` cho Undo |
 | 6 | 438 | 438 / 0 | 91.5% dòng | ✔ | ✔ 0 issue | ✔ | 🟨 **emulator + webcam**: smoke test 1 lần pass (preview → chụp → cắt → OCR → /review). ⚠ **Chưa xác minh trên điện thoại thật** |
+| 7 | 489 | 489 / 0 | 92.8% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu). 55 test mới; 4 test của màn debug OCR bị xóa cùng màn |
 
 ## Độ chính xác parser trên bộ fixture
 
@@ -291,6 +292,26 @@ Hạn chế của lần smoke test này (không được coi là đã test):
 - Trong lúc chạy, System UI của emulator báo "isn't responding" (máy 8 GB RAM, Gradle vừa build xong). App vẫn chạy bên dưới và test pass. Ảnh chụp màn hình bị hộp thoại này che một phần.
 - Ảnh chụp màn hình có hình xung quanh laptop từ webcam nên **không** đưa vào repo (lưu tạm ngoài repo).
 
+## Phase 7 — Màn Review & Verification
+
+55 test mới, tất cả pass (widget test trên máy tính, chưa thử trên máy thật).
+
+| Nhóm | Ca kiểm tra | File test |
+|---|---|---|
+| Hiển thị (FR-4.1, 4.2, 4.5, 2.4) | Ảnh + tên + số tiền "245.000" + ngày "14/09/2026" + chip "Ăn uống" từ kết quả quét; chạm ảnh → `InteractiveViewer`; "Xem văn bản OCR gốc" có thời gian OCR 420 ms và các dòng chữ; ảnh không đọc được → thông báo, form vẫn dùng được | `test/screens/review_screen_test.dart` |
+| Độ tin cậy (FR-4.4) | Trường `high` không có dấu; tên cửa hàng `missing` → banner đầu form có icon `error` + "Không đọc được tên cửa hàng", nằm trên ô nhập; `low` → icon cảnh báo + "Không chắc chắn — hãy kiểm tra lại"; số tiền / ngày / danh mục có icon + chú thích riêng; ngày thiếu → điền tạm hôm nay; sửa trường → dấu biến mất | 〃 |
+| Validator (FR-4.3) | Tên rỗng / chỉ có dấu cách / > 100 ký tự; số tiền rỗng, không phải số, quá 12 chữ số; **hóa đơn 0 đ bị chặn** kèm giải thích "giảm giá toàn bộ"; ngày tương lai (năm đọc nhầm 2062) bị chặn; bộ chọn ngày không cho quá hôm nay; chưa chọn danh mục | `test/core/expense_validators_test.dart`, `review_screen_test.dart` |
+| Ô số tiền (FR-4.6) | Gõ từng chữ số → 1 → 1.250 → … → 1.250.000; gõ chữ số ở giữa chuỗi → con trỏ đứng ngay sau chữ số vừa gõ; xóa giữa chuỗi; xóa ngay sau dấu chấm; dán "150,000", "150.000đ", "150.000 VNĐ" → 150.000 và lưu 150000; số 0 ở đầu; hơn 12 chữ số bị từ chối | `test/core/amount_input_test.dart`, `review_screen_test.dart` |
+| Lưu (FR-4.8, FR-5.3) | Từ kết quả quét: lưu ảnh + thumbnail rồi `add`, đủ trường, SnackBar "Đã lưu giao dịch.", quay về | `review_screen_test.dart`, `test/state/expense_list_notifier_test.dart` |
+| | **Ghi DB lỗi sau khi đã lưu ảnh: ảnh + thumbnail vừa lưu bị xóa, báo lỗi, màn hình không đóng, dữ liệu đã nhập còn nguyên**; lưu ảnh lỗi → không ghi DB | 〃 |
+| Ba chế độ (FR-4.9) | Thêm thủ công: không ảnh, ô trống, ngày hôm nay, lưu không gọi lưu ảnh; sửa `/expense/7`: nạp giá trị, lưu gọi `edit` (không `insert`), giữ giờ cũ khi không đổi ngày, SnackBar "Đã cập nhật giao dịch."; id không tồn tại → "Không tìm thấy giao dịch" | `review_screen_test.dart` |
+| Hủy (FR-4.8) | Chưa sửa → back quay về ngay; đã sửa → nút back AppBar hỏi "Bỏ thay đổi?" ("Tiếp tục sửa" giữ nguyên dữ liệu, "Bỏ thay đổi" quay về, không lưu); nút back Android cũng hỏi | 〃 |
+| Bàn phím, bố cục (FR-4.7) | Ô tên `TextInputAction.next` → Next chuyển sang ô số tiền (bàn phím số); màn 320×480 và màn ngang 640×360 với bàn phím chiếm 45% chiều cao: không overflow, cuộn tới được nút Lưu | 〃 |
+
+**Kiểm tra test có thật sự bắt lỗi:** cố ý bỏ bước xóa ảnh khi ghi DB lỗi → 2 test đỏ; cố ý đặt `canPop: true` → 2 test hủy đỏ. Đã khôi phục code.
+
+**Lỗi test phát hiện trong code:** form ban đầu dùng `ListView` (dựng trường kiểu lười), khiến nút Lưu và ô danh mục chưa tồn tại khi chưa cuộn, nên `Form.validate()` có thể bỏ qua chúng. Đã đổi sang `SingleChildScrollView` + `Column` (D-051).
+
 ## Checklist test thủ công trên thiết bị
 
 > Đánh dấu `[x]` khi bạn đã tự kiểm tra trên máy Android thật. Ghi tên máy và phiên bản Android.
@@ -320,22 +341,17 @@ Thiết bị: `__________` · Android `____`
 Phase này chỉ thêm logic thuần Dart, chưa nối vào màn hình. Trên máy chỉ cần xác nhận app vẫn chạy:
 
 - [ ] `flutter run` → app vẫn mở bình thường ở tab **Tổng quan** (không lỗi khởi động sau khi thêm parser).
-- [ ] *(Phase 3 sẽ có màn hình debug chọn ảnh hóa đơn thật → xem raw text và kết quả parse. Khi đó hãy ghi độ chính xác trên hóa đơn thật vào đây.)*
+- [ ] *(Kết quả OCR trên hóa đơn thật xem ở màn Review từ Phase 7: chụp hoặc chọn ảnh → Review → "Xem văn bản OCR gốc". Độ chính xác đo bằng công cụ ở mục Phase 3.)*
 
 
-### Phase 3 — Dịch vụ OCR (màn debug tạm)
+### Phase 3 — Dịch vụ OCR
 
-Đã chạy trên emulator `vku_test_api33` (API 33) bằng công cụ chấm tự động, xem mục "Độ chính xác trên hóa đơn thật". **Chưa test trên điện thoại thật.**
+Đã chạy trên emulator `vku_test_api33` (API 33) bằng công cụ chấm tự động, xem mục "Độ chính xác trên hóa đơn thật". **Chưa test trên điện thoại thật.** Màn debug OCR của Phase 3 đã được gỡ ở Phase 7; kết quả OCR giờ xem ở màn Review (checklist Phase 6–7).
 
 Thiết bị: `__________` · Android `____`
 
-- [ ] Tab **Quét** có nút mở màn debug OCR (`/debug/ocr`).
-- [ ] Bấm chọn ảnh → mở thư viện ảnh; chọn một hóa đơn → hiện vòng loading, **giao diện không bị đứng**.
-- [ ] Hiện tên cửa hàng, tổng tiền, ngày, danh mục kèm độ tin cậy; trường không đọc được ghi là thiếu (không crash).
-- [ ] Mở "Xem văn bản OCR gốc" → thấy các hàng chữ đã ghép và thời gian OCR (ms).
-- [ ] Bật **chế độ máy bay** rồi quét lại → vẫn nhận dạng được (OCR offline, NFR-1).
-- [ ] Chọn một file không phải ảnh hoặc ảnh hỏng → hiện thông báo lỗi tiếng Việt, app không crash.
-- [ ] Hủy chọn ảnh (bấm Back trong thư viện) → quay lại màn debug, không lỗi.
+- [ ] Bật **chế độ máy bay** rồi quét một hóa đơn → vẫn nhận dạng được (OCR offline, NFR-1).
+- [ ] Chọn một ảnh hỏng từ thư viện → thông báo tiếng Việt, app không crash.
 - [ ] Chạy đánh giá trên máy thật và ghi kết quả vào mục độ chính xác:
       `powershell -ExecutionPolicy Bypass -File tool\ocr_eval\run_ocr_eval.ps1 -DeviceId <serial>`
 
@@ -374,3 +390,18 @@ Thiết bị: `__________` · Android `____`
 - [ ] **Chuyển app** (Home rồi quay lại, hoặc mở app khác) khi đang ở tab Quét → camera vẫn chạy, không màn đen, không crash.
 - [ ] Chuyển sang tab khác rồi quay lại tab Quét → camera chạy lại (đèn báo camera của Android tắt khi rời tab).
 - [ ] Xoay ngang điện thoại ở tab Quét → không có dải sọc vàng-đen (overflow).
+
+### Phase 7 — Màn Review & Verification
+
+Thiết bị: `__________` · Android `____`
+
+- [ ] Quét một hóa đơn → màn Review hiện ảnh, các trường đã điền; chạm ảnh → phóng to bằng hai ngón.
+- [ ] Trường không chắc chắn có **icon + dòng chú thích**; nếu tên cửa hàng không chắc, banner màu ở đầu form nổi bật nhất.
+- [ ] Ô tên → bấm **Next** trên bàn phím → con trỏ sang ô số tiền, bàn phím **số** hiện ra.
+- [ ] Gõ 1250000 → thấy 1.250.000; đặt con trỏ giữa chuỗi rồi gõ/xóa → con trỏ không nhảy; dán "150,000" → 150.000.
+- [ ] Bàn phím mở: form cuộn được tới nút Lưu, không có dải sọc vàng-đen (cả dọc lẫn ngang).
+- [ ] Bộ chọn ngày hiện **tiếng Việt**, không cho chọn ngày sau hôm nay.
+- [ ] Để trống tên / nhập 0 / chưa chọn danh mục → bấm Lưu → thông báo tiếng Việt dưới từng ô.
+- [ ] Lưu hợp lệ → SnackBar "Đã lưu giao dịch." → quay về camera. (Lịch sử hiển thị ở Phase 8.)
+- [ ] Sửa một ô rồi bấm nút **back của Android** → hỏi "Bỏ thay đổi?".
+- [ ] Mở "Xem văn bản OCR gốc" → thấy các dòng chữ và thời gian OCR (ms); ghi lại thời gian OCR trên máy thật cho báo cáo.

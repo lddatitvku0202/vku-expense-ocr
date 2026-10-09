@@ -39,4 +39,16 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('a saved expense without OCR time shows only the row count', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: OcrTextPanel(rows: ['A', 'B', 'C'])),
+      ),
+    );
+    expect(find.text('3 dòng'), findsOneWidget);
+    expect(find.textContaining('ms'), findsNothing);
+  });
 }

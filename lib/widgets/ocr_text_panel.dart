@@ -8,13 +8,16 @@ class OcrTextPanel extends StatelessWidget {
   const OcrTextPanel({
     super.key,
     required this.rows,
-    required this.ocrDuration,
+    this.ocrDuration,
     this.initiallyExpanded = false,
   });
 
   /// Logical rows, top to bottom.
   final List<String> rows;
-  final Duration ocrDuration;
+
+  /// Time spent in OCR (FR-2.4); `null` for a saved expense, whose OCR
+  /// time is not stored.
+  final Duration? ocrDuration;
   final bool initiallyExpanded;
 
   @override
@@ -25,10 +28,11 @@ class OcrTextPanel extends StatelessWidget {
         initiallyExpanded: initiallyExpanded,
         leading: const Icon(Icons.text_snippet_outlined),
         title: const Text('Xem văn bản OCR gốc'),
-        subtitle: Text(
-          'Thời gian OCR: ${ocrDuration.inMilliseconds} ms · '
-          '${rows.length} dòng',
-        ),
+        subtitle: Text(switch (ocrDuration) {
+          final Duration d =>
+            'Thời gian OCR: ${d.inMilliseconds} ms · ${rows.length} dòng',
+          null => '${rows.length} dòng',
+        }),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         expandedCrossAxisAlignment: CrossAxisAlignment.start,
         children: [
