@@ -74,8 +74,15 @@ void main() {
     }
 
     final report = EvalReport(device: deviceLabel, scores: scores);
-    File('${dir.path}/report.json').writeAsStringSync(report.toJson());
-    File('${dir.path}/report.md').writeAsStringSync(report.toMarkdown());
+    final reports = {
+      'report.json': report.toJson(),
+      'report.md': report.toMarkdown(),
+    };
+    for (final MapEntry(key: name, value: content) in reports.entries) {
+      final file = File('${dir.path}/$name')..writeAsStringSync(content);
+      // Let `adb pull` (user shell) read the file the app just created.
+      await Process.run('chmod', ['666', file.path]);
+    }
     for (final summary in report.summaries) {
       debugPrint(
         'OCR_EVAL_SUMMARY ${summary.set}: n=${summary.count} '

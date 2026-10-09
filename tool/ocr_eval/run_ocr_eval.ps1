@@ -70,6 +70,9 @@ foreach ($row in $rows) {
   if (-not (Test-Path $image)) { throw "Photo listed in the CSV is missing: $image" }
   Invoke-Native $adb @('-s', $DeviceId, 'push', $image, "$remote/$($row.file)")
 }
+# adb creates the folder as user 'shell' (rwxrws---), which the app cannot
+# enter; open it up for this temporary run (it is deleted afterwards).
+Invoke-Native $adb @('-s', $DeviceId, 'shell', "chmod 777 $remote && chmod 666 $remote/*")
 Write-Host "Copied $($rows.Count) photos to $remote"
 
 # --- 4. Run the evaluation on the device ------------------------------------
