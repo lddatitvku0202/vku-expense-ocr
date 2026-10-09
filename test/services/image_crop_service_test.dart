@@ -4,7 +4,6 @@ import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
-import 'package:vku_expense_ocr/core/frame_geometry.dart';
 import 'package:vku_expense_ocr/services/image_crop_service.dart';
 
 void main() {
@@ -60,8 +59,8 @@ void main() {
       final source = storeWithExif(uprightPhoto(), 1);
       final out = await service.cropToFrame(
         source,
-        FrameCropRequest(
-          frame: const Rect.fromLTWH(40, 80, 280, 480),
+        const FrameCropRequest(
+          frame: Rect.fromLTWH(40, 80, 280, 480),
           viewport: viewport,
           previewAspectRatio: 9 / 16,
           padding: 0,
@@ -138,21 +137,25 @@ void main() {
   });
 
   group('cropUpright (pure)', () {
-    test('uses the decoded size and EXIF turns to pick the crop', () {
+    // package:image's JPEG decoder already applies the EXIF orientation
+    // while decoding (and clears the tag), so a phone photo arrives upright
+    // with 0 turns left; cropUpright still bakes any orientation that other
+    // formats keep (D-047).
+    test('a JPEG with EXIF 6 is upright by the time the crop is chosen', () {
       final bytes = img.encodeJpg(
         img.copyRotate(uprightPhoto(), angle: -90)
           ..exif.imageIfd.orientation = 6,
       );
-      Size? seenStored;
+      Size? seenSize;
       int? seenTurns;
-      final out = cropUpright(bytes, (stored, turns) {
-        seenStored = stored;
+      final out = cropUpright(bytes, (size, turns) {
+        seenSize = size;
         seenTurns = turns;
         return const Rect.fromLTWH(0, 0, 100, 100);
       });
 
-      expect(seenStored, const Size(1920, 1080));
-      expect(seenTurns, FrameGeometry.quarterTurnsForExif(6));
+      expect(seenSize, const Size(1080, 1920));
+      expect(seenTurns, 0);
       final cropped = img.decodeJpg(out)!;
       expect((cropped.width, cropped.height), (100, 100));
       expect(isRed(cropped.getPixel(50, 50)), isTrue);
