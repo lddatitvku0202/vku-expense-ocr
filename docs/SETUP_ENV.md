@@ -215,3 +215,23 @@ flutter build apk --debug
 1. Xóa `D:\flutter`, `D:\dev-cache` và (nếu muốn) `D:\Android\SDK\ndk\28.2.13676358`.
 2. Xóa hai biến: `[Environment]::SetEnvironmentVariable('PUB_CACHE', $null, 'User')`, tương tự với `GRADLE_USER_HOME`.
 3. Gỡ `D:\flutter\bin;D:\dev-cache\pub\bin` khỏi PATH của User (System Properties → Environment Variables) hoặc khôi phục từ bản sao lưu ở bước 2.
+
+## 12. Emulator `vku_test_api33` và camera
+
+- AVD nằm ở `D:\dev-cache\avd\vku_test_api33.avd` (biến môi trường `ANDROID_AVD_HOME=D:\dev-cache\avd`, chuyển khỏi ổ C: ở Phase 3).
+- **Phase 6:** camera sau của AVD dùng webcam laptop để thử màn camera trên emulator. Trong `D:\dev-cache\avd\vku_test_api33.avd\config.ini`:
+
+  ```ini
+  hw.camera.back=webcam0      ; trước đó: emulated
+  hw.camera.front=none
+  ```
+
+  Kiểm tra webcam có sẵn: `D:\Android\SDK\emulator\emulator.exe -avd vku_test_api33 -webcam-list`. Máy này có `Integrated Webcam` (`webcam0`, NV12). Nếu không có webcam thì dùng `hw.camera.back=virtualscene` (cảnh 3D giả lập).
+- Khởi động ở chế độ nền, không lưu snapshot:
+
+  ```powershell
+  D:\Android\SDK\emulator\emulator.exe -avd vku_test_api33 -no-snapshot-save -no-boot-anim -no-audio
+  ```
+
+- Máy chỉ có 8 GB RAM: emulator + Gradle chạy cùng lúc thì System UI của emulator hay báo "isn't responding" (xem `docs/TEST_REPORT.md`, Phase 6). Tắt emulator ngay khi xong: `adb -s emulator-5554 emu kill`.
+- Hoàn tác camera: đổi `hw.camera.back` về `emulated`.
