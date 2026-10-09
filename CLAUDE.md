@@ -405,7 +405,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 | 0 — Khởi tạo & môi trường | ✅ Xong | tag `phase-0` | format ✔ · analyze 0 issue · test 1/1 · build debug ✔ | B-001 đã giải quyết (cài Flutter 3.47.6). Chưa test trên thiết bị (chưa cắm máy) |
 | 1 — Nền tảng | ✅ Xong | tag `phase-1` | format ✔ · analyze 0 · test 48/48 · coverage 85.3% · build debug ✔ | Chưa test trên thiết bị (chưa cắm máy) |
 | 2 — ReceiptParser | ✅ Xong | tag `phase-2` | format ✔ · analyze 0 · test 201/201 · coverage 94.9% · build debug ✔ · fixture 23/23 mọi trường | Chưa test trên thiết bị; fixture là dữ liệu tổng hợp (xem PHASE_LOG) |
-| 3 — Dịch vụ OCR | ⬜ Chưa bắt đầu | — | — | |
+| 3 — Dịch vụ OCR | 🟨 Đang làm | nhánh `phase/3-ocr-service` | lần đánh giá đầu trên emulator: main merchant 7/19 · total 10/19 · date 14/19 · category 10/5/4 | A xong (AVD ở `D:\dev-cache\avd`); B1 deskew, OCR service, pipeline, màn debug, B2 công cụ chấm (`tool/ocr_eval`), B3 README xong; đang sửa lỗi tổng quát từ lần đánh giá đầu (test viết trước) |
 | 4 — CSDL & lưu ảnh | ⬜ Chưa bắt đầu | — | — | |
 | 5 — State management | ⬜ Chưa bắt đầu | — | — | |
 | 6 — Camera capture | ⬜ Chưa bắt đầu | — | — | |
