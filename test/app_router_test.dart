@@ -12,6 +12,9 @@ import 'package:vku_expense_ocr/screens/history/history_screen.dart';
 import 'package:vku_expense_ocr/screens/review/review_screen.dart';
 import 'package:vku_expense_ocr/screens/scan/scan_screen.dart';
 import 'package:vku_expense_ocr/state/router_provider.dart';
+import 'package:vku_expense_ocr/state/storage_providers.dart';
+
+import 'support/memory_settings_store.dart';
 
 void main() {
   /// Pumps the real app with a router that starts at [location].
@@ -23,7 +26,10 @@ void main() {
     addTearDown(router.dispose);
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [routerProvider.overrideWithValue(router)],
+        overrides: [
+          routerProvider.overrideWithValue(router),
+          settingsStoreProvider.overrideWithValue(MemorySettingsStore()),
+        ],
         child: const VkuExpenseApp(),
       ),
     );
@@ -32,7 +38,14 @@ void main() {
   }
 
   testWidgets('app starts on the dashboard tab without errors', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: VkuExpenseApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          settingsStoreProvider.overrideWithValue(MemorySettingsStore()),
+        ],
+        child: const VkuExpenseApp(),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
