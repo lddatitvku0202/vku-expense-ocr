@@ -297,11 +297,11 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] Test với `ProviderContainer` + override bằng repository giả: thêm → danh sách và tổng cập nhật; xóa → giảm; restore (undo); tính tuần đúng biên (Chủ nhật, đổi tháng/năm); tổng theo danh mục đúng.
 
 ### Phase 6 — Camera capture
-- [ ] `screens/scan/camera_screen.dart`: khởi tạo camera sau (back), `CameraPreview`, nút flash, chạm lấy nét có vòng chỉ báo, overlay khung (`CustomPainter` vẽ lớp tối có lỗ hình chữ nhật), nút chụp, nút chọn từ thư viện; xử lý `AppLifecycleState`; xử lý khi không có camera hoặc bị từ chối quyền.
-- [ ] `services/image_crop_service.dart`: quy đổi khung overlay sang tọa độ ảnh (tính đến tỷ lệ preview, `BoxFit` và hướng xoay), cắt bằng gói `image` trong isolate, sau đó mở `image_cropper` để chỉnh tay.
-- [ ] Chụp hoặc chọn ảnh xong → chạy `ReceiptScanService` (hiện loading) → điều hướng sang Review.
-- [ ] `CameraController(..., enableAudio: false)` — quyền micro `RECORD_AUDIO` đã bị gỡ khỏi manifest ở Phase 1 (D-014); để `enableAudio` mặc định (`true`) sẽ khiến camera lỗi hoặc xin quyền thừa. *(Ghi chú bổ sung theo yêu cầu của bạn ở Phase 2, không thuộc brief gốc.)*
-- [ ] Test: unit test hàm quy đổi tọa độ khung → vùng cắt (nhiều tỷ lệ màn hình/ảnh); unit test cắt ảnh trả về đúng kích thước; widget test overlay painter (`shouldRepaint`). Camera thật thì đưa vào checklist test thủ công.
+- [x] `screens/scan/camera_screen.dart`: khởi tạo camera sau (back), `CameraPreview`, nút flash, chạm lấy nét có vòng chỉ báo, overlay khung (`CustomPainter` vẽ lớp tối có lỗ hình chữ nhật), nút chụp, nút chọn từ thư viện; xử lý `AppLifecycleState`; xử lý khi không có camera hoặc bị từ chối quyền.
+- [x] `services/image_crop_service.dart`: quy đổi khung overlay sang tọa độ ảnh (tính đến tỷ lệ preview, `BoxFit` và hướng xoay), cắt bằng gói `image` trong isolate, sau đó mở `image_cropper` để chỉnh tay.
+- [x] Chụp hoặc chọn ảnh xong → chạy `ReceiptScanService` (hiện loading) → điều hướng sang Review.
+- [x] `CameraController(..., enableAudio: false)` — quyền micro `RECORD_AUDIO` đã bị gỡ khỏi manifest ở Phase 1 (D-014); để `enableAudio` mặc định (`true`) sẽ khiến camera lỗi hoặc xin quyền thừa. *(Ghi chú bổ sung theo yêu cầu của bạn ở Phase 2, không thuộc brief gốc.)*
+- [x] Test: unit test hàm quy đổi tọa độ khung → vùng cắt (nhiều tỷ lệ màn hình/ảnh); unit test cắt ảnh trả về đúng kích thước; widget test overlay painter (`shouldRepaint`). Camera thật thì đưa vào checklist test thủ công.
 
 ### Phase 7 — Màn Review & Verification
 - [ ] Triển khai đủ FR-4 (form, validator, date picker, chọn danh mục, đánh dấu độ tin cậy thấp, raw text, thời gian OCR, input formatter VND, focus, xác nhận khi hủy, chế độ thêm thủ công và chế độ sửa).
@@ -344,13 +344,13 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 
 > Danh sách mã lấy từ mục Requirements. Nội dung chi tiết xem ở mục FROZEN phía trên.
 
-- [ ] FR-1.1 — bằng chứng: _chưa có_
-- [ ] FR-1.2 — bằng chứng: _chưa có_
-- [ ] FR-1.3 — bằng chứng: _chưa có_
-- [ ] FR-1.4 — bằng chứng: _chưa có_
-- [ ] FR-1.5 — bằng chứng: _chưa có_
-- [ ] FR-1.6 — bằng chứng: _chưa có_
-- [ ] FR-1.7 — bằng chứng: _chưa có_
+- [ ] FR-1.1 — code + test máy tính xong, CHƯA xác minh trên điện thoại thật: `CameraScreen` + `PluginReceiptCamera` (`CameraPreview`, `BoxFit.cover`); widget test với camera giả; smoke test emulator + webcam: preview chạy
+- [ ] FR-1.2 — code + test máy tính xong, CHƯA xác minh trên điện thoại thật: vòng flash tắt/tự động/luôn bật/đèn pin, icon theo trạng thái, máy không có flash → vô hiệu nút (`camera_screen_test.dart`)
+- [ ] FR-1.3 — code + test máy tính xong, CHƯA xác minh trên điện thoại thật: `FrameGeometry.viewportToNormalized` + `setFocusPoint`/`setExposurePoint` chỉ khi được hỗ trợ, vòng chỉ báo (`frame_geometry_test.dart`, `camera_screen_test.dart`)
+- [ ] FR-1.4 — code + test máy tính xong, CHƯA xác minh trên điện thoại thật: `ReceiptFramePainter` (lớp tối có lỗ hình hóa đơn), `shouldRepaint` (`receipt_frame_overlay_test.dart`)
+- [ ] FR-1.5 — code + test máy tính xong, CHƯA xác minh trên điện thoại thật: `FrameGeometry.frameToImageCrop` (1.200 tổ hợp trong ảnh) + `ImageCropService.cropToFrame` (EXIF 1/6/3/8) + `image_cropper`; smoke test emulator: cắt 418×672. `image_cropper` chưa được thử trên máy
+- [ ] FR-1.6 — code + test máy tính xong, CHƯA xác minh trên điện thoại thật: nút thư viện ở màn camera và ở các màn lỗi → ảnh xoay đứng → chỉnh tay → OCR → Review (`camera_screen_test.dart`)
+- [ ] FR-1.7 — code + test máy tính xong, CHƯA xác minh trên điện thoại thật: `CameraAccessDenied` → hướng dẫn + "Mở Cài đặt" (`permission_handler`) + thư viện, thử lại khi quay về app (`camera_service_test.dart`, `camera_screen_test.dart`)
 - [x] FR-2.1 — bằng chứng: `MlKitOcrService` (`lib/services/ocr_service.dart`), `test/services/ocr_service_test.dart` (gửi script Latin + đường dẫn ảnh qua channel), chạy ML Kit bundled trên emulator với 22 ảnh (`docs/TEST_REPORT.md`); ảnh đã cắt sẽ có từ Phase 6
 - [x] FR-2.2 — bằng chứng: `ocrLinesFrom` (`lib/services/ocr_service.dart`) chuyển `RecognizedText` → `OcrLine` (text, `Rect`, cornerPoints), `test/services/ocr_service_test.dart`; parser không import ML Kit (`test/services/parser_purity_test.dart`)
 - [x] FR-2.3 — bằng chứng: `lib/services/row_grouper.dart`, `test/services/row_grouper_test.dart` (11 test: 2 block trái/phải, lệch dọc, bậc thang, ngưỡng cấu hình) + benchmark 23 fixture
@@ -409,7 +409,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 | 3 — Dịch vụ OCR | ✅ Xong | tag `phase-3` | format ✔ · analyze 0 · test 272/272 · coverage 95.6% · build debug ✔ · fixture 31/31 · hóa đơn thật (emulator, main 19): merchant 7→7 · total 10→16 · date 14→15 · category đúng 10→11 | Đánh giá trên emulator `vku_test_api33`; **chưa đánh giá trên điện thoại thật (NFR-6 còn nợ)**. Màn debug tạm xóa ở Phase 7 |
 | 4 — CSDL & lưu ảnh | ✅ Xong | tag `phase-4` | format ✔ · analyze 0 · test 321/321 · coverage 95.5% · build debug ✔ | Test DB bằng `sqflite_common_ffi`, ảnh bằng thư mục tạm; **chưa chạy trên thiết bị** (không bật emulator theo yêu cầu, `integration_test/storage_test.dart` chờ máy) |
 | 5 — State management | ✅ Xong | tag `phase-5` | format ✔ · analyze 0 · test 383/383 · coverage 95.0% · build debug ✔ | Test bằng `ProviderContainer` + repository/storage giả, `fakeAsync` cho Undo; **chưa chạy trên thiết bị** (không bật emulator theo yêu cầu) |
-| 6 — Camera capture | ⬜ Chưa bắt đầu | — | — | |
+| 6 — Camera capture | ✅ Xong (FR-1: code + test máy tính xong, CHƯA xác minh trên điện thoại thật) | tag `phase-6` | format ✔ · analyze 0 · test 438/438 · coverage 91.5% · build debug ✔ · smoke test **emulator + webcam** 1 lần pass (preview → chụp → cắt → OCR → /review) | `image_cropper`, flash, lấy nét, quyền, vòng đời chưa thử trên máy thật; xem checklist trong Việc còn nợ |
 | 7 — Review & Verification | ⬜ Chưa bắt đầu | — | — | |
 | 8 — Lịch sử & Dashboard | ⬜ Chưa bắt đầu | — | — | |
 | 9 — Biểu đồ CustomPainter | ⬜ Chưa bắt đầu | — | — | |
@@ -429,7 +429,17 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 - [ ] Khi có điện thoại thật, đánh giá thêm một bộ hóa đơn MỚI (holdout), gán nhãn và khóa hash trước, chạy đúng một lần, không sửa parser trước lần chạy đó. *(Yêu cầu của bạn ở Phase 4.)*
 - [ ] **Phase 4:** chạy `flutter test integration_test/storage_test.dart -d <máy>` (sqflite thật + `path_provider` trên Android).
 - [ ] **Phase 5:** `flutter run` trên Android để xác nhận `main()` mở DB + `shared_preferences` và dọn ảnh mồ côi khi khởi động không lỗi (mới kiểm chứng bằng `sqflite_common_ffi` trên Windows).
-- [ ] Checklist test thủ công trên thiết bị của Phase 0–5 trong `docs/TEST_REPORT.md`.
+- [ ] **Phase 6 — camera trên điện thoại thật** (FR-1 chưa được đánh `[x]` cho tới khi xong mục này):
+  - [ ] Preview đúng tỷ lệ (vật tròn không méo), lấp đầy vùng xem.
+  - [ ] Flash: icon đổi tắt → tự động → luôn bật → đèn pin, đèn sáng/nháy thật.
+  - [ ] Chạm lấy nét: vòng chỉ báo đúng chỗ chạm, ảnh nét lại.
+  - [ ] Ảnh sau khi cắt không bị xoay (cầm máy dọc và ngang).
+  - [ ] Vùng cắt khớp với khung căn chỉnh đã thấy, không mất chữ ở mép.
+  - [ ] `image_cropper` mở được, "Hủy" quay về camera, xác nhận thì sang Review.
+  - [ ] Từ chối quyền → hướng dẫn + "Mở Cài đặt" → cấp lại quyền → quay về, camera tự chạy.
+  - [ ] Chuyển app rồi quay lại (và đổi tab rồi quay lại): camera vẫn chạy, không màn đen, không crash.
+  - [ ] Chạy `flutter test integration_test/camera_smoke_test.dart -d <máy>` với một hóa đơn thật trước camera.
+- [ ] Checklist test thủ công trên thiết bị của Phase 0–6 trong `docs/TEST_REPORT.md`.
 
 ---
 
@@ -480,6 +490,13 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 | D-041 | Thêm `selectedMonthProvider`; `categoryTotalsProvider` và `monthTotalProvider` tính theo tháng đang chọn | Dashboard (FR-7.1) hiển thị "tổng tháng" và donut; cần một khoảng thời gian rõ ràng cho donut. Mặc định là tháng hiện tại, có `previous/next` để sau này xem tháng trước. |
 | D-042 | `undoWindow` = 5 s; Undo thất bại (DB lỗi) thì đặt lại hẹn giờ đủ 5 s | SnackBar ở Phase 8 dùng cùng hằng số. Đặt lại đủ 5 s chỉ làm file tồn tại lâu hơn một chút, không bao giờ xóa sớm. |
 | D-043 | Tổng theo danh mục / tuần / tháng tính bằng Dart từ `expenseListProvider`, không gọi `totalsByCategory` của SQL | Một nguồn dữ liệu duy nhất nên biểu đồ tự cập nhật sau mọi thao tác (FR-6.5); dữ liệu cá nhân nhỏ (vài trăm dòng) nên tính trong Dart rất nhanh. `totalsByCategory` của repository vẫn giữ và có test. |
+| D-044 | `permission_handler` ghim **12.0.3** (không dùng 13.x), chỉ dùng `openAppSettings()` | 13.0.2 kéo theo `permission_handler_android` 14.1.0 đòi compileSdk 37; app biên dịch với 36 (platform cao nhất đã cài, cũng là mức AGP 9.1 khuyến nghị). Quyền camera vẫn do plugin `camera` tự xin. |
+| D-045 | Máy không có flash được phát hiện ở **lần đổi flash đầu tiên bị từ chối** → vô hiệu nút + thông báo | Plugin `camera` 0.12 không có API cho biết máy có đèn flash hay không. |
+| D-046 | Quy đổi khung → ảnh: viewport → preview (`cover`) → ảnh (`cover`), padding 3% mỗi phía, kẹp trong ảnh, làm tròn ra ngoài | Giả định ảnh chụp và preview là hai vùng cắt giữa của cùng khung nhìn (CameraX dùng một resolution preset cho cả hai). Padding bù sai lệch nhỏ, vì `image_cropper` chỉ cho thu nhỏ vùng cắt, không mở rộng lại được. Cần kiểm chứng trên điện thoại. |
+| D-047 | Bộ giải mã JPEG của gói `image` 4.10.1 **tự xoay theo EXIF** khi giải mã (`_jpeg_quantize_io.dart`); vẫn gọi `bakeOrientation` sau đó | Ảnh luôn đứng trước khi cắt (4 test EXIF thật). `bakeOrientation` là lớp an toàn cho định dạng khác. Test thuần ban đầu kỳ vọng sai hành vi thư viện nên được sửa; ca PNG bỏ vì bộ mã hóa PNG không ghi EXIF. |
+| D-048 | Camera chỉ được giữ khi đang hiển thị: trả khi app `inactive/paused/hidden` (trừ lúc đang khởi tạo, vì hộp thoại xin quyền cũng làm app `inactive`), khi tab bị ẩn (`TickerMode` do `StatefulShellRoute` tắt), và trong lúc cắt/OCR/Review | Tiết kiệm pin và RAM (OCR cần bộ nhớ); `IndexedStack` giữ tab Quét sống nên nếu không thì camera chạy cả khi đang ở tab khác. Không trả camera khi đang khởi tạo để tránh vòng lặp xin quyền. |
+| D-049 | Luồng chụp: tự cắt theo khung → `image_cropper` để chỉnh tay → OCR → Review. "Hủy" ở màn chỉnh = hủy quét. Ảnh thư viện: xoay đứng → chỉnh tay. OCR thất bại → hộp thoại "Nhập tay" mở Review kèm ảnh. `ResolutionPreset.veryHigh` | `image_cropper` không nhận vùng cắt khởi tạo, nên tự cắt trước rồi cho chỉnh. Ảnh thư viện không chụp qua khung nên không tự cắt. Độ phân giải cao giúp đọc chữ nhỏ. |
+| D-050 | Smoke test camera: AVD `hw.camera.back=webcam0`; trong `integration_test/camera_smoke_test.dart`, bước `image_cropper` được thay bằng bước cho ảnh đi thẳng qua (chỉ trong test) | Activity native của uCrop không bấm được từ Flutter test. Việc `image_cropper` mở được nằm trong checklist điện thoại, không được coi là đã test. |
 
 ---
 

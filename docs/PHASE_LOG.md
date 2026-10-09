@@ -660,3 +660,126 @@ e78faf4 feat(state): save the theme mode and track scan states
 2513af0 test(state): add failing tests for Riverpod state and derived totals
 docs(phase-5): record phase 5 results   (commit cuối của phase)
 ```
+
+---
+
+## Phase 6 — Camera capture
+
+**Trạng thái:** ✅ hoàn tất phần code (merge vào `main`, tag `phase-6`). ⚠ FR-1: **code + test máy tính xong, CHƯA xác minh trên điện thoại thật**. Đã smoke test 1 lần trên emulator + webcam.
+
+### Mục tiêu phase
+
+Thay tab Quét giữ chỗ bằng màn camera thật: preview trực tiếp, flash, chạm lấy nét, khung căn chỉnh, chụp rồi cắt theo khung, chỉnh tay bằng `image_cropper`, chọn ảnh thư viện, xử lý quyền. Sau đó chạy OCR và mở màn Review.
+
+FR liên quan: **FR-1.1 → FR-1.7**, NFR-3 (vòng đời camera), NFR-2 (cắt ảnh trong isolate).
+
+### TDD trong lịch sử Git
+
+| # | Commit | Trạng thái test |
+|---|---|---|
+| 1 | `test(camera): add failing tests for capture, frame crop and camera UI` | 🔴 55 test mới không biên dịch được |
+| 2 | `feat(camera): map the receipt frame onto the captured photo` | 🟢 17 test hình học xanh ngay lần đầu |
+| 3 | `feat(camera): crop photos upright to the frame on a background isolate` | 🔴→🟢 test thuần kỳ vọng sai: bộ giải mã JPEG của gói `image` **đã tự xoay theo EXIF**. Sửa test cho đúng hành vi thư viện (D-047); 4 test ảnh EXIF thật giữ nguyên |
+| 4 | `feat(camera): wrap the camera plugin behind a testable interface` | 🟢 9 test lớp bọc camera |
+| 5 | `feat(camera): draw the receipt frame overlay with CustomPainter` | 🔴→🟢 test vẽ đặt `SizedBox` sai chỗ (bị ép theo màn test 800×600); sửa bố cục test |
+| 6 | `feat(scan): add the camera screen with frame crop, flash and focus` | 🔴→🟢 hai lỗi: vòng xoay "đang xử lý" chạy sau hộp thoại (lỗi giao diện thật, sửa code); `app_router_test` chạm vào plugin camera thật (thêm camera giả vào phần chuẩn bị) |
+| 7 | `build(deps): pin permission_handler to 12.x for compileSdk 36` | build debug lỗi với 13.x (đòi compileSdk 37) → ghim 12.0.3 |
+| 8 | `test(camera): add an on-device camera smoke test` | chạy 1 lần trên emulator + webcam: pass |
+
+### Đã làm gì
+
+| File | Vai trò |
+|---|---|
+| `lib/screens/scan/camera_screen.dart` | `CameraScreen` (thay `scan_screen.dart`): preview `cover`, khung căn chỉnh, nút flash, chạm lấy nét có vòng chỉ báo, nút chụp, nút thư viện, các màn lỗi (thiếu quyền / không có camera / lỗi khác), xử lý vòng đời. |
+| `lib/services/camera_service.dart` | Interface `ReceiptCamera` + `CameraSource`, bản chạy thật `PluginReceiptCamera` (`enableAudio: false`, `ResolutionPreset.veryHigh`), `CaptureFlash`, `CameraFailure` (sealed) và hàm ánh xạ mã lỗi plugin. |
+| `lib/core/frame_geometry.dart` | Hàm thuần: khung hình hóa đơn, vị trí `BoxFit.cover`, điểm chạm → tọa độ preview, khung → vùng cắt trên ảnh (có xoay EXIF, padding, kẹp mép). |
+| `lib/services/image_crop_service.dart` | Giải mã → xoay đứng → cắt → JPEG, chạy trong `Isolate.run`; bản không cắt cho ảnh thư viện. |
+| `lib/services/manual_cropper.dart` | Interface `ManualCropper` + bản dùng `image_cropper` (uCrop). |
+| `lib/widgets/receipt_frame_overlay.dart` | `ReceiptFramePainter`: lớp tối có lỗ hình hóa đơn + góc đánh dấu. |
+| `lib/state/camera_providers.dart` | Provider cho nguồn camera, dịch vụ cắt, màn chỉnh tay, `openAppSettings`. |
+| `lib/core/router.dart`, `review_screen.dart` | `/review` nhận thêm `ScanResult` qua `extra` (ảnh, kết quả parse, thời gian OCR) cho Phase 7. |
+| `integration_test/camera_smoke_test.dart` | Smoke test trên máy/emulator: preview → chụp → cắt → OCR thật → Review. |
+| `test/support/fake_camera.dart` | Camera giả, nguồn camera giả, dịch vụ cắt giả, màn chỉnh tay giả (chỉ trong `test/`). |
+
+### Luồng chụp một hóa đơn
+
+```
+[preview + khung] ──chụp──► ảnh gốc (EXIF) ──Isolate: xoay đứng + cắt theo khung (+3%)──► ảnh cắt
+      ▲                                                                                   │
+      │                                                                     image_cropper (chỉnh tay)
+      │  quay lại: mở camera lại                                              │ Hủy → "Đã hủy quét."
+      │                                                                       ▼
+      └──────────── Review ◄── ScanCompleted ◄── OCR + parse (scanControllerProvider)
+                       ▲
+                       └── ScanFailed → hộp thoại "Nhập tay" (Review kèm ảnh, các trường trống)
+```
+
+Camera được **trả** (dispose) trước bước chỉnh tay và mở lại khi quay về, vì OCR và màn Review cần bộ nhớ.
+
+### Vì sao làm vậy (liên hệ slide)
+
+- **Thêm gói `camera` (sửa lỗi slide W7 s42–43):** slide chỉ dùng `image_picker`, không có preview trực tiếp, flash hay lấy nét. `image_picker` vẫn được giữ làm đường vào phụ (FR-1.6).
+- **Stack + CustomPainter (W7 s32–39, W8 s30–34):** preview, lớp tối, vòng lấy nét và thanh nút là các lớp chồng nhau trong `Stack`. Lớp tối là một `Path` kiểu even-odd: hình chữ nhật ngoài trừ đi khung, nên khung "trong suốt".
+- **Ephemeral state (W8 s4–6):** flash, vòng lấy nét, trạng thái camera chỉ màn này cần → `setState`. Kết quả quét dùng ở màn khác → `scanControllerProvider` (Riverpod).
+- **Lifecycle và `dispose()` (W7 s26–29, NFR-3):** `WidgetsBindingObserver` trả camera khi app vào nền và mở lại khi quay về; `dispose()` của màn luôn đóng camera.
+- **Tính toán nặng ngoài `build()` (W7 s30):** giải mã/xoay/cắt ảnh 12 MP chạy trong `Isolate.run`.
+- **Interface cho camera:** widget test chạy với camera giả trên máy tính; trên máy thật mới dùng `CameraController`.
+- **Lựa chọn đã cân nhắc:**
+  - *Khóa màn camera ở hướng dọc:* đơn giản hóa phép quy đổi, nhưng FR-8.2 yêu cầu màn ngang không lỗi. Thay vào đó tỷ lệ preview được tính theo hướng máy, giống `CameraPreview`.
+  - *Đưa ảnh gốc cho `image_cropper` tự chọn vùng:* plugin không nhận vùng cắt khởi tạo, người dùng phải kéo lại từ đầu. Tự cắt theo khung trước (D-049).
+  - *Kiểm tra quyền trước bằng `permission_handler`:* thừa, vì plugin `camera` tự xin quyền và báo `CameraAccessDenied`. Chỉ dùng `openAppSettings()`.
+
+### Khái niệm cần hiểu
+
+- **BoxFit.cover:** phóng ảnh cho tới khi **phủ kín** khung, phần thừa ở hai cạnh bị cắt. Preview 9:16 trên màn 20:9 bị cắt bớt hai bên, nên điểm chạm ở mép màn **không** phải mép của preview. `FrameGeometry.coverRect` tính đúng phần bị cắt này.
+- **Ba hệ tọa độ:** viewport (điểm logic trên màn) → preview (luồng camera) → ảnh (điểm ảnh thật). Khung vẽ trên màn phải đi qua cả ba mới ra vùng cắt đúng trên ảnh.
+- **EXIF orientation:** camera thường lưu ảnh "nằm ngang" kèm tag "xoay 90° để xem". Phải xoay trước khi cắt, nếu không vùng cắt sẽ lệch sang chỗ khác. Gói `image` tự xoay ảnh JPEG khi giải mã.
+- **`AppLifecycleState`:** `inactive` (mất focus, ví dụ có hộp thoại hệ thống), `paused` (vào nền), `resumed` (quay lại). Camera là tài nguyên dùng chung: giữ nó khi app ở nền sẽ khiến app khác không mở được camera.
+- **`TickerMode`:** widget cho biết cây con có đang "được hiển thị" hay không. `StatefulShellRoute.indexedStack` giữ mọi tab sống nhưng tắt `TickerMode` ở tab bị ẩn, nên màn camera biết khi nào cần trả camera.
+- **Số thế hệ (generation):** camera mở chậm (xin quyền, khởi tạo). Nếu trong lúc đó người dùng rời tab, camera mở xong sẽ bị đóng ngay thay vì được dùng.
+
+### Kết quả kiểm thử
+
+| Bước | Kết quả |
+|---|---|
+| `dart format --set-exit-if-changed lib test integration_test tool` | ✔ 0 thay đổi |
+| `flutter analyze` | ✔ No issues found |
+| `flutter test` | ✔ **438/438** (383 cũ + 55 mới) |
+| `flutter test --coverage` | **91.5%** dòng (1400/1530); `frame_geometry.dart` 49/49, `receipt_frame_overlay.dart` 30/30, `camera_screen.dart` 257/283. Thấp nhất: `camera_service.dart` 26/60 và `manual_cropper.dart` 1/7, là phần gọi plugin thật chỉ chạy được trên máy |
+| `flutter build apk --debug` | ✔ (sau khi ghim `permission_handler` 12.0.3) |
+| Smoke test **emulator + webcam** (1 lần) | ✔ preview → chụp → cắt 418×672 → OCR 11.275 ms (0 hàng chữ, webcam không nhìn vào hóa đơn) → Review sau 26.775 ms |
+| Điện thoại thật | ⚠ **Chưa xác minh** |
+
+Phân bổ 55 test mới: hình học 17 · cắt ảnh 8 · overlay 3 · lớp bọc camera 9 · màn camera 17 · router 1. Bảng chi tiết: `docs/TEST_REPORT.md`, mục "Phase 6".
+
+### Hạn chế đã biết
+
+- Chưa thử trên điện thoại: tỷ lệ preview, vùng cắt có khớp khung không, flash, lấy nét, `image_cropper`, quyền, vòng đời (checklist trong CLAUDE.md, mục Việc còn nợ).
+- Phép quy đổi khung giả định ảnh chụp và preview cùng khung nhìn (D-046). Máy nào cho ảnh chụp khác tỷ lệ preview có thể bị lệch vài phần trăm; padding 3% chỉ bù được một phần.
+- Máy không có flash chỉ được phát hiện khi bấm nút flash lần đầu (D-045).
+- Smoke test trên emulator không thử `image_cropper` (activity native) và không có hóa đơn thật trước webcam.
+- Màn debug OCR (Phase 3) vẫn còn, mở từ nút trên AppBar; sẽ xóa ở Phase 7.
+
+### Cách tự kiểm tra bằng tay
+
+1. Chạy test camera trên máy tính:
+   ```powershell
+   flutter test test/core/frame_geometry_test.dart test/services/image_crop_service_test.dart test/screens/camera_screen_test.dart
+   ```
+2. Thử phép quy đổi: trong `frame_geometry_test.dart`, đổi `padding: 0` của ví dụ 20:9 thành `0.03` rồi chạy lại, xem vùng cắt rộng thêm bao nhiêu.
+3. Trên điện thoại: làm checklist "Phase 6" trong `docs/TEST_REPORT.md`, rồi chạy `flutter test integration_test/camera_smoke_test.dart -d <máy>` với một hóa đơn thật trước camera.
+4. Trên emulator có webcam: xem `docs/SETUP_ENV.md` mục 12.
+
+### Danh sách commit
+
+```
+58643b9 test(camera): add an on-device camera smoke test
+dca6e0e build(deps): pin permission_handler to 12.x for compileSdk 36
+9f7a484 feat(scan): add the camera screen with frame crop, flash and focus
+e4deea9 feat(camera): draw the receipt frame overlay with CustomPainter
+b804a12 feat(camera): wrap the camera plugin behind a testable interface
+0f78e93 feat(camera): crop photos upright to the frame on a background isolate
+8f8f6b0 feat(camera): map the receipt frame onto the captured photo
+cfd883d test(camera): add failing tests for capture, frame crop and camera UI
+docs(phase-6): record phase 6 results   (commit cuối của phase)
+```

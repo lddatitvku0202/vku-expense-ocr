@@ -10,6 +10,7 @@
 | 3 | 272 | 272 / 0 | 95.6% dòng | ✔ | ✔ 0 issue | ✔ | 🟨 Emulator `vku_test_api33` (API 33): đánh giá 22 hóa đơn thật tự động. ⚠ **Chưa test trên điện thoại thật** |
 | 4 | 321 | 321 / 0 | 95.5% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu, máy 8 GB RAM). DB test bằng `sqflite_common_ffi`, ảnh bằng thư mục tạm |
 | 5 | 383 | 383 / 0 | 95.0% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu). State test bằng `ProviderContainer` + repository/storage giả, `fakeAsync` cho Undo |
+| 6 | 438 | 438 / 0 | 91.5% dòng | ✔ | ✔ 0 issue | ✔ | 🟨 **emulator + webcam**: smoke test 1 lần pass (preview → chụp → cắt → OCR → /review). ⚠ **Chưa xác minh trên điện thoại thật** |
 
 ## Độ chính xác parser trên bộ fixture
 
@@ -246,6 +247,50 @@ Chạy trên máy tính: `sqflite_common_ffi` (DB in-memory hoặc file trong th
 
 **Kiểm tra test có thật sự bắt lỗi:** đã cố ý làm hỏng code hai lần rồi chạy lại. Lần 1 đặt hẹn giờ xóa ảnh thành 0 s: 3 test Undo đỏ. Lần 2 đổi biên cuối tuần (`!isBefore(next)` thành `isAfter(next)`): 4 test tuần đỏ. Sau đó khôi phục code.
 
+## Phase 6 — Camera capture
+
+### Test trên máy tính (55 test mới, tất cả pass)
+
+| Nhóm | Ca kiểm tra | File test |
+|---|---|---|
+| Khung → vùng cắt (FR-1.5) | Viewport 16:9 / 4:3 / 20:9 (dọc) và 1 viewport ngang; preview 9:16, 3:4, 9:20, 16:9, 4:3; `BoxFit.cover`; ảnh 4000×3000, 1920×1080, 1080×2400; xoay EXIF 0/90/180/270; 5 kiểu khung (khung chuẩn, toàn màn, góc trên trái, góc dưới phải, khung 1 px): **1.200 tổ hợp, vùng cắt luôn nằm trong ảnh, số nguyên, ≥ 1×1** | `test/core/frame_geometry_test.dart` |
+| | Ví dụ tính tay: cùng tỷ lệ → nhân thẳng; viewport 20:9 + preview 9:16 → (188, 240, 892, 1680); padding 5%; khung chạm mép bị kẹp vào ảnh | 〃 |
+| | Ảnh lưu nằm ngang + EXIF 90° cho cùng vùng cắt với ảnh lưu đứng; khung giữa → vùng cắt giữa ở mọi tỷ lệ | 〃 |
+| Khung căn chỉnh (FR-1.4) | Nằm giữa, trong viewport, tỷ lệ 0,62 ở cả dọc lẫn ngang | 〃 |
+| Chạm lấy nét (FR-1.3) | Điểm chạm → tọa độ 0..1 trên preview có tính phần bị cắt của `cover`; luôn kẹp trong 0..1 | 〃 |
+| Cắt ảnh thật | JPEG lưu với EXIF 1/6/3/8: kích thước đúng 540×960, ô đỏ đánh dấu vẫn ở góc trên trái, không còn tag xoay | `test/services/image_crop_service_test.dart` |
+| | Cắt theo khung ra đúng 840×1440; ảnh hỏng → `ImageCropException`; ảnh thư viện được xoay đứng, giữ nguyên khung hình | 〃 |
+| Overlay | `shouldRepaint` đúng khi khung, màu nền, màu viền, nét vẽ đổi; vùng ngoài khung bị phủ tối, trong khung trong suốt | `test/widgets/receipt_frame_overlay_test.dart` |
+| Lớp bọc camera | `enableAudio == false`; `ResolutionPreset.veryHigh`; mã `CameraAccessDenied` (CameraX) và mã iOS → thiếu quyền; plugin vắng mặt → lỗi chung; chọn camera sau; vòng flash | `test/services/camera_service_test.dart` |
+| Màn camera (camera giả) | Preview + khung + nút chụp + nút thư viện; vòng flash tắt → tự động → luôn bật → đèn pin → tắt với icon tương ứng; máy không có flash → nút bị vô hiệu + thông báo | `test/screens/camera_screen_test.dart` |
+| | Chạm lấy nét: vòng chỉ báo hiện đúng chỗ chạm rồi tự tắt; điểm (0,5; 0,5) gửi cho camera; chỉ gọi focus/exposure khi máy hỗ trợ; không hỗ trợ cả hai → không vòng, có thông báo | 〃 |
+| | Từ chối quyền → hướng dẫn + nút "Mở Cài đặt" (gọi `openAppSettings`) + chọn ảnh thư viện; quay lại app → thử mở camera lại | 〃 |
+| | Không có camera → thông báo, chọn ảnh thư viện vẫn chạy đến `/review` | 〃 |
+| | Chụp → cắt theo khung (đúng viewport, tỷ lệ preview, khung) → chỉnh tay → OCR → `/review`; camera được trả trước khi OCR, mở lại khi quay về | 〃 |
+| | Hủy chỉnh tay → quay lại camera, không OCR; OCR không đọc được → hộp thoại "Nhập tay" mở Review kèm ảnh | 〃 |
+| | App inactive → trả camera, resumed → mở lại; tab bị ẩn (TickerMode) → trả camera; đóng màn → dispose; màn ngang không overflow | 〃 |
+
+**Kiểm tra test có thật sự bắt lỗi:** cố ý bỏ kiểm tra `focusPointSupported` → test "focus / exposure are only called when supported" đỏ; cố ý không trả camera khi inactive → test vòng đời đỏ. Đã khôi phục code.
+
+### Smoke test trên emulator — nhãn **emulator + webcam**
+
+| Mục | Giá trị |
+|---|---|
+| Ngày | 10/10/2026, đúng 1 lần chạy |
+| Thiết bị | AVD `vku_test_api33` (API 33, x86_64), `hw.camera.back=webcam0` (Integrated Webcam của laptop) |
+| Lệnh | `flutter test integration_test/camera_smoke_test.dart -d emulator-5554` (+ `adb shell pm grant … CAMERA`) |
+| Kết quả | ✔ **pass** (`01:13 +1: All tests passed!`) |
+| Preview | ✔ camera khởi tạo, nút chụp bật; vùng xem 320 × 480 dp; ảnh chụp màn hình cho thấy hình webcam trong khung căn chỉnh |
+| Chụp → cắt theo khung | ✔ ảnh cắt 418 × 672 px, dọc |
+| OCR | ✔ chạy ML Kit thật: 11.275 ms, **0 hàng chữ** (webcam không nhìn vào hóa đơn nào, nên chỉ thử được luồng chạy, không thử được độ chính xác) |
+| Chụp → `/review` | ✔ 26.775 ms, màn Review nhận `ScanResult`, không exception |
+
+Hạn chế của lần smoke test này (không được coi là đã test):
+- **`image_cropper` không được thử**: màn cắt của uCrop là activity native, integration test không bấm được, nên trong smoke test bước chỉnh tay được thay bằng bước cho ảnh đi thẳng qua (chỉ nằm trong `integration_test/`).
+- Flash, chạm lấy nét, từ chối quyền, chuyển app không thử trên emulator (webcam không có flash, emulator không có điểm lấy nét thật).
+- Trong lúc chạy, System UI của emulator báo "isn't responding" (máy 8 GB RAM, Gradle vừa build xong). App vẫn chạy bên dưới và test pass. Ảnh chụp màn hình bị hộp thoại này che một phần.
+- Ảnh chụp màn hình có hình xung quanh laptop từ webcam nên **không** đưa vào repo (lưu tạm ngoài repo).
+
 ## Checklist test thủ công trên thiết bị
 
 > Đánh dấu `[x]` khi bạn đã tự kiểm tra trên máy Android thật. Ghi tên máy và phiên bản Android.
@@ -311,3 +356,21 @@ Thiết bị: `__________` · Android `____`
 - [ ] Đổi Dark mode trong cài đặt điện thoại → app đổi theo (mặc định "theo hệ thống").
 - [ ] Đóng hẳn app rồi mở lại → vẫn mở bình thường (DB mở lại được, dọn ảnh mồ côi không lỗi).
 - [ ] *(Nút chuyển sáng/tối/hệ thống có ở Phase 10; khi đó kiểm tra lựa chọn còn nguyên sau khi mở lại app.)*
+
+### Phase 6 — Camera capture (bắt buộc làm trên điện thoại thật)
+
+Thiết bị: `__________` · Android `____`
+
+- [ ] Lần đầu mở tab **Quét**: hiện hộp thoại xin quyền camera (không xin micro). Cho phép → thấy preview.
+- [ ] Preview **đúng tỷ lệ** (vật tròn không bị méo), lấp đầy vùng xem, không viền đen lạ.
+- [ ] Nút **flash** đổi icon tắt → tự động → luôn bật → đèn pin; ở chế độ đèn pin đèn sáng thật; chụp ở "luôn bật" thì đèn nháy.
+- [ ] **Chạm lấy nét**: chạm vào một dòng chữ → vòng vàng hiện đúng chỗ chạm, ảnh nét lại ở chỗ đó.
+- [ ] Chụp một hóa đơn thật đặt trong khung → màn chỉnh vùng cắt (`image_cropper`) **mở được**; vùng cắt sẵn **khớp với khung** đã thấy (không lệch, không mất chữ ở mép).
+- [ ] Ảnh sau khi cắt **không bị xoay** (thử cả lúc cầm máy dọc và ngang).
+- [ ] Bấm "Hủy" ở màn chỉnh → quay về camera, có thông báo "Đã hủy quét."
+- [ ] Xác nhận cắt → hiện "Đang đọc hóa đơn…" → sang màn Review.
+- [ ] Nút thư viện: chọn một ảnh hóa đơn → màn chỉnh → Review.
+- [ ] **Từ chối quyền** (hoặc tắt quyền camera trong Cài đặt) → mở lại tab Quét: thấy hướng dẫn + nút "Mở Cài đặt". Bấm → vào trang cài đặt của app, **cấp lại quyền**, quay về → camera tự chạy lại.
+- [ ] **Chuyển app** (Home rồi quay lại, hoặc mở app khác) khi đang ở tab Quét → camera vẫn chạy, không màn đen, không crash.
+- [ ] Chuyển sang tab khác rồi quay lại tab Quét → camera chạy lại (đèn báo camera của Android tắt khi rời tab).
+- [ ] Xoay ngang điện thoại ở tab Quét → không có dải sọc vàng-đen (overflow).
