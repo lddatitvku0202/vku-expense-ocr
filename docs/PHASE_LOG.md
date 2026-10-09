@@ -442,3 +442,104 @@ baaf321 feat(ocr): add ML Kit text recognition service and adapter
 f981731 test(ocr): add rotated receipt fixtures and deskew tests
 docs(phase-3): record phase 3 results   (commit cuối của phase)
 ```
+
+---
+
+## Phase 4 — CSDL & lưu ảnh
+
+**Trạng thái:** ✅ hoàn tất (merge vào `main`, tag `phase-4`). ⚠ **Chưa chạy trên thiết bị**: phase này không bật emulator (máy 8 GB RAM); kiểm tra trên Android thật nằm trong checklist thủ công.
+
+### Mục tiêu phase
+
+Lưu giao dịch bền vững trên máy: bảng `expenses` trong SQLite, lớp repository cho CRUD và truy vấn, lưu ảnh hóa đơn kèm thumbnail vào thư mục của app, xóa giao dịch thì xóa luôn ảnh.
+
+FR liên quan: **FR-5.1** (schema, version, `onUpgrade`), **FR-5.2** (CRUD qua `ExpenseRepository`), **FR-5.3** (lưu ảnh + thumbnail trong isolate), **FR-5.4** (xóa file ảnh; phần Undo làm ở Phase 5/8), NFR-2 (thumbnail ngoài UI thread).
+
+### TDD trong lịch sử Git
+
+| # | Commit | Trạng thái test |
+|---|---|---|
+| 1 | `test(db): add failing tests for database, repository and image storage` | 🔴 49 test mới không biên dịch được (chưa có 3 service) |
+| 2 | `feat(db): open the expenses database with versioned migrations` | 🟢 10 test DB xanh |
+| 3 | `feat(db): add ExpenseRepository with a sqflite implementation` | 🟢 22 test repository xanh |
+| 4 | `feat(storage): save receipt photos with thumbnails made off the UI thread` | 🔴→🟢 lần chạy đầu 16/17: ảnh rác làm bộ giải mã ném `RangeError` chứ không trả `null` → sửa code để bắt mọi lỗi giải mã, test giữ nguyên |
+| 5 | `style(db): drop arguments equal to their defaults` | 🔵 `dart fix` cho lint, giá trị test không đổi |
+| 6 | `test(db): add on-device check for sqflite and photo storage` | integration test chạy trên Android (chưa chạy) |
+
+### Đã làm gì
+
+| File | Vai trò |
+|---|---|
+| `lib/services/database_service.dart` | `DatabaseService.open()`: mở `vku_expense.db`, tạo bảng `expenses` (version 1) và index trên cột `date`. `schemaMigrations` chứa SQL cho từng version sau này; `onCreate` chạy v1 rồi mọi bước, `onUpgrade` chỉ chạy bước còn thiếu. |
+| `lib/services/expense_repository.dart` | Interface `ExpenseRepository` + `SqfliteExpenseRepository`: `insert`, `getAll` (mới nhất trước), `getById`, `update` (tự cập nhật `updatedAt`), `delete` (trả về bản ghi đã xóa để Undo), `getBetween` (khoảng ngày), `totalsByCategory` (SQL `SUM ... GROUP BY`). |
+| `lib/services/image_storage_service.dart` | `ImageStorageService.save()`: copy ảnh vào `<documents>/receipts/`, tạo thumbnail JPEG rộng 256 px trong `Isolate.run`. `delete()` / `deleteFilesOf()`: xóa ảnh + thumbnail, bỏ qua file đã mất. Hàm thuần `createThumbnail()` để test. |
+| `test/services/database_service_test.dart` | 10 test: kiểu cột, NOT NULL, AUTOINCREMENT, index, `onUpgrade`. |
+| `test/services/sqflite_expense_repository_test.dart` | 22 test: CRUD, thứ tự, kiểu INTEGER, biên ngày, tổng theo danh mục. |
+| `test/services/image_storage_service_test.dart` | 17 test: lưu, thumbnail, EXIF, lỗi, xóa, xóa giao dịch kèm ảnh (FR-5.4). |
+| `integration_test/storage_test.dart` | Chạy sqflite thật + `path_provider` thật trên Android, dùng file DB và thư mục riêng rồi dọn sạch. |
+
+### Vì sao làm vậy (liên hệ slide)
+
+- **ID là `INTEGER PRIMARY KEY AUTOINCREMENT` (sửa lỗi slide W8 s28):** slide dùng `UniqueKey().toString()` làm ID; chuỗi đó không bền qua các lần chạy app và không sắp xếp được. `AUTOINCREMENT` còn bảo đảm ID của dòng đã xóa **không bị dùng lại**, nên `ValueKey(id)` ở danh sách (W7 s19–24) không bao giờ trỏ nhầm sang giao dịch khác.
+- **`amount` là `INTEGER` (sửa lỗi slide: số tiền `double`):** VND không có phần lẻ. Test kiểm tra bằng `typeof(amount)` của SQLite chứ không chỉ đọc lại trong Dart.
+- **Ngày lưu epoch ms (`INTEGER`):** so sánh và sắp xếp bằng số rất nhanh, có index. Lưu chuỗi `"09/10/2026"` thì sắp xếp sai (so sánh theo ký tự).
+- **Future/async (W7 s17):** mọi thao tác DB và file đều trả `Future`, UI không bị chặn.
+- **Isolate cho thumbnail (W7 s30, NFR-2):** giải mã một ảnh 12 MP có thể mất hàng trăm ms (chưa đo trên máy thật), trong khi một khung hình chỉ có 16 ms. Chỉ **hai đường dẫn** được gửi qua isolate; isolate tự đọc và ghi file, không phải chép hàng chục MB điểm ảnh qua lại.
+- **Interface repository:** Phase 5 sẽ test state bằng repository giả mà không cần SQLite.
+- **Lựa chọn đã cân nhắc:**
+  - *Xóa file ảnh ngay trong `repository.delete`:* gọn nhưng làm hỏng Undo (ảnh đã mất khi người dùng bấm hoàn tác). Vì vậy tách thành hai bước (D-032).
+  - *`onUpgrade` kiểu "xóa bảng tạo lại":* đơn giản nhưng **mất hết dữ liệu**. Dùng danh sách migration (D-030).
+  - *Truy vấn `date BETWEEN start AND 23:59:59.999`:* dễ quên mili giây cuối. Dùng khoảng nửa mở `[0h ngày đầu, 0h ngày sau ngày cuối)` (D-031).
+  - *Lưu ảnh dạng BLOB trong DB:* làm DB phình to, đọc danh sách chậm; FR-5.3 yêu cầu DB chỉ lưu đường dẫn.
+
+### Khái niệm cần hiểu
+
+- **Schema version và migration:** mỗi lần đổi cấu trúc bảng thì tăng `version`. sqflite so version trong file DB với version app yêu cầu: file mới thì gọi `onCreate`, file cũ hơn thì gọi `onUpgrade(old, new)`. Ở đây `onUpgrade` chạy lần lượt các bước `old+1 … new`.
+- **Transaction và rollback:** sqflite chạy `onCreate`/`onUpgrade` trong một transaction. Nếu một bước lỗi thì mọi thay đổi bị hủy, DB giữ nguyên version cũ và dữ liệu cũ. Test "refuses to upgrade when a step is missing" chứng minh điều này.
+- **Khoảng nửa mở `[a, b)`:** gồm `a`, không gồm `b`. Tuần T2–CN = `[0h T2, 0h T2 tuần sau)`. Không cần quan tâm giây hay mili giây cuối ngày.
+- **`DateTime(2026, 12, 31 + 1)`:** Dart tự chuyển thành 01/01/2027, nên cộng một ngày không cần tự xử lý cuối tháng/năm.
+- **EXIF orientation:** điện thoại thường lưu ảnh "nằm ngang" kèm một cờ "hãy xoay 90°". `bakeOrientation` xoay thật các điểm ảnh, để thumbnail hiện đúng chiều ở mọi nơi.
+- **`Exception` và `Error` trong Dart:** `Exception` là lỗi dự kiến (file không có); `Error` thường là lỗi lập trình. Riêng bộ giải mã ảnh lại ném `RangeError` khi gặp file hỏng, nên ở đúng chỗ đó code bắt mọi lỗi và báo "ảnh bị hỏng".
+- **`sqflite_common_ffi`:** chạy SQLite thật trên máy tính (qua FFI) với cùng API sqflite, nên test DB chạy trong vài giây mà không cần điện thoại.
+
+### Kết quả kiểm thử
+
+| Bước | Kết quả |
+|---|---|
+| `dart format --set-exit-if-changed lib test integration_test tool` | ✔ 0 thay đổi |
+| `flutter analyze` | ✔ No issues found |
+| `flutter test` | ✔ **321/321** (272 cũ + 49 mới) |
+| `flutter test --coverage` | **95.5%** dòng (799/837); `database_service.dart` 19/21, `expense_repository.dart` 45/46, `image_storage_service.dart` 42/45 (dòng chưa phủ là đường dẫn mặc định cần nền tảng thật: `getDatabasesPath`, `path_provider`) |
+| `flutter build apk --debug` | ✔ |
+| Thiết bị | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu); `integration_test/storage_test.dart` chờ chạy |
+
+Bảng ca biên chi tiết: `docs/TEST_REPORT.md`, mục "Phase 4 — Ca biên CSDL & lưu ảnh".
+
+### Hạn chế đã biết
+
+- Chưa kiểm chứng plugin sqflite và `path_provider` thật trên Android (chỉ FFI trên Windows).
+- DB lưu **đường dẫn tuyệt đối**; trên iOS thư mục app có thể đổi sau khi cập nhật (D-035). Dự án chỉ nộp APK Android.
+- Undo (FR-5.4) chưa có: Phase 5 thêm `restore` vào notifier, Phase 8 thêm SnackBar.
+- Thời gian tạo thumbnail chưa đo trên máy thật.
+
+### Cách tự kiểm tra bằng tay
+
+1. Chạy riêng test DB và ảnh:
+   ```powershell
+   flutter test test/services/database_service_test.dart test/services/sqflite_expense_repository_test.dart test/services/image_storage_service_test.dart
+   ```
+2. Thử phá để thấy test bắt lỗi: trong `expense_repository.dart`, đổi `<` thành `<=` ở `_inDayRange` rồi chạy lại. Test "a single day covers that whole day only" sẽ fail vì giao dịch lúc 00:00 hôm sau bị tính vào. Hoàn tác bằng `git checkout -- lib`.
+3. Khi có điện thoại: `flutter test integration_test/storage_test.dart -d <máy>`.
+4. Checklist đầy đủ: `docs/TEST_REPORT.md`, mục "Phase 4".
+
+### Danh sách commit
+
+```
+f3d2b10 test(db): add on-device check for sqflite and photo storage
+8e353ac style(db): drop arguments equal to their defaults
+d915528 feat(storage): save receipt photos with thumbnails made off the UI thread
+50c5f52 feat(db): add ExpenseRepository with a sqflite implementation
+5ae7d40 feat(db): open the expenses database with versioned migrations
+f034d34 test(db): add failing tests for database, repository and image storage
+docs(phase-4): record phase 4 results   (commit cuối của phase)
+```
