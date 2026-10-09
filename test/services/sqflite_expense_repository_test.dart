@@ -79,8 +79,8 @@ void main() {
     });
 
     test('ids keep increasing', () async {
-      final a = await repo.insert(expense('A', 1000, DateTime(2026, 10, 1)));
-      final b = await repo.insert(expense('B', 2000, DateTime(2026, 10, 1)));
+      final a = await repo.insert(expense('A', 1000, DateTime(2026, 10)));
+      final b = await repo.insert(expense('B', 2000, DateTime(2026, 10)));
       expect(b.id, greaterThan(a.id!));
     });
 
@@ -89,9 +89,7 @@ void main() {
     });
 
     test('re-inserting a deleted expense keeps its id (undo)', () async {
-      final saved = await repo.insert(
-        expense('A', 1000, DateTime(2026, 10, 1)),
-      );
+      final saved = await repo.insert(expense('A', 1000, DateTime(2026, 10)));
       final removed = await repo.delete(saved.id!);
 
       final restored = await repo.insert(removed!);
@@ -103,7 +101,7 @@ void main() {
   group('getAll', () {
     test('sorts by date, newest first, then by id', () async {
       final oct1 = await repo.insert(
-        expense('Oct 1', 1000, DateTime(2026, 10, 1)),
+        expense('Oct 1', 1000, DateTime(2026, 10)),
       );
       final oct5a = await repo.insert(
         expense('Oct 5 a', 1000, DateTime(2026, 10, 5)),
@@ -148,8 +146,8 @@ void main() {
     });
 
     test('does not touch other rows', () async {
-      final a = await repo.insert(expense('A', 1000, DateTime(2026, 10, 1)));
-      final b = await repo.insert(expense('B', 2000, DateTime(2026, 10, 1)));
+      final a = await repo.insert(expense('A', 1000, DateTime(2026, 10)));
+      final b = await repo.insert(expense('B', 2000, DateTime(2026, 10)));
 
       await repo.update(a.copyWith(amount: 5000));
       expect(await repo.getById(b.id!), b);
@@ -157,15 +155,13 @@ void main() {
 
     test('rejects an expense that was never saved', () async {
       expect(
-        () => repo.update(expense('A', 1000, DateTime(2026, 10, 1))),
+        () => repo.update(expense('A', 1000, DateTime(2026, 10))),
         throwsArgumentError,
       );
     });
 
     test('fails for an id that no longer exists', () async {
-      final saved = await repo.insert(
-        expense('A', 1000, DateTime(2026, 10, 1)),
-      );
+      final saved = await repo.insert(expense('A', 1000, DateTime(2026, 10)));
       await repo.delete(saved.id!);
 
       expect(() => repo.update(saved), throwsStateError);
@@ -174,7 +170,7 @@ void main() {
 
   group('delete', () {
     test('removes the row and returns it', () async {
-      final a = await repo.insert(expense('A', 1000, DateTime(2026, 10, 1)));
+      final a = await repo.insert(expense('A', 1000, DateTime(2026, 10)));
       final b = await repo.insert(expense('B', 2000, DateTime(2026, 10, 2)));
 
       expect(await repo.delete(a.id!), a);
@@ -249,15 +245,13 @@ void main() {
       final dec31 = await repo.insert(
         expense('dec31', 1000, DateTime(2026, 12, 31, 23, 59, 59, 999)),
       );
-      final jan1 = await repo.insert(
-        expense('jan1', 1000, DateTime(2027, 1, 1)),
-      );
+      final jan1 = await repo.insert(expense('jan1', 1000, DateTime(2027)));
       await repo.insert(expense('jan2', 1000, DateTime(2027, 1, 2)));
 
-      expect(
-        await repo.getBetween(DateTime(2026, 12, 31), DateTime(2027, 1, 1)),
-        [jan1, dec31],
-      );
+      expect(await repo.getBetween(DateTime(2026, 12, 31), DateTime(2027)), [
+        jan1,
+        dec31,
+      ]);
     });
 
     test('rejects a range that ends before it starts', () async {
@@ -270,7 +264,7 @@ void main() {
 
   group('totalsByCategory', () {
     setUp(() async {
-      await repo.insert(expense('a', 50000, DateTime(2026, 10, 1)));
+      await repo.insert(expense('a', 50000, DateTime(2026, 10)));
       await repo.insert(expense('b', 25000, DateTime(2026, 10, 31, 23, 59)));
       await repo.insert(
         expense(
@@ -284,7 +278,7 @@ void main() {
         expense(
           'd',
           300000,
-          DateTime(2026, 11, 1),
+          DateTime(2026, 11),
           category: ExpenseCategory.gear,
         ),
       );
@@ -301,7 +295,7 @@ void main() {
     test('limits the sums to a day range', () async {
       expect(
         await repo.totalsByCategory(
-          firstDay: DateTime(2026, 10, 1),
+          firstDay: DateTime(2026, 10),
           lastDay: DateTime(2026, 10, 31),
         ),
         {ExpenseCategory.food: 75000, ExpenseCategory.study: 120000},
@@ -311,7 +305,7 @@ void main() {
     test('is empty when nothing matches', () async {
       expect(
         await repo.totalsByCategory(
-          firstDay: DateTime(2025, 1, 1),
+          firstDay: DateTime(2025),
           lastDay: DateTime(2025, 1, 31),
         ),
         isEmpty,

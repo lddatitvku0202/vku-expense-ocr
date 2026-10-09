@@ -42,8 +42,7 @@ abstract interface class ExpenseRepository {
 
 /// [ExpenseRepository] backed by the sqflite `expenses` table.
 class SqfliteExpenseRepository implements ExpenseRepository {
-  SqfliteExpenseRepository(this._db, {DateTime Function() clock = DateTime.now})
-    : _clock = clock;
+  SqfliteExpenseRepository(this._db, {this._clock = DateTime.now});
 
   final Database _db;
   final DateTime Function() _clock;

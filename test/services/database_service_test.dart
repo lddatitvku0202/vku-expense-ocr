@@ -30,7 +30,7 @@ void main() {
   Map<String, Object?> row(String merchant, int amount) => {
     'merchant': merchant,
     'amount': amount,
-    'date': DateTime(2026, 10, 1).millisecondsSinceEpoch,
+    'date': DateTime(2026, 10).millisecondsSinceEpoch,
     'category': 'food',
     'image_path': '/receipts/$merchant.jpg',
     'thumb_path': '/receipts/${merchant}_thumb.jpg',
