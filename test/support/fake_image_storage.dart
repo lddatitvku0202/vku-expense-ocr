@@ -10,6 +10,12 @@ class FakeImageStorage implements ImageStorageService {
   /// Every path passed to [delete], in call order (nulls dropped).
   final List<String> deletedPaths = [];
 
+  /// Every source passed to [save].
+  final List<String> savedSources = [];
+
+  /// Thrown by the next [save] when set (then cleared).
+  ImageStorageException? failNextSave;
+
   @override
   Future<void> delete(Iterable<String?> paths) async {
     deletedPaths.addAll(paths.nonNulls);
@@ -25,7 +31,18 @@ class FakeImageStorage implements ImageStorageService {
   @override
   Future<Directory> receiptsDirectory() async => Directory('/fake/receipts');
 
+  /// Returns `/fake/receipts/receipt_<n>.jpg` and `..._thumb.jpg`.
   @override
-  Future<StoredReceipt> save(String sourcePath) async =>
-      (imagePath: '/fake/receipts/a.jpg', thumbPath: '/fake/receipts/a_t.jpg');
+  Future<StoredReceipt> save(String sourcePath) async {
+    if (failNextSave case final error?) {
+      failNextSave = null;
+      throw error;
+    }
+    savedSources.add(sourcePath);
+    final n = savedSources.length;
+    return (
+      imagePath: '/fake/receipts/receipt_$n.jpg',
+      thumbPath: '/fake/receipts/receipt_${n}_thumb.jpg',
+    );
+  }
 }

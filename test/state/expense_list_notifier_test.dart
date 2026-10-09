@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vku_expense_ocr/models/expense.dart';
 import 'package:vku_expense_ocr/models/expense_category.dart';
+import 'package:vku_expense_ocr/services/image_storage_service.dart';
 import 'package:vku_expense_ocr/state/expense_providers.dart';
 import 'package:vku_expense_ocr/state/storage_providers.dart';
 
@@ -204,6 +205,82 @@ void main() {
       );
       expect(listOf(c).map((e) => e.id), [1, 2, 3]);
       expect(storage.deletedPaths, isEmpty);
+    });
+  });
+
+  group('addWithPhoto (Review save, FR-5.3)', () {
+    test('stores the photo, then saves the expense with its paths', () async {
+      final c = container();
+      await c.read(expenseListProvider.future);
+
+      final saved = await c
+          .read(expenseListProvider.notifier)
+          .addWithPhoto(
+            _expense('Circle K', 25000, DateTime(2026, 10, 9)),
+            photoPath: '/cache/scan/receipt.jpg',
+          );
+
+      expect(storage.savedSources, ['/cache/scan/receipt.jpg']);
+      expect(saved.imagePath, '/fake/receipts/receipt_1.jpg');
+      expect(saved.thumbPath, '/fake/receipts/receipt_1_thumb.jpg');
+      expect(await repo.getById(saved.id!), saved);
+      expect(listOf(c).first, saved);
+    });
+
+    test('without a photo it is a plain add', () async {
+      final c = container();
+      await c.read(expenseListProvider.future);
+
+      final saved = await c
+          .read(expenseListProvider.notifier)
+          .addWithPhoto(_expense('Quán cơm', 35000, DateTime(2026, 10, 9)));
+
+      expect(storage.savedSources, isEmpty);
+      expect(saved.imagePath, isNull);
+      expect(listOf(c), hasLength(4));
+    });
+
+    test(
+      'a database error deletes the photo just stored and rethrows',
+      () async {
+        final c = container();
+        await c.read(expenseListProvider.future);
+        repo.failNextInsert = Exception('disk full');
+
+        await expectLater(
+          c
+              .read(expenseListProvider.notifier)
+              .addWithPhoto(
+                _expense('Circle K', 25000, DateTime(2026, 10, 9)),
+                photoPath: '/cache/scan/receipt.jpg',
+              ),
+          throwsException,
+        );
+
+        expect(storage.deletedPaths, [
+          '/fake/receipts/receipt_1.jpg',
+          '/fake/receipts/receipt_1_thumb.jpg',
+        ]);
+        expect(listOf(c), hasLength(3));
+      },
+    );
+
+    test('a photo that cannot be stored saves nothing', () async {
+      final c = container();
+      await c.read(expenseListProvider.future);
+      storage.failNextSave = const ImageStorageException('Ảnh bị hỏng.');
+
+      await expectLater(
+        c
+            .read(expenseListProvider.notifier)
+            .addWithPhoto(
+              _expense('Circle K', 25000, DateTime(2026, 10, 9)),
+              photoPath: '/cache/scan/broken.jpg',
+            ),
+        throwsA(isA<ImageStorageException>()),
+      );
+      expect(repo.insertCalls, 0);
+      expect(listOf(c), hasLength(3));
     });
   });
 
