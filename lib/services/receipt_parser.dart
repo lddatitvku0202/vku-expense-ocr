@@ -72,11 +72,18 @@ class ReceiptParser {
       );
     }
 
-    final fallback = [
+    // Without keywords: the largest amount written like money; bare
+    // numbers (check numbers, times without colons) only when nothing
+    // else is available.
+    final usable = [
       for (final scan in scans)
         if (scan.kind != _RowKind.tender && scan.kind != _RowKind.notTotal)
-          ...scan.amounts,
+          scan,
     ];
+    final formatted = [for (final scan in usable) ...scan.formatted];
+    final fallback = formatted.isNotEmpty
+        ? formatted
+        : [for (final scan in usable) ...scan.amounts];
     if (fallback.isEmpty) return null;
     return (fallback.reduce(math.max), FieldConfidence.low);
   }
@@ -347,13 +354,26 @@ final RegExp _unitPrice = RegExp(
   r'(\d{1,3}(?:[.,]\d{3})+|\d{4,9})',
 );
 
-/// Money: "150.000", "150,000", "150000", optionally followed by
-/// "đ"/"vnd"/"dong" (already normalized) or "₫". Not part of a code such
-/// as "M331", "A-2041", "#3021" or "3068B".
+/// Money. Group 1: grouped integer ("150.000", "123,100") with its
+/// separator in group 2, optionally followed by two decimals using the
+/// other separator ("123,100.00", "245.000,00") or by a 0/6 that is really
+/// a misread "đ" ("184.0340"). Group 3: bare digits ("150000"). Not part
+/// of a code such as "M331", "A-2041", "#3021" or "3068B".
 final RegExp _amount = RegExp(
-  r'(?<![a-z0-9.,/:#\-])(\d{1,3}(?:[.,]\d{3})+|\d{4,9})(?![.,]?\d)'
+  r'(?<![a-z0-9.,/:#\-])'
+  r'(?:(\d{1,3}(?:([.,])\d{3})(?:\2\d{3})*)'
+  r'(?:(?!\2)[.,]\d{2}(?!\d)|[06](?![\d.,]))?'
+  r'|(\d{4,9}))'
+  r'(?![.,]?\d)'
   r'(?=(?:d|vnd|dong)?(?![a-z0-9]))',
 );
+
+/// "123, 100.00": a space OCR put after a thousands separator.
+final RegExp _splitNumber = RegExp(r'(\d[.,])\s+(?=\d{3}(?!\d))');
+
+/// Currency mark right after an amount ("150000d", "150000 vnd", "₫").
+final RegExp _currencyAfter = RegExp(r'^\s*(?:d|vnd|dong|₫)(?![a-z])');
+
 final RegExp _currencyWord = RegExp('(?<![a-z])(?:vnd|dong|d)(?![a-z])');
 final RegExp _separators = RegExp('[.,]');
 final RegExp _letter = RegExp('[a-z]');
@@ -363,10 +383,11 @@ const int _maxAmount = 999999999;
 
 /// One row prepared for total extraction.
 class _RowScan {
-  _RowScan(this.kind, this.amounts, {required this.amountOnly});
+  _RowScan(this.kind, this.amounts, this.formatted, {required this.amountOnly});
 
   factory _RowScan.of(String row) {
-    final norm = TextNormalizer.normalize(TextNormalizer.repairDigits(row));
+    final norm = TextNormalizer.normalize(TextNormalizer.repairDigits(row))
+        .replaceAllMapped(_splitNumber, (m) => m[1]!);
     final key = TextNormalizer.ocrKey(norm);
     final chars = norm.split('');
     void blank(int start, int end) {
@@ -391,13 +412,19 @@ class _RowScan {
 
     final cleaned = chars.join();
     final amounts = <int>[];
+    final formatted = <int>[];
     for (final match in _amount.allMatches(cleaned)) {
       final before = cleaned.substring(0, match.start).trimRight();
       if (before.endsWith('-') || before.endsWith('(')) continue;
-      final digits = match[1]!;
+      final digits = match[1] ?? match[3]!;
       if (digits.startsWith('0')) continue;
       final value = int.parse(digits.replaceAll(_separators, ''));
-      if (value >= _minAmount && value <= _maxAmount) amounts.add(value);
+      if (value < _minAmount || value > _maxAmount) continue;
+      amounts.add(value);
+      final hasCurrency =
+          before.endsWith('₫') ||
+          _currencyAfter.hasMatch(cleaned.substring(match.end));
+      if (match[1] != null || hasCurrency) formatted.add(value);
     }
     final rest = cleaned
         .replaceAll(_amount, ' ')
@@ -405,6 +432,7 @@ class _RowScan {
     return _RowScan(
       _classify(key),
       amounts,
+      formatted,
       amountOnly: amounts.isNotEmpty && !_letter.hasMatch(rest),
     );
   }
@@ -414,6 +442,10 @@ class _RowScan {
 
   /// Valid amounts on the row after all exclusions.
   final List<int> amounts;
+
+  /// The subset written like money: thousands separators or a currency
+  /// mark. Bare numbers ("126431") may be a check number or a time.
+  final List<int> formatted;
 
   /// True for a row that is nothing but an amount, like "84.000".
   final bool amountOnly;
