@@ -783,3 +783,114 @@ b804a12 feat(camera): wrap the camera plugin behind a testable interface
 cfd883d test(camera): add failing tests for capture, frame crop and camera UI
 docs(phase-6): record phase 6 results   (commit cuối của phase)
 ```
+
+---
+
+## Phase 7 — Màn Review & Verification
+
+**Trạng thái:** ✅ hoàn tất (merge vào `main`, tag `phase-7`). ⚠ **Chưa thử trên thiết bị** (không bật emulator theo yêu cầu); mọi kiểm thử là widget test trên máy tính.
+
+### Mục tiêu phase
+
+Màn hình bắt buộc của đề: người dùng **kiểm tra lại** dữ liệu OCR trước khi lưu. Cùng một màn dùng cho ba việc: xác nhận hóa đơn vừa quét, thêm thủ công, sửa giao dịch đã lưu. Hoàn tất phần còn dở của FR-2.4 (hiện thời gian OCR) và FR-4.5 (văn bản OCR gốc), và gỡ màn debug tạm của Phase 3.
+
+FR liên quan: **FR-4.1 → FR-4.9**, **FR-2.4**, **FR-4.5**.
+
+### TDD trong lịch sử Git
+
+| # | Commit | Trạng thái test |
+|---|---|---|
+| 1 | `test(review): add failing tests for the Review & Verification screen` | 🔴 55 test mới không biên dịch được |
+| 2 | `feat(core): format VND amounts while typing and validate the form` | 🟢 22 test ô số tiền + validator xanh ngay lần đầu |
+| 3 | `feat(state): save a reviewed expense with its photo, cleaning up on failure` | 🟢 4 test lưu an toàn xanh |
+| 4 | `feat(review): add the Review & Verification form in its three modes` | 🔴→🟢 lần chạy đầu 12 test đỏ. **Lỗi thật trong code:** form dùng `ListView` nên các trường dưới chưa được dựng, và `Form.validate()` bỏ qua chúng → đổi sang `SingleChildScrollView` + `Column`. **Lỗi trong test mới:** 2 test dán số tiền đọc nhầm giao dịch có sẵn; 2 test hủy bấm back trong cùng khung hình với lúc gõ (thêm `pump()`); test màn nhỏ chạm vào ô nằm ngoài màn (thêm `ensureVisible`) |
+| 5 | `refactor(scan): remove the temporary OCR debug screen` | 🟢 489/489 |
+
+Ghi chú lịch sử Git: lần commit đầu, việc xóa hai file debug (đã `git rm` từ trước) bị lọt vào commit `feat(core)`, làm commit đó không build được. Vì nhánh chưa merge, đã `git reset --soft` về commit test rồi commit lại đúng nội dung (không dùng `rebase -i`, không `--amend` commit đã merge).
+
+### Đã làm gì
+
+| File | Vai trò |
+|---|---|
+| `lib/screens/review/review_screen.dart` | `ReviewScreen`: chọn chế độ; chế độ sửa đọc giao dịch từ `expenseListProvider` (`AsyncValue.when`: đang tải / lỗi / không tìm thấy). `_ReviewForm`: `Form` + `GlobalKey<FormState>`, ô tên, ô số tiền, chọn ngày, chip danh mục, dấu độ tin cậy, ảnh, văn bản OCR, nút Lưu, `PopScope` hỏi khi hủy. |
+| `lib/screens/review/review_draft.dart` | `ReviewMode` (scan / manual / edit) và `ReviewDraft`: giá trị khởi đầu của form cho từng chế độ (ngày thiếu → gợi ý hôm nay nhưng vẫn đánh dấu "missing"). |
+| `lib/core/amount_input.dart` | `AmountInput.parse/format` và `VndAmountInputFormatter` (FR-4.6). |
+| `lib/core/expense_validators.dart` | Validator của bốn trường, thông báo tiếng Việt (FR-4.3). |
+| `lib/widgets/confidence_note.dart` | `ConfidenceNote` (icon + chú thích dưới trường) và `MerchantWarningBanner` (banner đầu form cho tên cửa hàng). |
+| `lib/widgets/receipt_image_view.dart` | Ảnh hóa đơn; chạm → xem toàn màn với `InteractiveViewer` (FR-4.1). |
+| `lib/state/expense_providers.dart` | `addWithPhoto`: lưu ảnh + thumbnail → ghi DB; ghi DB lỗi thì xóa ảnh vừa lưu. |
+| `lib/widgets/ocr_text_panel.dart` | Thời gian OCR thành tùy chọn (chế độ sửa không có). |
+| Đã xóa | `lib/screens/debug/ocr_debug_screen.dart`, route `/debug/ocr`, nút debug ở màn camera, `test/screens/ocr_debug_screen_test.dart`. |
+
+### Lưu an toàn (yêu cầu 5)
+
+```
+Lưu ─► validate() ─► ImageStorageService.save (ảnh + thumbnail)
+                         │ lỗi ảnh → báo lỗi, KHÔNG ghi DB
+                         ▼
+                     repository.insert
+                         │ lỗi DB → xóa ảnh + thumbnail vừa lưu → báo lỗi, màn hình vẫn mở
+                         ▼
+                     SnackBar "Đã lưu giao dịch." → quay về
+```
+
+### Vì sao làm vậy (liên hệ slide)
+
+- **Form, `GlobalKey<FormState>`, validator, `FocusNode` (W8 s26–28):** đúng mẫu của slide; thêm `TextInputAction.next` để chuyển ô và `dispose()` mọi controller/focus node (W7 s26–29).
+- **Ephemeral state:** giá trị đang nhập, dấu độ tin cậy, trạng thái "đang lưu" chỉ màn này cần → `setState`. Danh sách giao dịch là app state → lưu qua notifier, Dashboard và Lịch sử tự cập nhật (FR-6.5).
+- **Pattern matching (W7 s14):** chọn chế độ bằng `switch ((scan, receipt))`; icon/chú thích theo độ tin cậy bằng `switch` trên enum.
+- **Null safety (W7 s12):** `ParsedReceipt` có trường null khi không đọc được; form xử lý bằng `??` và `case final x?` thay vì `!`.
+- **Lựa chọn đã cân nhắc:**
+  - *`ListView` cho form dài:* nhẹ hơn, nhưng `Form.validate()` bỏ qua trường chưa dựng (D-051).
+  - *Chỉ tô màu viền trường không chắc chắn:* không đủ cho người khó phân biệt màu, nên luôn kèm icon và chữ (D-052).
+  - *Dùng `NumberFormat` của `intl` trong bộ định dạng ô số tiền:* phải đồng bộ locale và khó kiểm soát vị trí con trỏ. Tự chèn dấu chấm thì đơn giản và thuần.
+  - *Cho phép lưu 0 đ (hóa đơn giảm giá toàn bộ):* đề yêu cầu "số nguyên dương", nên vẫn chặn và giải thích lý do trong thông báo.
+
+### Khái niệm cần hiểu
+
+- **`TextInputFormatter`:** chạy mỗi lần nội dung ô thay đổi, nhận giá trị cũ và mới (gồm cả vị trí con trỏ) và trả về giá trị sẽ hiển thị. Để con trỏ không nhảy: đếm số **chữ số** đứng trước con trỏ, định dạng lại, rồi đặt con trỏ sau đúng số chữ số đó.
+- **`PopScope`:** chặn việc rời màn. `canPop: false` thì nút back (AppBar, Android, cử chỉ) không đóng màn mà gọi `onPopInvokedWithResult`, nơi ta hỏi xác nhận. `Navigator.pop()` gọi trực tiếp thì không bị chặn, nên dùng sau khi lưu thành công.
+- **`FormField<T>`:** biến mọi widget (bộ chọn ngày, hàng chip) thành một trường của `Form`, có `validator` và `errorText` như `TextFormField`.
+- **Dựng lười (lazy) của `ListView`:** chỉ dựng phần tử gần màn hình. Phần tử chưa dựng thì không có `State`, nên `Form` không biết tới nó.
+- **Dọn dẹp khi thất bại (rollback thủ công):** ảnh nằm trên ổ đĩa, DB là SQLite, hai nơi không chung một transaction. Vì vậy phải tự xóa ảnh khi bước ghi DB thất bại.
+
+### Kết quả kiểm thử
+
+| Bước | Kết quả |
+|---|---|
+| `dart format --set-exit-if-changed lib test integration_test tool` | ✔ 0 thay đổi |
+| `flutter analyze` | ✔ No issues found |
+| `flutter test` | ✔ **489/489** (438 cũ − 4 test màn debug đã xóa + 55 mới) |
+| `flutter test --coverage` | **92.8%** dòng (1731/1866); `review_screen.dart` 232/235, `review_draft.dart` 40/40, `expense_validators.dart` 14/14, `confidence_note.dart` 39/39, `amount_input.dart` 53/55 |
+| `flutter build apk --debug` | ✔ |
+| Kiểm tra test bắt lỗi | Bỏ bước xóa ảnh khi DB lỗi → 2 test đỏ; `canPop: true` → 2 test hủy đỏ; đã khôi phục |
+| Thiết bị | ⚠ **Chưa test trên thiết bị** |
+
+Phân bổ 55 test mới: màn Review 28 · ô số tiền 11 · validator 11 · lưu an toàn 4 · khung văn bản OCR 1. Bảng chi tiết: `docs/TEST_REPORT.md`, mục "Phase 7".
+
+### Hạn chế đã biết
+
+- Chưa thử trên máy thật: bàn phím số, bộ chọn ngày tiếng Việt, phóng to ảnh, lưu ảnh thật (checklist Phase 7 trong `docs/TEST_REPORT.md`).
+- Hủy khi **chưa sửa** gì sau khi quét thì không hỏi (đúng FR-4.8), nên ảnh cắt tạm còn nằm trong thư mục cache cho tới khi hệ điều hành dọn.
+- Chế độ sửa không đổi được ảnh hóa đơn (chỉ xem); muốn thay ảnh thì xóa và quét lại.
+- Văn bản dán có phần thập phân viết bằng dấu chấm cả hai chỗ (ví dụ "150.000.00") sẽ bị đọc thành 15000000; hiếm gặp, và người dùng nhìn thấy số ngay trong ô.
+
+### Cách tự kiểm tra bằng tay
+
+1. Chạy test của màn Review:
+   ```powershell
+   flutter test test/screens/review_screen_test.dart test/core/amount_input_test.dart test/core/expense_validators_test.dart
+   ```
+2. Thử phá: trong `review_screen.dart`, đổi `SingleChildScrollView` + `Column` lại thành `ListView` rồi chạy test, xem những test nào đỏ và vì sao.
+3. Trên điện thoại: làm checklist "Phase 7" trong `docs/TEST_REPORT.md`.
+
+### Danh sách commit
+
+```
+14b3b6b refactor(scan): remove the temporary OCR debug screen
+b35b1f1 feat(review): add the Review & Verification form in its three modes
+72ee993 feat(state): save a reviewed expense with its photo, cleaning up on failure
+b31f433 feat(core): format VND amounts while typing and validate the form
+308713f test(review): add failing tests for the Review & Verification screen
+docs(phase-7): record phase 7 results   (commit cuối của phase)
+```

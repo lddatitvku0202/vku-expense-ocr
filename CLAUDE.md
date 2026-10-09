@@ -304,10 +304,10 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] Test: unit test hàm quy đổi tọa độ khung → vùng cắt (nhiều tỷ lệ màn hình/ảnh); unit test cắt ảnh trả về đúng kích thước; widget test overlay painter (`shouldRepaint`). Camera thật thì đưa vào checklist test thủ công.
 
 ### Phase 7 — Màn Review & Verification
-- [ ] Triển khai đủ FR-4 (form, validator, date picker, chọn danh mục, đánh dấu độ tin cậy thấp, raw text, thời gian OCR, input formatter VND, focus, xác nhận khi hủy, chế độ thêm thủ công và chế độ sửa).
-- [ ] Lưu: lưu ảnh và thumbnail → insert DB qua notifier → SnackBar → quay về.
-- [ ] Từ kết quả đánh giá Phase 3, tên cửa hàng là trường yếu nhất (7/19): FR-4.4 phải đánh dấu thật rõ khi merchant có độ tin cậy low/missing để người dùng kiểm tra lại. *(Yêu cầu bổ sung của bạn ở Phase 4, không thuộc brief gốc.)*
-- [ ] Widget test: hiển thị dữ liệu parse sẵn; trường `missing` được đánh dấu; validator chặn số tiền ≤ 0, tên rỗng, ngày tương lai, chưa chọn danh mục; submit hợp lệ gọi `add` (repository giả); chế độ sửa gọi `update`.
+- [x] Triển khai đủ FR-4 (form, validator, date picker, chọn danh mục, đánh dấu độ tin cậy thấp, raw text, thời gian OCR, input formatter VND, focus, xác nhận khi hủy, chế độ thêm thủ công và chế độ sửa).
+- [x] Lưu: lưu ảnh và thumbnail → insert DB qua notifier → SnackBar → quay về.
+- [x] Từ kết quả đánh giá Phase 3, tên cửa hàng là trường yếu nhất (7/19): FR-4.4 phải đánh dấu thật rõ khi merchant có độ tin cậy low/missing để người dùng kiểm tra lại. *(Yêu cầu bổ sung của bạn ở Phase 4, không thuộc brief gốc.)*
+- [x] Widget test: hiển thị dữ liệu parse sẵn; trường `missing` được đánh dấu; validator chặn số tiền ≤ 0, tên rỗng, ngày tương lai, chưa chọn danh mục; submit hợp lệ gọi `add` (repository giả); chế độ sửa gọi `update`.
 
 ### Phase 8 — Lịch sử & Dashboard (khung)
 - [ ] `widgets/expense_summary_card.dart` (bài lab Week 7, có thumbnail), `screens/history/` (ListView.builder, lọc danh mục, Dismissible + Undo, chạm để sửa `/expense/:id`), Dashboard hiển thị tổng tháng và các vị trí dành cho biểu đồ.
@@ -354,7 +354,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] FR-2.1 — bằng chứng: `MlKitOcrService` (`lib/services/ocr_service.dart`), `test/services/ocr_service_test.dart` (gửi script Latin + đường dẫn ảnh qua channel), chạy ML Kit bundled trên emulator với 22 ảnh (`docs/TEST_REPORT.md`); ảnh đã cắt sẽ có từ Phase 6
 - [x] FR-2.2 — bằng chứng: `ocrLinesFrom` (`lib/services/ocr_service.dart`) chuyển `RecognizedText` → `OcrLine` (text, `Rect`, cornerPoints), `test/services/ocr_service_test.dart`; parser không import ML Kit (`test/services/parser_purity_test.dart`)
 - [x] FR-2.3 — bằng chứng: `lib/services/row_grouper.dart`, `test/services/row_grouper_test.dart` (11 test: 2 block trái/phải, lệch dọc, bậc thang, ngưỡng cấu hình) + benchmark 23 fixture
-- [ ] FR-2.4 — một phần: `Stopwatch` quanh `processImage` + log (`ocr_service_test.dart`), hiển thị trong `OcrTextPanel` ở màn debug; hiển thị ở màn Review → Phase 7. Số đo emulator ở `docs/TEST_REPORT.md`
+- [x] FR-2.4 — bằng chứng: `Stopwatch` quanh `processImage` + log (`ocr_service_test.dart`); hiển thị ở màn Review trong "Xem văn bản OCR gốc" (`test/screens/review_screen_test.dart`); số đo emulator ở `docs/TEST_REPORT.md`. Chưa thử trên máy thật
 - [x] FR-2.5 — bằng chứng: `MlKitOcrService.close()` đóng đúng recognizer (`ocr_service_test.dart`), `ocrServiceProvider` gọi `close()` khi dispose (`lib/state/ocr_providers.dart`)
 - [x] FR-3.1 — bằng chứng: `TextNormalizer.normalize/ocrKey` dùng để so khớp, giá trị trả về giữ nguyên bản gốc (`test/core/text_normalizer_test.dart`, `text_normalizer_ocr_test.dart`, merchant test "keeps the original spelling")
 - [x] FR-3.2 — bằng chứng: `ReceiptParser.extractTotal`, `test/services/receipt_parser_total_test.dart` (34 test: 9 định dạng, 8 từ khóa, ưu tiên, hàng thấp hơn, loại trừ, fallback, kết quả `int`); fixture total 23/23
@@ -363,15 +363,15 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] FR-3.5 — bằng chứng: `ReceiptParser.suggestCategory` (switch trên record, list pattern + `when`, switch exhaustive), `test/services/receipt_parser_category_test.dart` (28 test); fixture category 23/23
 - [x] FR-3.6 — bằng chứng: `ReceiptParser.parse` → `ParsedReceipt` đủ trường + độ tin cậy từng trường (`test/services/receipt_parser_parse_test.dart`)
 - [x] FR-3.7 — bằng chứng: `docs/REGEX_TABLE.md` (29 pattern, sinh từ mã nguồn bằng `tool/regex_table/`, ví dụ đã chạy thử)
-- [ ] FR-4.1 — bằng chứng: _chưa có_
-- [ ] FR-4.2 — bằng chứng: _chưa có_
-- [ ] FR-4.3 — bằng chứng: _chưa có_
-- [ ] FR-4.4 — bằng chứng: _chưa có_
-- [ ] FR-4.5 — một phần: widget `OcrTextPanel` (raw text + thời gian OCR, `test/widgets/ocr_text_panel_test.dart`); gắn vào màn Review → Phase 7
-- [ ] FR-4.6 — bằng chứng: _chưa có_
-- [ ] FR-4.7 — bằng chứng: _chưa có_
-- [ ] FR-4.8 — bằng chứng: _chưa có_
-- [ ] FR-4.9 — bằng chứng: _chưa có_
+- [x] FR-4.1 — bằng chứng: `ReceiptImageView` (ảnh đã cắt, chạm → `InteractiveViewer` toàn màn) (`test/screens/review_screen_test.dart`). Chưa thử trên máy thật
+- [x] FR-4.2 — bằng chứng: `Form` + `GlobalKey<FormState>`, `TextFormField` tên/số tiền, `showDatePicker` (không quá hôm nay), 5 `ChoiceChip` danh mục (`test/screens/review_screen_test.dart`). Chưa thử trên máy thật
+- [x] FR-4.3 — bằng chứng: `ExpenseValidators` (tên rỗng, số tiền ≤ 0 kể cả hóa đơn 0 đ, ngày tương lai, chưa chọn danh mục), thông báo tiếng Việt (`test/core/expense_validators_test.dart`, `test/screens/review_screen_test.dart`). Chưa thử trên máy thật
+- [x] FR-4.4 — bằng chứng: icon + dòng chú thích cho từng trường low/missing (không chỉ màu); tên cửa hàng là banner nổi bật nhất ở đầu form + viền màu (`test/screens/review_screen_test.dart`). Chưa thử trên máy thật
+- [x] FR-4.5 — bằng chứng: `OcrTextPanel` trong màn Review: văn bản OCR gốc + thời gian OCR (`test/screens/review_screen_test.dart`, `test/widgets/ocr_text_panel_test.dart`). Chưa thử trên máy thật
+- [x] FR-4.6 — bằng chứng: `VndAmountInputFormatter`: chấm phân cách khi gõ, con trỏ đúng khi sửa giữa chuỗi, dán "150,000"/"150.000đ" → 150000 (`test/core/amount_input_test.dart`, `test/screens/review_screen_test.dart`). Chưa thử trên máy thật
+- [x] FR-4.7 — bằng chứng: `FocusNode` + `TextInputAction.next` tên → số tiền; mọi controller/focus node được `dispose()`; cuộn được khi bàn phím mở ở màn nhỏ và màn ngang (`test/screens/review_screen_test.dart`). Chưa thử trên máy thật
+- [x] FR-4.8 — bằng chứng: lưu → SnackBar → quay về; `PopScope` hỏi "Bỏ thay đổi?" khi đã sửa, cả nút back AppBar lẫn back Android (`test/screens/review_screen_test.dart`). Chưa thử trên máy thật
+- [x] FR-4.9 — bằng chứng: ba chế độ: từ kết quả quét, thêm thủ công không ảnh, sửa `/expense/:id` gọi `edit` (`test/screens/review_screen_test.dart`). Chưa thử trên máy thật
 - [x] FR-5.1 — bằng chứng: `DatabaseService` (`lib/services/database_service.dart`), `test/services/database_service_test.dart` (kiểu cột, NOT NULL, AUTOINCREMENT, version 1, `onUpgrade` từ v1 giữ nguyên dữ liệu, thiếu bước migration thì rollback)
 - [x] FR-5.2 — bằng chứng: `ExpenseRepository` + `SqfliteExpenseRepository` (`lib/services/expense_repository.dart`), `test/services/sqflite_expense_repository_test.dart` (22 test: CRUD, thứ tự, biên đầu/cuối ngày, tổng theo danh mục)
 - [x] FR-5.3 — bằng chứng: `ImageStorageService.save` copy vào `<documents>/receipts/`, thumbnail JPEG 256px trong `Isolate.run` (`test/services/image_storage_service_test.dart`); trên Android thật: `integration_test/storage_test.dart` (chưa chạy, xem Việc còn nợ)
@@ -410,7 +410,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 | 4 — CSDL & lưu ảnh | ✅ Xong | tag `phase-4` | format ✔ · analyze 0 · test 321/321 · coverage 95.5% · build debug ✔ | Test DB bằng `sqflite_common_ffi`, ảnh bằng thư mục tạm; **chưa chạy trên thiết bị** (không bật emulator theo yêu cầu, `integration_test/storage_test.dart` chờ máy) |
 | 5 — State management | ✅ Xong | tag `phase-5` | format ✔ · analyze 0 · test 383/383 · coverage 95.0% · build debug ✔ | Test bằng `ProviderContainer` + repository/storage giả, `fakeAsync` cho Undo; **chưa chạy trên thiết bị** (không bật emulator theo yêu cầu) |
 | 6 — Camera capture | ✅ Xong (FR-1: code + test máy tính xong, CHƯA xác minh trên điện thoại thật) | tag `phase-6` | format ✔ · analyze 0 · test 438/438 · coverage 91.5% · build debug ✔ · smoke test **emulator + webcam** 1 lần pass (preview → chụp → cắt → OCR → /review) | `image_cropper`, flash, lấy nét, quyền, vòng đời chưa thử trên máy thật; xem checklist trong Việc còn nợ |
-| 7 — Review & Verification | ⬜ Chưa bắt đầu | — | — | |
+| 7 — Review & Verification | ✅ Xong | tag `phase-7` | format ✔ · analyze 0 · test 489/489 · coverage 92.8% · build debug ✔ | Widget test trên máy tính; **chưa thử trên thiết bị** (không bật emulator theo yêu cầu). Màn debug OCR Phase 3 đã gỡ |
 | 8 — Lịch sử & Dashboard | ⬜ Chưa bắt đầu | — | — | |
 | 9 — Biểu đồ CustomPainter | ⬜ Chưa bắt đầu | — | — | |
 | 10 — UI/UX polish | ⬜ Chưa bắt đầu | — | — | |
@@ -439,7 +439,8 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
   - [ ] Từ chối quyền → hướng dẫn + "Mở Cài đặt" → cấp lại quyền → quay về, camera tự chạy.
   - [ ] Chuyển app rồi quay lại (và đổi tab rồi quay lại): camera vẫn chạy, không màn đen, không crash.
   - [ ] Chạy `flutter test integration_test/camera_smoke_test.dart -d <máy>` với một hóa đơn thật trước camera.
-- [ ] Checklist test thủ công trên thiết bị của Phase 0–6 trong `docs/TEST_REPORT.md`.
+- [ ] **Phase 7 — màn Review trên điện thoại thật:** bàn phím số cho ô số tiền và nút Next chuyển ô; form cuộn được khi bàn phím mở; bộ chọn ngày hiện tiếng Việt và không cho chọn ngày tương lai; phóng to ảnh hóa đơn; lưu thật (ảnh + thumbnail vào `receipts/`, DB); nút back Android hỏi trước khi bỏ thay đổi.
+- [ ] Checklist test thủ công trên thiết bị của Phase 0–7 trong `docs/TEST_REPORT.md`.
 
 ---
 
@@ -497,6 +498,12 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 | D-048 | Camera chỉ được giữ khi đang hiển thị: trả khi app `inactive/paused/hidden` (trừ lúc đang khởi tạo, vì hộp thoại xin quyền cũng làm app `inactive`), khi tab bị ẩn (`TickerMode` do `StatefulShellRoute` tắt), và trong lúc cắt/OCR/Review | Tiết kiệm pin và RAM (OCR cần bộ nhớ); `IndexedStack` giữ tab Quét sống nên nếu không thì camera chạy cả khi đang ở tab khác. Không trả camera khi đang khởi tạo để tránh vòng lặp xin quyền. |
 | D-049 | Luồng chụp: tự cắt theo khung → `image_cropper` để chỉnh tay → OCR → Review. "Hủy" ở màn chỉnh = hủy quét. Ảnh thư viện: xoay đứng → chỉnh tay. OCR thất bại → hộp thoại "Nhập tay" mở Review kèm ảnh. `ResolutionPreset.veryHigh` | `image_cropper` không nhận vùng cắt khởi tạo, nên tự cắt trước rồi cho chỉnh. Ảnh thư viện không chụp qua khung nên không tự cắt. Độ phân giải cao giúp đọc chữ nhỏ. |
 | D-050 | Smoke test camera: AVD `hw.camera.back=webcam0`; trong `integration_test/camera_smoke_test.dart`, bước `image_cropper` được thay bằng bước cho ảnh đi thẳng qua (chỉ trong test) | Activity native của uCrop không bấm được từ Flutter test. Việc `image_cropper` mở được nằm trong checklist điện thoại, không được coi là đã test. |
+| D-051 | Form Review dùng `SingleChildScrollView` + `Column`, không dùng `ListView` | `ListView` dựng trường theo kiểu lười: trường chưa cuộn tới chưa được dựng, và `Form.validate()` bỏ qua nó. Test phát hiện điều này (nút Lưu và ô danh mục không tồn tại khi chưa cuộn). |
+| D-052 | Dấu độ tin cậy = icon + chú thích (+ màu); tên cửa hàng dùng banner ở đầu form; dấu của một trường **mất đi khi người dùng sửa trường đó** | Không dựa vào màu (người mù màu, màn hình tối). Tên cửa hàng là trường yếu nhất ở Phase 3 (7/19). Người dùng đã sửa nghĩa là đã kiểm tra. |
+| D-053 | Ô số tiền: chỉ giữ chữ số, tối đa 12 chữ số; con trỏ đặt sau cùng số chữ số như trước khi định dạng; xóa ngay sau dấu chấm thì xóa chữ số đứng trước; văn bản dán được đọc bằng `AmountInput.parse` (bỏ phần thập phân kiểu "150.000,00") | Đáp ứng FR-4.6 mà không để con trỏ nhảy. Hóa đơn 0 đ vẫn bị chặn ("số tiền > 0"), thông báo giải thích trường hợp giảm giá toàn bộ. |
+| D-054 | Giao dịch mới lưu ngày đã chọn lúc 00:00; khi sửa mà **không đổi ngày** thì giữ nguyên giờ cũ | Biểu đồ và tổng chỉ cần ngày. Giữ giờ khi sửa để thứ tự trong Lịch sử không bị xáo trộn. |
+| D-055 | Gỡ màn debug OCR (Phase 3) và route `/debug/ocr`; `OcrTextPanel` dùng lại trong Review, thời gian OCR có thể null | Brief yêu cầu không để code chết. Chế độ sửa không có thời gian OCR (DB không lưu), chỉ hiện số dòng. Test của màn debug bị xóa cùng màn; nội dung tương đương được test ở màn Review và màn camera. |
+| D-056 | Hủy: `PopScope(canPop: !_dirty)` + hộp thoại "Bỏ thay đổi?"; chưa sửa gì thì quay về ngay | Giữ cử chỉ back dự đoán của Android khi form chưa sửa. FR-4.8 chỉ yêu cầu hỏi khi đã sửa. |
 
 ---
 
