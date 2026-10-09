@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show Offset;
 
 import 'package:vku_expense_ocr/models/ocr_line.dart';
 import 'package:vku_expense_ocr/models/receipt_row.dart';
@@ -10,6 +11,10 @@ import 'package:vku_expense_ocr/models/receipt_row.dart';
 /// the raw text on newlines (as in W8 s42) therefore separates "Tổng tiền"
 /// from its amount. Instead, lines whose vertical extents overlap by at
 /// least [minOverlapRatio] of the shorter height are merged into one row.
+///
+/// Tilted or sideways photos are handled first: the tilt is estimated from
+/// the lines' corner points ([estimateSkew]) and every line is rotated back
+/// before the overlap test, so "upright" rows exist again.
 ///
 /// Pure Dart: works on [OcrLine], never on ML Kit types.
 class RowGrouper {
@@ -23,12 +28,38 @@ class RowGrouper {
   /// pieces of text to count as the same row.
   final double minOverlapRatio;
 
+  /// Angle of the text baseline in radians (0 = upright, π/2 = text runs
+  /// downwards, i.e. the photo was taken sideways), or 0 without corners.
+  ///
+  /// Each line contributes the vector along its top edge (top-left →
+  /// top-right); summing the vectors weighs long lines more than short
+  /// noisy ones and handles angles around ±180° without wrap-around issues.
+  static double estimateSkew(List<OcrLine> lines) {
+    var sumX = 0.0;
+    var sumY = 0.0;
+    for (final line in lines) {
+      final corners = line.cornerPoints;
+      if (corners == null || corners.length < 2) continue;
+      final edge = corners[1] - corners[0];
+      sumX += edge.dx;
+      sumY += edge.dy;
+    }
+    if (sumX == 0 && sumY == 0) return 0;
+    return math.atan2(sumY, sumX);
+  }
+
   /// Groups [lines] into rows ordered top to bottom, each sorted left to
-  /// right. Blank lines are dropped.
+  /// right (in the deskewed frame). Blank lines are dropped.
   List<ReceiptRow> group(List<OcrLine> lines) {
+    final skew = estimateSkew(lines);
+    final cos = math.cos(-skew);
+    final sin = math.sin(-skew);
+    Offset upright(Offset p) =>
+        Offset(p.dx * cos - p.dy * sin, p.dx * sin + p.dy * cos);
+
     final visible = [
       for (final line in lines)
-        if (line.text.trim().isNotEmpty) _Band.of(line),
+        if (line.text.trim().isNotEmpty) _Band.of(line, upright),
     ]..sort((a, b) => a.center.compareTo(b.center));
 
     final rows = <_RowBuilder>[];
@@ -44,16 +75,24 @@ class RowGrouper {
   }
 }
 
-/// Vertical extent of one line; zero-height boxes are treated as 1 px tall.
+/// Extent of one line after deskewing; zero-height lines count as 1 px.
 class _Band {
-  _Band(this.line, this.top, this.bottom);
+  _Band(this.line, this.left, this.top, this.bottom);
 
-  factory _Band.of(OcrLine line) {
+  factory _Band.of(OcrLine line, Offset Function(Offset) upright) {
     final box = line.boundingBox;
-    return _Band(line, box.top, math.max(box.bottom, box.top + 1));
+    final corners =
+        line.cornerPoints ??
+        [box.topLeft, box.topRight, box.bottomRight, box.bottomLeft];
+    final points = corners.map(upright).toList();
+    final top = points.map((p) => p.dy).reduce(math.min);
+    final bottom = points.map((p) => p.dy).reduce(math.max);
+    final left = points.map((p) => p.dx).reduce(math.min);
+    return _Band(line, left, top, math.max(bottom, top + 1));
   }
 
   final OcrLine line;
+  final double left;
   final double top;
   final double bottom;
 
@@ -68,19 +107,19 @@ class _RowBuilder {
     add(first);
   }
 
-  final List<OcrLine> _lines = [];
+  final List<_Band> _bands = [];
   double _sumTop = 0;
   double _sumBottom = 0;
 
   void add(_Band band) {
-    _lines.add(band.line);
+    _bands.add(band);
     _sumTop += band.top;
     _sumBottom += band.bottom;
   }
 
   double overlapRatio(_Band band) {
-    final rowTop = _sumTop / _lines.length;
-    final rowBottom = _sumBottom / _lines.length;
+    final rowTop = _sumTop / _bands.length;
+    final rowBottom = _sumBottom / _bands.length;
     final overlap =
         math.min(band.bottom, rowBottom) - math.max(band.top, rowTop);
     if (overlap <= 0) return 0;
@@ -88,8 +127,8 @@ class _RowBuilder {
     return overlap / shorter;
   }
 
-  ReceiptRow build() => ReceiptRow(
-    [..._lines]
-      ..sort((a, b) => a.boundingBox.left.compareTo(b.boundingBox.left)),
-  );
+  ReceiptRow build() => ReceiptRow([
+    for (final band in [..._bands]..sort((a, b) => a.left.compareTo(b.left)))
+      band.line,
+  ]);
 }
