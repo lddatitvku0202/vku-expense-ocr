@@ -12,9 +12,11 @@ import 'package:vku_expense_ocr/screens/history/history_screen.dart';
 import 'package:vku_expense_ocr/screens/review/review_screen.dart';
 import 'package:vku_expense_ocr/screens/scan/camera_screen.dart';
 import 'package:vku_expense_ocr/services/receipt_scan_service.dart';
+import 'package:vku_expense_ocr/state/camera_providers.dart';
 import 'package:vku_expense_ocr/state/router_provider.dart';
 import 'package:vku_expense_ocr/state/storage_providers.dart';
 
+import 'support/fake_camera.dart';
 import 'support/memory_settings_store.dart';
 
 void main() {
@@ -30,6 +32,8 @@ void main() {
         overrides: [
           routerProvider.overrideWithValue(router),
           settingsStoreProvider.overrideWithValue(MemorySettingsStore()),
+          // Router tests never touch camera hardware.
+          cameraSourceProvider.overrideWithValue(FakeCameraSource(() => null)),
         ],
         child: const VkuExpenseApp(),
       ),

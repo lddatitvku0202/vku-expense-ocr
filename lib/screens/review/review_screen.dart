@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vku_expense_ocr/models/parsed_receipt.dart';
+import 'package:vku_expense_ocr/services/receipt_scan_service.dart';
 import 'package:vku_expense_ocr/widgets/state_message.dart';
 
 /// Review & verification form (FR-4).
@@ -11,10 +12,14 @@ import 'package:vku_expense_ocr/widgets/state_message.dart';
 ///
 /// Placeholder until Phase 7 adds the form.
 class ReviewScreen extends StatelessWidget {
-  const ReviewScreen({super.key, this.receipt, this.expenseId});
+  const ReviewScreen({super.key, this.receipt, this.expenseId, this.scan});
 
   final ParsedReceipt? receipt;
   final int? expenseId;
+
+  /// Photo path, OCR time and rows of a scan, when the receipt came from
+  /// the camera or the gallery.
+  final ScanResult? scan;
 
   @override
   Widget build(BuildContext context) {

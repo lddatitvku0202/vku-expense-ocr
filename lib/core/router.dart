@@ -5,8 +5,9 @@ import 'package:vku_expense_ocr/screens/dashboard/dashboard_screen.dart';
 import 'package:vku_expense_ocr/screens/debug/ocr_debug_screen.dart';
 import 'package:vku_expense_ocr/screens/history/history_screen.dart';
 import 'package:vku_expense_ocr/screens/review/review_screen.dart';
-import 'package:vku_expense_ocr/screens/scan/scan_screen.dart';
+import 'package:vku_expense_ocr/screens/scan/camera_screen.dart';
 import 'package:vku_expense_ocr/screens/shell/home_shell.dart';
+import 'package:vku_expense_ocr/services/receipt_scan_service.dart';
 import 'package:vku_expense_ocr/widgets/state_message.dart';
 
 /// Route paths used across the app (W8 s20–24).
@@ -51,7 +52,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.dashboard}) {
             routes: [
               GoRoute(
                 path: AppRoutes.scan,
-                builder: (context, state) => const ScanScreen(),
+                builder: (context, state) => const CameraScreen(),
               ),
             ],
           ),
@@ -67,12 +68,15 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.dashboard}) {
       ),
       GoRoute(
         path: AppRoutes.review,
-        builder: (context, state) => ReviewScreen(
-          receipt: switch (state.extra) {
-            final ParsedReceipt receipt => receipt,
-            _ => null,
-          },
-        ),
+        builder: (context, state) => switch (state.extra) {
+          // From the camera or gallery: photo, parsed fields, OCR time.
+          final ScanResult scan => ReviewScreen(
+            receipt: scan.receipt,
+            scan: scan,
+          ),
+          final ParsedReceipt receipt => ReviewScreen(receipt: receipt),
+          _ => const ReviewScreen(),
+        },
       ),
       GoRoute(
         path: AppRoutes.expensePattern,
