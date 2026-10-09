@@ -103,7 +103,7 @@ void main() {
 
   group('CategoryTotals.of', () {
     test('lists all 5 categories in enum order, 0 when nothing was spent', () {
-      final totals = CategoryTotals.of([_e(50000, DateTime(2026, 10, 1))]);
+      final totals = CategoryTotals.of([_e(50000, DateTime(2026, 10))]);
 
       expect(totals.amounts.keys, ExpenseCategory.values);
       expect(totals.amounts, {
@@ -117,7 +117,7 @@ void main() {
 
     test('sums per category and gives shares that add up to 1', () {
       final totals = CategoryTotals.of([
-        _e(50000, DateTime(2026, 10, 1)),
+        _e(50000, DateTime(2026, 10)),
         _e(25000, DateTime(2026, 10, 2)),
         _e(75000, DateTime(2026, 10, 3), ExpenseCategory.study),
         _e(50000, DateTime(2026, 10, 4), ExpenseCategory.gear),
@@ -152,14 +152,14 @@ void main() {
 
     test('equal data gives equal objects', () {
       expect(
-        CategoryTotals.of([_e(1000, DateTime(2026, 10, 1))]),
-        CategoryTotals.of([_e(1000, DateTime(2026, 9, 1))]),
+        CategoryTotals.of([_e(1000, DateTime(2026, 10))]),
+        CategoryTotals.of([_e(1000, DateTime(2026, 9))]),
       );
       expect(
-        CategoryTotals.of([_e(1000, DateTime(2026, 10, 1))]),
+        CategoryTotals.of([_e(1000, DateTime(2026, 10))]),
         isNot(
           CategoryTotals.of([
-            _e(1000, DateTime(2026, 10, 1), ExpenseCategory.gear),
+            _e(1000, DateTime(2026, 10), ExpenseCategory.gear),
           ]),
         ),
       );
