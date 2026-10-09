@@ -413,12 +413,6 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                 : null,
             icon: Icon(_flashIcon(_flash)),
           ),
-          // TEMPORARY (Phase 3): removed with the debug screen in Phase 7.
-          IconButton(
-            tooltip: 'Thử OCR (debug)',
-            onPressed: () => context.push(AppRoutes.ocrDebug),
-            icon: const Icon(Icons.bug_report_outlined),
-          ),
         ],
       ),
       body: SafeArea(
