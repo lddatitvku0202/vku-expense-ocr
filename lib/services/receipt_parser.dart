@@ -65,6 +65,9 @@ class ReceiptParser {
       }
     }
     if (best != null) {
+      if (_cashMinusChange(scans, best.amount) case final paid?) {
+        return (paid, FieldConfidence.low);
+      }
       final subtotalOnly = best.tier == _RowKind.subtotal.tier;
       return (
         best.amount,
@@ -77,8 +80,7 @@ class ReceiptParser {
     // else is available.
     final usable = [
       for (final scan in scans)
-        if (scan.kind != _RowKind.tender && scan.kind != _RowKind.notTotal)
-          scan,
+        if (scan.kind case null || _RowKind.contact) scan,
     ];
     final formatted = [for (final scan in usable) ...scan.formatted];
     final fallback = formatted.isNotEmpty
@@ -86,6 +88,33 @@ class ReceiptParser {
         : [for (final scan in usable) ...scan.amounts];
     if (fallback.isEmpty) return null;
     return (fallback.reduce(math.max), FieldConfidence.low);
+  }
+
+  /// Some POS print the cash handed over as "Tổng tiền thanh toán". When
+  /// the chosen total equals a cash amount and change was given, the amount
+  /// paid is cash − change; it is only trusted when that number is printed
+  /// elsewhere on the receipt.
+  static int? _cashMinusChange(List<_RowScan> scans, int total) {
+    List<int> amountsOf(_RowKind kind) => [
+      for (var i = 0; i < scans.length; i++)
+        if (scans[i].kind == kind)
+          ...(scans[i].amounts.isNotEmpty || i + 1 >= scans.length
+              ? scans[i].amounts
+              : scans[i + 1].amountOnly
+              ? scans[i + 1].amounts
+              : const <int>[]),
+    ];
+    if (!amountsOf(_RowKind.tender).contains(total)) return null;
+    final printed = {
+      for (final scan in scans)
+        if (scan.kind != _RowKind.tender && scan.kind != _RowKind.change)
+          ...scan.amounts,
+    };
+    for (final change in amountsOf(_RowKind.change)) {
+      final paid = total - change;
+      if (paid > 0 && printed.contains(paid)) return paid;
+    }
+    return null;
   }
 
   /// Transaction date (FR-3.3).
@@ -251,10 +280,12 @@ class ReceiptParser {
 
 /// What a row is about, decided by its first keyword.
 enum _RowKind {
-  finalTotal(3),
-  total(2),
+  finalTotal(4),
+  total(3),
+  weakTotal(2),
   subtotal(1),
   tender(0),
+  change(0),
   notTotal(0),
   contact(0);
 
@@ -274,13 +305,36 @@ RegExp _keywordPattern(List<String> keywords) {
   return RegExp('(?<![a-z0-9])(?:$body)(?![a-z0-9])');
 }
 
+/// Like [_keywordPattern], plus every variant of a keyword of 8+ characters
+/// with one character replaced by any letter or digit: OCR often misreads a
+/// single glyph of a long label ("1ONG CONG", "TONG CON6").
+RegExp _fuzzyKeywordPattern(List<String> keywords) {
+  final alternatives = <(int, String)>[];
+  for (final word in keywords.map(TextNormalizer.ocrKey)) {
+    alternatives.add((word.length, RegExp.escape(word)));
+    if (word.length < 8) continue;
+    for (var i = 0; i < word.length; i++) {
+      if (word[i] == ' ') continue;
+      final variant =
+          '${RegExp.escape(word.substring(0, i))}[a-z0-9]'
+          '${RegExp.escape(word.substring(i + 1))}';
+      alternatives.add((word.length, variant));
+    }
+  }
+  alternatives.sort((a, b) => b.$1.compareTo(a.$1));
+  final body = alternatives.map((a) => a.$2).join('|');
+  return RegExp('(?<![a-z0-9])(?:$body)(?![a-z0-9])');
+}
+
 final List<(RegExp, _RowKind)> _kindPatterns = [
-  (_keywordPattern(finalTotalKeywords), _RowKind.finalTotal),
-  (_keywordPattern(totalKeywords), _RowKind.total),
+  (_fuzzyKeywordPattern(finalTotalKeywords), _RowKind.finalTotal),
+  (_fuzzyKeywordPattern(totalKeywords), _RowKind.total),
   // "Cộng: 110.000đ" on hand-written bills; only at the start of a row.
   (RegExp('^cong(?![a-z0-9])'), _RowKind.total),
-  (_keywordPattern(subtotalKeywords), _RowKind.subtotal),
+  (_keywordPattern(weakTotalKeywords), _RowKind.weakTotal),
+  (_fuzzyKeywordPattern(subtotalKeywords), _RowKind.subtotal),
   (_keywordPattern(tenderKeywords), _RowKind.tender),
+  (_keywordPattern(changeKeywords), _RowKind.change),
   (_keywordPattern(notTotalKeywords), _RowKind.notTotal),
   (_keywordPattern(contactKeywords), _RowKind.contact),
 ];
