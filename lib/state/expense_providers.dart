@@ -46,6 +46,28 @@ class ExpenseListNotifier extends AsyncNotifier<List<Expense>> {
     return saved;
   }
 
+  /// Saves an expense from the Review screen: first copies [photoPath]
+  /// into app storage with its thumbnail (FR-5.3), then inserts the row.
+  ///
+  /// If the insert fails, the photo files just written are deleted again,
+  /// so a failed save leaves no orphan files, and the error is rethrown
+  /// for the screen to show. If storing the photo fails, nothing is saved.
+  Future<Expense> addWithPhoto(Expense expense, {String? photoPath}) async {
+    if (photoPath == null) return add(expense);
+    final stored = await _images.save(photoPath);
+    try {
+      return await add(
+        expense.copyWith(
+          imagePath: () => stored.imagePath,
+          thumbPath: () => stored.thumbPath,
+        ),
+      );
+    } on Object {
+      await _deleteFiles([stored.imagePath, stored.thumbPath]);
+      rethrow;
+    }
+  }
+
   /// Saves changes to an existing expense. When the photo was replaced, the
   /// old files are deleted once the new row is saved.
   ///
