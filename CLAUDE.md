@@ -284,6 +284,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [ ] `lib/services/ocr_service.dart`: interface `OcrService` + `MlKitOcrService` (InputImage từ file, recognizer latin, chuyển sang `List<OcrLine>`, đo `Stopwatch`, `close()`).
 - [ ] Pipeline `ReceiptScanService`: ảnh → OCR → group rows → parse → `ParsedReceipt` + thời gian xử lý.
 - [ ] Test: `ReceiptScanService` với `FakeOcrService` (fake chỉ nằm trong `test/`), kiểm tra pipeline và xử lý lỗi (ảnh hỏng, text rỗng → trả về ParsedReceipt với các trường `missing`, không crash).
+- [ ] Đánh giá trên hóa đơn thật `D:\receipts-test\`: **trước khi chấm** phải kiểm tra SHA-256 của `ground_truth.csv` bằng `0ec9054112e46ecebf22f87b5d12dec588c9aea5c52eacad37f2ae134d03ecc0`; không khớp thì **dừng lại báo bạn**. Chấm theo mục "Quy tắc gán nhãn & chấm điểm hóa đơn thật" trong `docs/TEST_REPORT.md`, báo riêng set=main / set=edge. Không sửa `ground_truth.csv`. *(Yêu cầu bổ sung của bạn, không thuộc brief gốc.)*
 - [ ] Thêm màn hình debug tạm (chọn ảnh từ thư viện → hiển thị raw text + kết quả parse) để kiểm tra trên máy thật. Màn này sau đó trở thành phần "Xem văn bản OCR gốc" của Review, không để lại code chết.
 
 ### Phase 4 — CSDL & lưu ảnh

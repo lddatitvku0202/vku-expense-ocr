@@ -51,6 +51,46 @@ Chi tiết từng fixture (✓ đúng, ✗ sai):
 | pho24_ocr_digits.txt | ✓ | ✓ | ✓ | ✓ |
 | banh_mi_skewed.txt | ✓ | ✓ | ✓ | ✓ |
 
+## Quy tắc gán nhãn & chấm điểm hóa đơn thật
+
+Dùng ở Phase 3 để đo parser trên ảnh hóa đơn thật trong `D:\receipts-test\` (ngoài repo). Đáp án (`ground_truth.csv`) do bạn duyệt và chốt **trước** khi chạy OCR/parser trên các ảnh này.
+
+**Gán nhãn**
+
+- `total` = số phải thanh toán in trên hóa đơn, số nguyên VND.
+- Chỉ suy ra từ nội dung thấy trong ảnh, không dùng kiến thức ngoài ảnh.
+- Ô trống nghĩa là đáp án đúng là **"không có"**.
+- `Gear` = đồ dùng / thiết bị / quần áo / phụ kiện.
+
+**Chấm điểm**
+
+| Trường | Quy tắc |
+|---|---|
+| `total` | Khớp chính xác số nguyên. |
+| `date` | Khớp chính xác; đáp án trống → đúng khi parser trả `null`. |
+| `merchant` | So sau chuẩn hóa (bỏ dấu, chữ thường, bỏ ký tự không phải chữ/số). Đúng nếu kết quả **chứa** hoặc **nằm trong** `merchant` hoặc `merchant_alt` (tối thiểu 4 ký tự). Đáp án trống → đúng khi parser trả `null`. |
+| `category` | Báo 3 nhóm: **đúng** / **không gợi ý** (`null`) / **gợi ý sai**. |
+
+Báo cáo riêng hai nhóm `set=main` và `set=edge`.
+
+## Ground truth đã khóa
+
+| Mục | Giá trị |
+|---|---|
+| File | `D:\receipts-test\ground_truth.csv` (ngoài repo, không commit ảnh) |
+| SHA-256 | `0ec9054112e46ecebf22f87b5d12dec588c9aea5c52eacad37f2ae134d03ecc0` |
+| Kích thước | 6.451 byte (UTF-8, không BOM, xuống dòng CRLF) |
+| Số hóa đơn | **22** (`main` 19 · `edge` 3: `highlands_02.jpg`, `thietbisieuthi_01.jpg`, `unknown_03.jpg`) |
+| Cột | `file, merchant, merchant_alt, total, date, category, confidence, notes, set, verified` |
+| Ngày khóa | 2026-10-09 |
+
+Trước mỗi lần đánh giá ở Phase 3 phải kiểm tra hash; **không khớp thì dừng lại, không chấm điểm**:
+
+```powershell
+(Get-FileHash 'D:\receipts-test\ground_truth.csv' -Algorithm SHA256).Hash
+# phải bằng 0EC9054112E46ECEBF22F87B5D12DEC588C9AEA5C52EACAD37F2AE134D03ECC0
+```
+
 ## Checklist test thủ công trên thiết bị
 
 > Đánh dấu `[x]` khi bạn đã tự kiểm tra trên máy Android thật. Ghi tên máy và phiên bản Android.
