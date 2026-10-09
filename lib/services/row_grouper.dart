@@ -31,21 +31,49 @@ class RowGrouper {
   /// Angle of the text baseline in radians (0 = upright, π/2 = text runs
   /// downwards, i.e. the photo was taken sideways), or 0 without corners.
   ///
-  /// Each line contributes the vector along its top edge (top-left →
-  /// top-right); summing the vectors weighs long lines more than short
-  /// noisy ones and handles angles around ±180° without wrap-around issues.
+  /// Each line's direction is its top edge (top-left → top-right). The
+  /// dominant direction is the one shared by the most lines (within
+  /// [_window]); ties go to more text length. Only lines near it are then
+  /// averaged, as summed vectors, so long lines count more and angles near
+  /// ±180° do not wrap. Text at another angle in the photo (a shopping bag,
+  /// a sign) cannot outvote the receipt's many lines.
   static double estimateSkew(List<OcrLine> lines) {
-    var sumX = 0.0;
-    var sumY = 0.0;
+    final edges = <({double angle, Offset vector})>[];
     for (final line in lines) {
       final corners = line.cornerPoints;
       if (corners == null || corners.length < 2) continue;
       final edge = corners[1] - corners[0];
-      sumX += edge.dx;
-      sumY += edge.dy;
+      if (edge.distance == 0) continue;
+      edges.add((angle: edge.direction, vector: edge));
     }
-    if (sumX == 0 && sumY == 0) return 0;
-    return math.atan2(sumY, sumX);
+    if (edges.isEmpty) return 0;
+
+    List<Offset> near(double angle) => [
+      for (final e in edges)
+        if (_angleBetween(e.angle, angle) <= _window) e.vector,
+    ];
+    double length(List<Offset> vectors) =>
+        vectors.fold(0, (sum, v) => sum + v.distance);
+
+    var best = near(edges.first.angle);
+    for (final e in edges.skip(1)) {
+      final group = near(e.angle);
+      if (group.length > best.length ||
+          (group.length == best.length && length(group) > length(best))) {
+        best = group;
+      }
+    }
+    final sum = best.fold(Offset.zero, (a, b) => a + b);
+    return math.atan2(sum.dy, sum.dx);
+  }
+
+  /// Lines within ±10° count as the same direction.
+  static const double _window = 10 * math.pi / 180;
+
+  /// Smallest absolute difference between two angles, in [0, π].
+  static double _angleBetween(double a, double b) {
+    final d = (a - b) % (2 * math.pi);
+    return d > math.pi ? 2 * math.pi - d : d;
   }
 
   /// Groups [lines] into rows ordered top to bottom, each sorted left to
