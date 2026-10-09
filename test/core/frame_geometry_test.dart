@@ -121,8 +121,9 @@ void main() {
     );
 
     test('20:9 viewport covered by a 9:16 preview (worked example)', () {
-      // Preview shown 450 x 1000 from x = -45 in a 360 x 800 viewport... scaled
-      // to a 1080 x 2400 viewport: preview 1350 x 2400 from x = -135.
+      // The 9:16 preview covers the 1080 x 2400 viewport at 1350 x 2400,
+      // starting at x = -135. The photo fills the preview, scale 1080 / 1350
+      // = 0.8: x 100 → (100 + 135) * 0.8 = 188, y 300 → 300 * 0.8 = 240.
       final crop = FrameGeometry.frameToImageCrop(
         frame: const Rect.fromLTRB(100, 300, 980, 2100),
         viewport: const Size(1080, 2400),
