@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -186,10 +185,10 @@ void main() {
     ) async {
       await pumpReview(
         tester,
-        extra: ScanResult(
+        extra: const ScanResult(
           imagePath: '/cache/scan/receipt.jpg',
-          receipt: const ParsedReceipt.empty(),
-          rows: const [],
+          receipt: ParsedReceipt.empty(),
+          rows: [],
           ocrDuration: Duration.zero,
           error: 'Không đọc được ảnh hóa đơn. Hãy chụp lại hoặc nhập tay.',
         ),
@@ -443,7 +442,8 @@ void main() {
         await tester.pump();
         expect(textOf(tester, ReviewScreen.amountFieldKey), '150.000');
         await tapSave(tester);
-        expect((await repo.getAll()).first.amount, 150000);
+        final added = (await repo.getAll()).firstWhere((e) => e.id != 7);
+        expect(added.amount, 150000);
       });
     }
   });
@@ -568,6 +568,7 @@ void main() {
     testWidgets('with changes the back button asks first', (tester) async {
       await pumpReview(tester, extra: _scan());
       await tester.enterText(field(ReviewScreen.merchantFieldKey), 'Co.opmart');
+      await tester.pump(); // the next frame, as when a person types
 
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
@@ -589,6 +590,7 @@ void main() {
     testWidgets('the Android back button asks too', (tester) async {
       await pumpReview(tester, location: '/expense/7');
       await tester.enterText(field(ReviewScreen.amountFieldKey), '1');
+      await tester.pump(); // the next frame, as when a person types
 
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
@@ -641,6 +643,8 @@ void main() {
         );
         tester.view.viewInsets = FakeViewPadding(bottom: size.height * 0.45);
         addTearDown(tester.view.resetViewInsets);
+        await tester.ensureVisible(field(ReviewScreen.merchantFieldKey));
+        await tester.pumpAndSettle();
         await tester.tap(field(ReviewScreen.merchantFieldKey));
         await tester.pumpAndSettle();
 
