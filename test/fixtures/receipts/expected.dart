@@ -195,4 +195,62 @@ const receiptExpectations = <ReceiptExpectation>[
     date: (2026, 10, 25),
     category: ExpenseCategory.food,
   ),
+  // Phase 3: rotated photos (deskew with ML Kit corner points).
+  ReceiptExpectation(
+    file: 'tilted_minimart.txt',
+    merchant: ['MINIMART AN BÌNH'],
+    total: 70000,
+    date: (2026, 10, 26),
+    category: ExpenseCategory.food,
+  ),
+  ReceiptExpectation(
+    file: 'tilted_cafe_ccw.txt',
+    merchant: ['CỘNG CÀ PHÊ'],
+    total: 149000,
+    date: (2026, 10, 28),
+    category: ExpenseCategory.food,
+  ),
+  ReceiptExpectation(
+    file: 'sideways_bookshop.txt',
+    merchant: ['NHÀ SÁCH MINH TRÍ'],
+    total: 115000,
+    date: (2026, 10, 27),
+    category: ExpenseCategory.study,
+  ),
+  // Phase 3: patterns seen on real photos (synthetic receipts).
+  ReceiptExpectation(
+    file: 'pos_decimal_amounts.txt',
+    merchant: ['CO.OP FOOD AN THƯỢNG'],
+    total: 70000,
+    date: (2026, 10, 22),
+    category: ExpenseCategory.food,
+  ),
+  ReceiptExpectation(
+    file: 'cash_tendered_label.txt',
+    merchant: ['TẠP HÓA MINH ANH'],
+    total: 33500,
+    date: (2026, 10, 23),
+    category: ExpenseCategory.food,
+  ),
+  ReceiptExpectation(
+    file: 'tax_table_total.txt',
+    merchant: ['SIÊU THỊ AN PHÚ'],
+    total: 63500,
+    date: (2026, 10, 24),
+    category: ExpenseCategory.food,
+  ),
+  ReceiptExpectation(
+    file: 'english_date_store.txt',
+    merchant: ['FAMILYMART NGUYEN VAN LINH'],
+    total: 42000,
+    date: (2026, 10, 24),
+    category: ExpenseCategory.food,
+  ),
+  ReceiptExpectation(
+    file: 'clothing_shop.txt',
+    merchant: ['THỜI TRANG LAN ANH'],
+    total: 693000,
+    date: (2026, 10, 25),
+    category: ExpenseCategory.gear,
+  ),
 ];

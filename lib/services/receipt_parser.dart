@@ -65,6 +65,9 @@ class ReceiptParser {
       }
     }
     if (best != null) {
+      if (_cashMinusChange(scans, best.amount) case final paid?) {
+        return (paid, FieldConfidence.low);
+      }
       final subtotalOnly = best.tier == _RowKind.subtotal.tier;
       return (
         best.amount,
@@ -72,13 +75,46 @@ class ReceiptParser {
       );
     }
 
-    final fallback = [
+    // Without keywords: the largest amount written like money; bare
+    // numbers (check numbers, times without colons) only when nothing
+    // else is available.
+    final usable = [
       for (final scan in scans)
-        if (scan.kind != _RowKind.tender && scan.kind != _RowKind.notTotal)
-          ...scan.amounts,
+        if (scan.kind case null || _RowKind.contact) scan,
     ];
+    final formatted = [for (final scan in usable) ...scan.formatted];
+    final fallback = formatted.isNotEmpty
+        ? formatted
+        : [for (final scan in usable) ...scan.amounts];
     if (fallback.isEmpty) return null;
     return (fallback.reduce(math.max), FieldConfidence.low);
+  }
+
+  /// Some POS print the cash handed over as "Tổng tiền thanh toán". When
+  /// the chosen total equals a cash amount and change was given, the amount
+  /// paid is cash − change; it is only trusted when that number is printed
+  /// elsewhere on the receipt.
+  static int? _cashMinusChange(List<_RowScan> scans, int total) {
+    List<int> amountsOf(_RowKind kind) => [
+      for (var i = 0; i < scans.length; i++)
+        if (scans[i].kind == kind)
+          ...(scans[i].amounts.isNotEmpty || i + 1 >= scans.length
+              ? scans[i].amounts
+              : scans[i + 1].amountOnly
+              ? scans[i + 1].amounts
+              : const <int>[]),
+    ];
+    if (!amountsOf(_RowKind.tender).contains(total)) return null;
+    final printed = {
+      for (final scan in scans)
+        if (scan.kind != _RowKind.tender && scan.kind != _RowKind.change)
+          ...scan.amounts,
+    };
+    for (final change in amountsOf(_RowKind.change)) {
+      final paid = total - change;
+      if (paid > 0 && printed.contains(paid)) return paid;
+    }
+    return null;
   }
 
   /// Transaction date (FR-3.3).
@@ -94,10 +130,22 @@ class ReceiptParser {
     for (final row in rows) {
       final norm = TextNormalizer.normalize(TextNormalizer.repairDigits(row));
       final labelled = _dateLabel.hasMatch(TextNormalizer.ocrKey(norm));
-      for (final match in _datePattern.allMatches(norm)) {
-        if (_validDate(match) case final date?) {
-          found.add((date: date, labelled: labelled));
-        }
+      final candidates = [
+        for (final match in _datePattern.allMatches(norm))
+          (match.start, _validDate(match[1]!, match[3]!, match[4]!)),
+        for (final match in _dayMonthNamePattern.allMatches(norm))
+          (
+            match.start,
+            _validDate(match[1]!, _monthNumber(match[2]!), match[3]!),
+          ),
+        for (final match in _monthNameDayPattern.allMatches(norm))
+          (
+            match.start,
+            _validDate(match[2]!, _monthNumber(match[1]!), match[3]!),
+          ),
+      ]..sort((a, b) => a.$1.compareTo(b.$1));
+      for (final (_, date) in candidates) {
+        if (date != null) found.add((date: date, labelled: labelled));
       }
     }
     if (found.isEmpty) return null;
@@ -112,13 +160,16 @@ class ReceiptParser {
     );
   }
 
-  /// Builds the date of a [_datePattern] match, or `null` if it does not
-  /// exist. `DateTime(2026, 4, 31)` silently becomes 1 May, so the day and
-  /// month are compared after construction.
-  static DateTime? _validDate(RegExpMatch match) {
-    final day = int.parse(match[1]!);
-    final month = int.parse(match[3]!);
-    final yearText = match[4]!;
+  /// Builds a date from its parts, or `null` if it does not exist.
+  /// `DateTime(2026, 4, 31)` silently becomes 1 May, so the day and month
+  /// are compared after construction.
+  static DateTime? _validDate(
+    String dayText,
+    String monthText,
+    String yearText,
+  ) {
+    final day = int.parse(dayText);
+    final month = int.parse(monthText);
     final year = int.parse(yearText) + (yearText.length == 2 ? 2000 : 0);
     if (year < 2000 || year > 2099 || month < 1 || month > 12 || day < 1) {
       return null;
@@ -212,11 +263,10 @@ class ReceiptParser {
   static ExpenseCategory? _categoryFromContent(List<String> rows) {
     final votes = {for (final category in ExpenseCategory.values) category: 0};
     for (final row in rows) {
-      final key = TextNormalizer.ocrKey(row);
-      for (final category in ExpenseCategory.values) {
-        if (_categoryPattern(category).hasMatch(key)) {
-          votes.update(category, (count) => count + 1);
-        }
+      // One vote per row, for its longest keyword: "áo sơ mi" (Gear)
+      // beats the "mi" (mì, Food) inside it.
+      if (_categoryOf(TextNormalizer.ocrKey(row)) case final category?) {
+        votes.update(category, (count) => count + 1);
       }
     }
     final ranked = votes.entries.where((entry) => entry.value > 0).toList()
@@ -244,10 +294,12 @@ class ReceiptParser {
 
 /// What a row is about, decided by its first keyword.
 enum _RowKind {
-  finalTotal(3),
-  total(2),
+  finalTotal(4),
+  total(3),
+  weakTotal(2),
   subtotal(1),
   tender(0),
+  change(0),
   notTotal(0),
   contact(0);
 
@@ -267,13 +319,36 @@ RegExp _keywordPattern(List<String> keywords) {
   return RegExp('(?<![a-z0-9])(?:$body)(?![a-z0-9])');
 }
 
+/// Like [_keywordPattern], plus every variant of a keyword of 8+ characters
+/// with one character replaced by any letter or digit: OCR often misreads a
+/// single glyph of a long label ("1ONG CONG", "TONG CON6").
+RegExp _fuzzyKeywordPattern(List<String> keywords) {
+  final alternatives = <(int, String)>[];
+  for (final word in keywords.map(TextNormalizer.ocrKey)) {
+    alternatives.add((word.length, RegExp.escape(word)));
+    if (word.length < 8) continue;
+    for (var i = 0; i < word.length; i++) {
+      if (word[i] == ' ') continue;
+      final variant =
+          '${RegExp.escape(word.substring(0, i))}[a-z0-9]'
+          '${RegExp.escape(word.substring(i + 1))}';
+      alternatives.add((word.length, variant));
+    }
+  }
+  alternatives.sort((a, b) => b.$1.compareTo(a.$1));
+  final body = alternatives.map((a) => a.$2).join('|');
+  return RegExp('(?<![a-z0-9])(?:$body)(?![a-z0-9])');
+}
+
 final List<(RegExp, _RowKind)> _kindPatterns = [
-  (_keywordPattern(finalTotalKeywords), _RowKind.finalTotal),
-  (_keywordPattern(totalKeywords), _RowKind.total),
+  (_fuzzyKeywordPattern(finalTotalKeywords), _RowKind.finalTotal),
+  (_fuzzyKeywordPattern(totalKeywords), _RowKind.total),
   // "Cộng: 110.000đ" on hand-written bills; only at the start of a row.
   (RegExp('^cong(?![a-z0-9])'), _RowKind.total),
-  (_keywordPattern(subtotalKeywords), _RowKind.subtotal),
+  (_keywordPattern(weakTotalKeywords), _RowKind.weakTotal),
+  (_fuzzyKeywordPattern(subtotalKeywords), _RowKind.subtotal),
   (_keywordPattern(tenderKeywords), _RowKind.tender),
+  (_keywordPattern(changeKeywords), _RowKind.change),
   (_keywordPattern(notTotalKeywords), _RowKind.notTotal),
   (_keywordPattern(contactKeywords), _RowKind.contact),
 ];
@@ -297,6 +372,23 @@ final RegExp _timeLike = RegExp(
 final RegExp _datePattern = RegExp(
   r'(?<!\d)(\d{1,2})\s*([/.\-])\s*(\d{1,2})\s*\2\s*(\d{4}|\d{2})(?!\d)',
 );
+
+/// English month names: "18 Jun 2024", "5 October 2025", "Oct 21, 2026".
+const _monthNames = 'jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec';
+final RegExp _dayMonthNamePattern = RegExp(
+  r'(?<![a-z0-9])(\d{1,2})\s+('
+  '$_monthNames'
+  r')[a-z]*\.?,?\s+(\d{4})(?!\d)',
+);
+final RegExp _monthNameDayPattern = RegExp(
+  r'(?<![a-z0-9])('
+  '$_monthNames'
+  r')[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})(?!\d)',
+);
+
+/// "oct" → "10" (the pattern only lets the twelve prefixes through).
+String _monthNumber(String name) =>
+    '${_monthNames.split('|').indexOf(name.substring(0, 3)) + 1}';
 
 /// Rows whose date is the transaction date.
 final RegExp _dateLabel = _keywordPattern([
@@ -347,13 +439,26 @@ final RegExp _unitPrice = RegExp(
   r'(\d{1,3}(?:[.,]\d{3})+|\d{4,9})',
 );
 
-/// Money: "150.000", "150,000", "150000", optionally followed by
-/// "đ"/"vnd"/"dong" (already normalized) or "₫". Not part of a code such
-/// as "M331", "A-2041", "#3021" or "3068B".
+/// Money. Group 1: grouped integer ("150.000", "123,100") with its
+/// separator in group 2, optionally followed by two decimals using the
+/// other separator ("123,100.00", "245.000,00") or by a 0/6 that is really
+/// a misread "đ" ("184.0340"). Group 3: bare digits ("150000"). Not part
+/// of a code such as "M331", "A-2041", "#3021" or "3068B".
 final RegExp _amount = RegExp(
-  r'(?<![a-z0-9.,/:#\-])(\d{1,3}(?:[.,]\d{3})+|\d{4,9})(?![.,]?\d)'
+  r'(?<![a-z0-9.,/:#\-])'
+  r'(?:(\d{1,3}(?:([.,])\d{3})(?:\2\d{3})*)'
+  r'(?:(?!\2)[.,]\d{2}(?!\d)|[06](?![\d.,]))?'
+  r'|(\d{4,9}))'
+  r'(?![.,]?\d)'
   r'(?=(?:d|vnd|dong)?(?![a-z0-9]))',
 );
+
+/// "123, 100.00": a space OCR put after a thousands separator.
+final RegExp _splitNumber = RegExp(r'(\d[.,])\s+(?=\d{3}(?!\d))');
+
+/// Currency mark right after an amount ("150000d", "150000 vnd", "₫").
+final RegExp _currencyAfter = RegExp(r'^\s*(?:d|vnd|dong|₫)(?![a-z])');
+
 final RegExp _currencyWord = RegExp('(?<![a-z])(?:vnd|dong|d)(?![a-z])');
 final RegExp _separators = RegExp('[.,]');
 final RegExp _letter = RegExp('[a-z]');
@@ -363,10 +468,11 @@ const int _maxAmount = 999999999;
 
 /// One row prepared for total extraction.
 class _RowScan {
-  _RowScan(this.kind, this.amounts, {required this.amountOnly});
+  _RowScan(this.kind, this.amounts, this.formatted, {required this.amountOnly});
 
   factory _RowScan.of(String row) {
-    final norm = TextNormalizer.normalize(TextNormalizer.repairDigits(row));
+    final norm = TextNormalizer.normalize(TextNormalizer.repairDigits(row))
+        .replaceAllMapped(_splitNumber, (m) => m[1]!);
     final key = TextNormalizer.ocrKey(norm);
     final chars = norm.split('');
     void blank(int start, int end) {
@@ -391,13 +497,19 @@ class _RowScan {
 
     final cleaned = chars.join();
     final amounts = <int>[];
+    final formatted = <int>[];
     for (final match in _amount.allMatches(cleaned)) {
       final before = cleaned.substring(0, match.start).trimRight();
       if (before.endsWith('-') || before.endsWith('(')) continue;
-      final digits = match[1]!;
+      final digits = match[1] ?? match[3]!;
       if (digits.startsWith('0')) continue;
       final value = int.parse(digits.replaceAll(_separators, ''));
-      if (value >= _minAmount && value <= _maxAmount) amounts.add(value);
+      if (value < _minAmount || value > _maxAmount) continue;
+      amounts.add(value);
+      final hasCurrency =
+          before.endsWith('₫') ||
+          _currencyAfter.hasMatch(cleaned.substring(match.end));
+      if (match[1] != null || hasCurrency) formatted.add(value);
     }
     final rest = cleaned
         .replaceAll(_amount, ' ')
@@ -405,6 +517,7 @@ class _RowScan {
     return _RowScan(
       _classify(key),
       amounts,
+      formatted,
       amountOnly: amounts.isNotEmpty && !_letter.hasMatch(rest),
     );
   }
@@ -414,6 +527,10 @@ class _RowScan {
 
   /// Valid amounts on the row after all exclusions.
   final List<int> amounts;
+
+  /// The subset written like money: thousands separators or a currency
+  /// mark. Bare numbers ("126431") may be a check number or a time.
+  final List<int> formatted;
 
   /// True for a row that is nothing but an amount, like "84.000".
   final bool amountOnly;

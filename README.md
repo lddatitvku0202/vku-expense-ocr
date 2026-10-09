@@ -31,6 +31,13 @@ flutter test
 flutter build apk --release
 ```
 
+## Công cụ phát triển (không cần để build hay chạy app)
+
+| Công cụ | Cần | Khi nào dùng |
+|---|---|---|
+| `tool/regex_table/gen_regex_table.py` | **Python 3** | Chỉ khi sửa regex trong `lib/services/receipt_parser.dart` / `receipt_keywords.dart`: sinh lại `docs/REGEX_TABLE.md` (`python tool/regex_table/gen_regex_table.py`). |
+| `tool/ocr_eval/run_ocr_eval.ps1` | PowerShell, `adb`, thiết bị Android đã cắm | Chấm độ chính xác OCR trên ảnh hóa đơn thật (dữ liệu nằm ngoài repo, mặc định `D:\receipts-test`). Xem `docs/TEST_REPORT.md`. |
+
 ## Tải APK
 
 _Sẽ bổ sung._

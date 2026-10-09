@@ -11,6 +11,9 @@ const finalTotalKeywords = [
   'tong tien thanh toan',
   'tong so tien thanh toan',
   'tong cong thanh toan',
+  'tong tien phai t.toan',
+  'phai t.toan',
+  'phai t. toan',
   'can thanh toan',
   'phai thanh toan',
   'con phai thanh toan',
@@ -30,11 +33,16 @@ const finalTotalKeywords = [
 const totalKeywords = [
   'tong cong',
   'tong tien',
-  'tong',
+  't.cong',
+  't. cong',
   'total',
   'thanh toan',
   'da thanh toan',
 ];
+
+/// A bare "Tổng:" is weaker than "Tổng cộng": tax tables and quantity
+/// summaries also start with it.
+const weakTotalKeywords = ['tong'];
 
 /// Sum of the items before discounts or VAT: used only as a last resort.
 const subtotalKeywords = [
@@ -49,7 +57,7 @@ const subtotalKeywords = [
   'sub-total',
 ];
 
-/// Cash handed over, change, deposits: never the expense amount.
+/// Cash handed over and deposits: never the expense amount.
 const tenderKeywords = [
   'tien khach dua',
   'khach dua',
@@ -57,19 +65,24 @@ const tenderKeywords = [
   'khach tra',
   'khach thanh toan',
   'tien mat',
+  'da coc',
+  'dat coc',
+  'con lai',
+  'cash',
+  'tendered',
+  'received',
+];
+
+/// Change given back. Never the expense amount, but cash − change is.
+const changeKeywords = [
   'tien thua',
   'tien thoi',
   'tien tra lai',
   'thoi lai',
   'tra lai',
   'tien du',
-  'da coc',
-  'dat coc',
-  'con lai',
-  'cash',
   'change',
-  'tendered',
-  'received',
+  'change due',
 ];
 
 /// Rows that carry money but are not the total: discounts, taxes,
@@ -186,6 +199,14 @@ const notNameKeywords = [
   'bill',
   'ticket',
   've xem phim',
+  // Item table headers.
+  'mat hang',
+  'ten hang',
+  'san pham',
+  't.tien',
+  'don gia',
+  'dvt',
+  'sl',
   // Date and staff labels.
   'ngay',
   'date',
@@ -494,6 +515,14 @@ const gearKeywords = [
   'electronics',
   'bao hanh',
   'imei',
+  // Clothes and personal items count as Gear (labelling rule). Words that
+  // collide once accents are removed (giày/giấy, dép/đẹp, mũ/mù, váy/vay)
+  // are only used inside phrases.
+  'thoi trang', 'fashion', 'clothing', 'apparel', 'quan ao', 'ao so mi',
+  'so mi', 'ao thun', 'ao khoac', 'ao len', 'ao polo', 'quan tay',
+  'quan jean', 'quan short', 'chan vay', 'giay the thao', 'sneaker',
+  'sandal', 'tui xach', 'balo', 'that lung', 'kinh mat', 'khau trang',
+  't-shirt', 'shirt',
 ];
 
 const entertainmentKeywords = [

@@ -1,0 +1,10 @@
+# Convenience store with an English POS that prints the month as a word.
+FAMILYMART NGUYEN VAN LINH
+Store: FM-0412
+Date: Sat 24 Oct 2026 21:03:11
+Receipt: 0412-02-77120
+AQUAFINA 500ML | 1 | 6,000
+ONIGIRI TUNA | 2 | 18,000 | 36,000
+TOTAL(+VAT) | 42,000 VND
+CASH | 50,000 VND
+CHANGE DUE | 8,000 VND

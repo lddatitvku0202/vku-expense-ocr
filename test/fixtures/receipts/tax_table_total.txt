@@ -1,0 +1,15 @@
+# Hypermarket receipt with a VAT breakdown table after the total. OCR read
+# "TONG" as "1ONG" and the "đ" after the total as a 0.
+SIÊU THỊ AN PHÚ
+Ma so thue: 0100956381
+PHIEU TINH TIEN
+1 MI HAO HAO | 22.500d
+1 NUOC MAM NAM NGU | 41.000d
+1ONG CONG | 63.5000
+TIEN MAT (VND) | 100.000d
+TIEN THOI LAI | -36.500d
+T.Suat - GB chua co GTGT - Thue GTGT
+1> 5% | 39.048 | 1.952
+2>10% | 20.455 | 2.045
+Tong : | 59.503 | 3.997
+Ticket: 010000207 24/10/2026 18:12:05

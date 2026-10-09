@@ -1,0 +1,15 @@
+# rotate: 7
+# Minimart photographed at about 7 degrees: labels and amounts drift into
+# neighbouring rows unless the grouper deskews using the corner points.
+MINIMART AN BÌNH
+45 Phan Châu Trinh, Hải Châu, Đà Nẵng
+ĐT: 0236 3812 456
+Ngày: 26/10/2026 20:15
+Mì Omachi xốt bò | 3 | 8.500 | 25.500
+Sữa Milo hộp 180ml | 4 | 7.000 | 28.000
+Bánh Oreo | 1 | 18.000
+Tổng tiền hàng | 71.500
+Giảm giá | -1.500
+Tổng thanh toán | 70.000
+Tiền khách đưa | 100.000
+Tiền thối | 30.000

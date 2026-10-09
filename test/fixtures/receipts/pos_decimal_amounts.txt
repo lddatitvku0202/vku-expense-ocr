@@ -1,0 +1,10 @@
+# POS that prints amounts with two decimals. OCR inserted a space after a
+# thousands separator, and a delivery phone number is not right after its
+# label, so it looks like a large bare number.
+CO.OP FOOD AN THƯỢNG
+DT Giao hang: 39256601
+Ngay: 22/10/2026 18:20
+VAT10% 1 | 45,000.00 | 45,000.00
+VAT00% 2 | 12,500.00 | 25,000.00
+Tong so tien thanh toan: | 70, 000.00
+The Ngan Hang | 70, 000.00

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vku_expense_ocr/models/parsed_receipt.dart';
 import 'package:vku_expense_ocr/screens/dashboard/dashboard_screen.dart';
+import 'package:vku_expense_ocr/screens/debug/ocr_debug_screen.dart';
 import 'package:vku_expense_ocr/screens/history/history_screen.dart';
 import 'package:vku_expense_ocr/screens/review/review_screen.dart';
 import 'package:vku_expense_ocr/screens/scan/scan_screen.dart';
@@ -21,6 +22,9 @@ abstract final class AppRoutes {
   static const String expensePattern = '/expense/:id';
 
   static String expense(int id) => '/expense/$id';
+
+  /// Temporary OCR check screen (Phase 3, removed in Phase 7).
+  static const String ocrDebug = '/debug/ocr';
 }
 
 /// Creates the app router.
@@ -77,6 +81,10 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.dashboard}) {
           if (id == null) return const _NotFoundScreen();
           return ReviewScreen(expenseId: id);
         },
+      ),
+      GoRoute(
+        path: AppRoutes.ocrDebug,
+        builder: (context, state) => const OcrDebugScreen(),
       ),
     ],
     errorBuilder: (context, state) => const _NotFoundScreen(),

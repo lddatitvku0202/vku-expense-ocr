@@ -1,0 +1,12 @@
+# rotate: -12
+# Cafe receipt tilted the other way (about -12 degrees). The shop name
+# starts with "Cộng", which is also a total keyword on hand-written bills.
+CỘNG CÀ PHÊ
+Cộng Cà Phê - 98 Bạch Đằng, Đà Nẵng
+Hotline: 1900 6766
+Ngày: 28/10/2026 09:05
+Cốt dừa cà phê | 2 | 55.000 | 110.000
+Bạc xỉu | 1 | 39.000
+Thành tiền | 149.000
+TỔNG CỘNG | 149.000
+Thanh toán thẻ | 149.000
