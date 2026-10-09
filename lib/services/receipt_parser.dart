@@ -130,10 +130,22 @@ class ReceiptParser {
     for (final row in rows) {
       final norm = TextNormalizer.normalize(TextNormalizer.repairDigits(row));
       final labelled = _dateLabel.hasMatch(TextNormalizer.ocrKey(norm));
-      for (final match in _datePattern.allMatches(norm)) {
-        if (_validDate(match) case final date?) {
-          found.add((date: date, labelled: labelled));
-        }
+      final candidates = [
+        for (final match in _datePattern.allMatches(norm))
+          (match.start, _validDate(match[1]!, match[3]!, match[4]!)),
+        for (final match in _dayMonthNamePattern.allMatches(norm))
+          (
+            match.start,
+            _validDate(match[1]!, _monthNumber(match[2]!), match[3]!),
+          ),
+        for (final match in _monthNameDayPattern.allMatches(norm))
+          (
+            match.start,
+            _validDate(match[2]!, _monthNumber(match[1]!), match[3]!),
+          ),
+      ]..sort((a, b) => a.$1.compareTo(b.$1));
+      for (final (_, date) in candidates) {
+        if (date != null) found.add((date: date, labelled: labelled));
       }
     }
     if (found.isEmpty) return null;
@@ -148,13 +160,16 @@ class ReceiptParser {
     );
   }
 
-  /// Builds the date of a [_datePattern] match, or `null` if it does not
-  /// exist. `DateTime(2026, 4, 31)` silently becomes 1 May, so the day and
-  /// month are compared after construction.
-  static DateTime? _validDate(RegExpMatch match) {
-    final day = int.parse(match[1]!);
-    final month = int.parse(match[3]!);
-    final yearText = match[4]!;
+  /// Builds a date from its parts, or `null` if it does not exist.
+  /// `DateTime(2026, 4, 31)` silently becomes 1 May, so the day and month
+  /// are compared after construction.
+  static DateTime? _validDate(
+    String dayText,
+    String monthText,
+    String yearText,
+  ) {
+    final day = int.parse(dayText);
+    final month = int.parse(monthText);
     final year = int.parse(yearText) + (yearText.length == 2 ? 2000 : 0);
     if (year < 2000 || year > 2099 || month < 1 || month > 12 || day < 1) {
       return null;
@@ -248,11 +263,10 @@ class ReceiptParser {
   static ExpenseCategory? _categoryFromContent(List<String> rows) {
     final votes = {for (final category in ExpenseCategory.values) category: 0};
     for (final row in rows) {
-      final key = TextNormalizer.ocrKey(row);
-      for (final category in ExpenseCategory.values) {
-        if (_categoryPattern(category).hasMatch(key)) {
-          votes.update(category, (count) => count + 1);
-        }
+      // One vote per row, for its longest keyword: "áo sơ mi" (Gear)
+      // beats the "mi" (mì, Food) inside it.
+      if (_categoryOf(TextNormalizer.ocrKey(row)) case final category?) {
+        votes.update(category, (count) => count + 1);
       }
     }
     final ranked = votes.entries.where((entry) => entry.value > 0).toList()
@@ -358,6 +372,23 @@ final RegExp _timeLike = RegExp(
 final RegExp _datePattern = RegExp(
   r'(?<!\d)(\d{1,2})\s*([/.\-])\s*(\d{1,2})\s*\2\s*(\d{4}|\d{2})(?!\d)',
 );
+
+/// English month names: "18 Jun 2024", "5 October 2025", "Oct 21, 2026".
+const _monthNames = 'jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec';
+final RegExp _dayMonthNamePattern = RegExp(
+  r'(?<![a-z0-9])(\d{1,2})\s+('
+  '$_monthNames'
+  r')[a-z]*\.?,?\s+(\d{4})(?!\d)',
+);
+final RegExp _monthNameDayPattern = RegExp(
+  r'(?<![a-z0-9])('
+  '$_monthNames'
+  r')[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})(?!\d)',
+);
+
+/// "oct" → "10" (the pattern only lets the twelve prefixes through).
+String _monthNumber(String name) =>
+    '${_monthNames.split('|').indexOf(name.substring(0, 3)) + 1}';
 
 /// Rows whose date is the transaction date.
 final RegExp _dateLabel = _keywordPattern([

@@ -199,6 +199,14 @@ const notNameKeywords = [
   'bill',
   'ticket',
   've xem phim',
+  // Item table headers.
+  'mat hang',
+  'ten hang',
+  'san pham',
+  't.tien',
+  'don gia',
+  'dvt',
+  'sl',
   // Date and staff labels.
   'ngay',
   'date',
@@ -507,6 +515,14 @@ const gearKeywords = [
   'electronics',
   'bao hanh',
   'imei',
+  // Clothes and personal items count as Gear (labelling rule). Words that
+  // collide once accents are removed (giày/giấy, dép/đẹp, mũ/mù, váy/vay)
+  // are only used inside phrases.
+  'thoi trang', 'fashion', 'clothing', 'apparel', 'quan ao', 'ao so mi',
+  'so mi', 'ao thun', 'ao khoac', 'ao len', 'ao polo', 'quan tay',
+  'quan jean', 'quan short', 'chan vay', 'giay the thao', 'sneaker',
+  'sandal', 'tui xach', 'balo', 'that lung', 'kinh mat', 'khau trang',
+  't-shirt', 'shirt',
 ];
 
 const entertainmentKeywords = [
