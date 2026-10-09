@@ -85,6 +85,20 @@ void main() {
       });
     }
 
+    test('ignores long background text at another angle', () {
+      // A shopping bag behind the receipt: two long lines printed sideways.
+      final lines = [
+        ...tiltedReceipt(8),
+        rotatedLine('VINMART VINMART', 500, -300, 90, width: 420, height: 60),
+        rotatedLine('VINMART', 600, -300, 90, width: 380, height: 60),
+      ];
+      expect(degreesOf(RowGrouper.estimateSkew(lines)), closeTo(8, 1));
+      final rows = grouper.group(lines).map((r) => r.text).toList();
+      for (final row in expectedRows) {
+        expect(rows, contains(row));
+      }
+    });
+
     test('long lines weigh more than short noisy ones', () {
       final lines = [
         rotatedLine('Tổng thanh toán 70.000', 16, 40, 5, width: 300),

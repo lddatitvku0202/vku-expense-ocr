@@ -1,0 +1,10 @@
+# Clothing shop: clothes count as Gear. "sơ mi" contains "mi", which on its
+# own is a food word (mì).
+THỜI TRANG LAN ANH
+88 Ông Ích Khiêm, Đà Nẵng
+Ngày: 25/10/2026 15:30
+Áo sơ mi trắng - M | 1 | 320.000
+Quần jean xanh - 29 | 1 | 450.000
+Tổng tiền hàng | 770.000
+Chiết khấu 10% | -77.000
+Khách phải trả | 693.000

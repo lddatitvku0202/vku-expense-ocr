@@ -1,0 +1,11 @@
+# Small grocery POS that prints the cash handed over as "TỔNG TIỀN THANH
+# TOÁN"; the amount actually paid is "Tổng tiền" (= cash − change).
+TẠP HÓA MINH ANH
+12 Hà Huy Tập, Đà Nẵng
+Ngày: 23/10/2026 07:40
+Bánh mì sandwich | 2 | 12.000 | 24.000
+Sữa tươi Dalat Milk | 1 | 9.500
+Tổng tiền | 33.500
+TỔNG TIỀN THANH TOÁN | 50.000
+Tiền mặt | 50.000
+Tiền trả lại | 16.500
