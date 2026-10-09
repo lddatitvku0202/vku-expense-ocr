@@ -281,11 +281,11 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] Báo cáo **độ chính xác trên bộ fixture** cho từng trường (ví dụ total 14/15) trong PHASE_LOG và TEST_REPORT. Fixture nào fail thì phải được ghi rõ là "known limitation" kèm lý do. Chỉ được phép làm vậy sau khi đã thực sự cố gắng sửa, và không được xóa fixture đó.
 
 ### Phase 3 — Dịch vụ OCR (ML Kit)
-- [ ] `lib/services/ocr_service.dart`: interface `OcrService` + `MlKitOcrService` (InputImage từ file, recognizer latin, chuyển sang `List<OcrLine>`, đo `Stopwatch`, `close()`).
-- [ ] Pipeline `ReceiptScanService`: ảnh → OCR → group rows → parse → `ParsedReceipt` + thời gian xử lý.
-- [ ] Test: `ReceiptScanService` với `FakeOcrService` (fake chỉ nằm trong `test/`), kiểm tra pipeline và xử lý lỗi (ảnh hỏng, text rỗng → trả về ParsedReceipt với các trường `missing`, không crash).
-- [ ] Đánh giá trên hóa đơn thật `D:\receipts-test\`: **trước khi chấm** phải kiểm tra SHA-256 của `ground_truth.csv` bằng `0ec9054112e46ecebf22f87b5d12dec588c9aea5c52eacad37f2ae134d03ecc0`; không khớp thì **dừng lại báo bạn**. Chấm theo mục "Quy tắc gán nhãn & chấm điểm hóa đơn thật" trong `docs/TEST_REPORT.md`, báo riêng set=main / set=edge. Không sửa `ground_truth.csv`. *(Yêu cầu bổ sung của bạn, không thuộc brief gốc.)*
-- [ ] Thêm màn hình debug tạm (chọn ảnh từ thư viện → hiển thị raw text + kết quả parse) để kiểm tra trên máy thật. Màn này sau đó trở thành phần "Xem văn bản OCR gốc" của Review, không để lại code chết.
+- [x] `lib/services/ocr_service.dart`: interface `OcrService` + `MlKitOcrService` (InputImage từ file, recognizer latin, chuyển sang `List<OcrLine>`, đo `Stopwatch`, `close()`).
+- [x] Pipeline `ReceiptScanService`: ảnh → OCR → group rows → parse → `ParsedReceipt` + thời gian xử lý.
+- [x] Test: `ReceiptScanService` với `FakeOcrService` (fake chỉ nằm trong `test/`), kiểm tra pipeline và xử lý lỗi (ảnh hỏng, text rỗng → trả về ParsedReceipt với các trường `missing`, không crash).
+- [x] Đánh giá trên hóa đơn thật `D:\receipts-test\`: **trước khi chấm** phải kiểm tra SHA-256 của `ground_truth.csv` bằng `0ec9054112e46ecebf22f87b5d12dec588c9aea5c52eacad37f2ae134d03ecc0`; không khớp thì **dừng lại báo bạn**. Chấm theo mục "Quy tắc gán nhãn & chấm điểm hóa đơn thật" trong `docs/TEST_REPORT.md`, báo riêng set=main / set=edge. Không sửa `ground_truth.csv`. *(Yêu cầu bổ sung của bạn, không thuộc brief gốc.)* → đã chạy trên **emulator** (lần đầu + sau sửa, `docs/TEST_REPORT.md`); trên điện thoại thật còn nợ.
+- [x] Thêm màn hình debug tạm (chọn ảnh từ thư viện → hiển thị raw text + kết quả parse) để kiểm tra trên máy thật. Màn này sau đó trở thành phần "Xem văn bản OCR gốc" của Review, không để lại code chết.
 
 ### Phase 4 — CSDL & lưu ảnh
 - [ ] `lib/services/database_service.dart` (mở DB, schema version 1, `onCreate`, `onUpgrade`), `ExpenseRepository` + `SqfliteExpenseRepository` (insert, getAll sắp xếp theo ngày giảm dần, getById, update, delete, query theo khoảng ngày, tổng theo danh mục).
@@ -350,11 +350,11 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [ ] FR-1.5 — bằng chứng: _chưa có_
 - [ ] FR-1.6 — bằng chứng: _chưa có_
 - [ ] FR-1.7 — bằng chứng: _chưa có_
-- [ ] FR-2.1 — bằng chứng: _chưa có_
-- [ ] FR-2.2 — một phần: model `OcrLine` (`lib/models/ocr_line.dart`, test `test/models/parsed_receipt_test.dart`); adapter ML Kit → Phase 3
+- [x] FR-2.1 — bằng chứng: `MlKitOcrService` (`lib/services/ocr_service.dart`), `test/services/ocr_service_test.dart` (gửi script Latin + đường dẫn ảnh qua channel), chạy ML Kit bundled trên emulator với 22 ảnh (`docs/TEST_REPORT.md`); ảnh đã cắt sẽ có từ Phase 6
+- [x] FR-2.2 — bằng chứng: `ocrLinesFrom` (`lib/services/ocr_service.dart`) chuyển `RecognizedText` → `OcrLine` (text, `Rect`, cornerPoints), `test/services/ocr_service_test.dart`; parser không import ML Kit (`test/services/parser_purity_test.dart`)
 - [x] FR-2.3 — bằng chứng: `lib/services/row_grouper.dart`, `test/services/row_grouper_test.dart` (11 test: 2 block trái/phải, lệch dọc, bậc thang, ngưỡng cấu hình) + benchmark 23 fixture
-- [ ] FR-2.4 — bằng chứng: _chưa có_
-- [ ] FR-2.5 — bằng chứng: _chưa có_
+- [ ] FR-2.4 — một phần: `Stopwatch` quanh `processImage` + log (`ocr_service_test.dart`), hiển thị trong `OcrTextPanel` ở màn debug; hiển thị ở màn Review → Phase 7. Số đo emulator ở `docs/TEST_REPORT.md`
+- [x] FR-2.5 — bằng chứng: `MlKitOcrService.close()` đóng đúng recognizer (`ocr_service_test.dart`), `ocrServiceProvider` gọi `close()` khi dispose (`lib/state/ocr_providers.dart`)
 - [x] FR-3.1 — bằng chứng: `TextNormalizer.normalize/ocrKey` dùng để so khớp, giá trị trả về giữ nguyên bản gốc (`test/core/text_normalizer_test.dart`, `text_normalizer_ocr_test.dart`, merchant test "keeps the original spelling")
 - [x] FR-3.2 — bằng chứng: `ReceiptParser.extractTotal`, `test/services/receipt_parser_total_test.dart` (34 test: 9 định dạng, 8 từ khóa, ưu tiên, hàng thấp hơn, loại trừ, fallback, kết quả `int`); fixture total 23/23
 - [x] FR-3.3 — bằng chứng: `ReceiptParser.extractDate`, `test/services/receipt_parser_date_test.dart` (20 test: 4 định dạng, có giờ, 45/13/2026, 31/04, 29/02, 20YY, null); fixture date 23/23
@@ -366,7 +366,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [ ] FR-4.2 — bằng chứng: _chưa có_
 - [ ] FR-4.3 — bằng chứng: _chưa có_
 - [ ] FR-4.4 — bằng chứng: _chưa có_
-- [ ] FR-4.5 — bằng chứng: _chưa có_
+- [ ] FR-4.5 — một phần: widget `OcrTextPanel` (raw text + thời gian OCR, `test/widgets/ocr_text_panel_test.dart`); gắn vào màn Review → Phase 7
 - [ ] FR-4.6 — bằng chứng: _chưa có_
 - [ ] FR-4.7 — bằng chứng: _chưa có_
 - [ ] FR-4.8 — bằng chứng: _chưa có_
@@ -405,7 +405,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 | 0 — Khởi tạo & môi trường | ✅ Xong | tag `phase-0` | format ✔ · analyze 0 issue · test 1/1 · build debug ✔ | B-001 đã giải quyết (cài Flutter 3.47.6). Chưa test trên thiết bị (chưa cắm máy) |
 | 1 — Nền tảng | ✅ Xong | tag `phase-1` | format ✔ · analyze 0 · test 48/48 · coverage 85.3% · build debug ✔ | Chưa test trên thiết bị (chưa cắm máy) |
 | 2 — ReceiptParser | ✅ Xong | tag `phase-2` | format ✔ · analyze 0 · test 201/201 · coverage 94.9% · build debug ✔ · fixture 23/23 mọi trường | Chưa test trên thiết bị; fixture là dữ liệu tổng hợp (xem PHASE_LOG) |
-| 3 — Dịch vụ OCR | 🟨 Đang làm | nhánh `phase/3-ocr-service` | lần đánh giá đầu trên emulator: main merchant 7/19 · total 10/19 · date 14/19 · category 10/5/4 | A xong (AVD ở `D:\dev-cache\avd`); B1 deskew, OCR service, pipeline, màn debug, B2 công cụ chấm (`tool/ocr_eval`), B3 README xong; đang sửa lỗi tổng quát từ lần đánh giá đầu (test viết trước) |
+| 3 — Dịch vụ OCR | ✅ Xong | tag `phase-3` | format ✔ · analyze 0 · test 272/272 · coverage 95.6% · build debug ✔ · fixture 31/31 · hóa đơn thật (emulator, main 19): merchant 7→7 · total 10→16 · date 14→15 · category đúng 10→11 | Đánh giá trên emulator `vku_test_api33`; **chưa đánh giá trên điện thoại thật (NFR-6 còn nợ)**. Màn debug tạm xóa ở Phase 7 |
 | 4 — CSDL & lưu ảnh | ⬜ Chưa bắt đầu | — | — | |
 | 5 — State management | ⬜ Chưa bắt đầu | — | — | |
 | 6 — Camera capture | ⬜ Chưa bắt đầu | — | — | |

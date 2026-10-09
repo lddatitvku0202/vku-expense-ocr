@@ -317,3 +317,128 @@ c4ddb5e feat(parser): group OCR lines into rows by vertical overlap
 794a4e4 test(parser): add 23 receipt fixtures with expected fields and tests
 docs(phase-2): record phase 2 results   (commit cuối của phase)
 ```
+
+---
+
+## Phase 3 — Dịch vụ OCR (ML Kit)
+
+**Trạng thái:** ✅ hoàn tất (merge vào `main`, tag `phase-3`). ⚠ Phần đánh giá trên **điện thoại thật** còn nợ (NFR-6), mới chạy trên emulator.
+
+### Mục tiêu phase
+
+Nối parser ở Phase 2 với ML Kit để đọc ảnh thật: ảnh → OCR → ghép hàng → parse → `ParsedReceipt` + thời gian xử lý. Sau đó đo độ chính xác trên hóa đơn thật (đáp án đã khóa bằng SHA-256) và sửa các lỗi tổng quát mà lần đo đầu phát hiện.
+
+FR liên quan: **FR-2.1** (TextRecognizer Latin, offline), **FR-2.2** (adapter ML Kit → `OcrLine`), **FR-2.3** (ghép hàng, thêm khử nghiêng), **FR-2.4** (đo `Stopwatch`), **FR-2.5** (`close()`), **FR-4.5** (một phần: widget "Xem văn bản OCR gốc"), NFR-2 (parse chạy trong isolate).
+
+### Đã làm gì
+
+| File | Vai trò |
+|---|---|
+| `lib/services/ocr_service.dart` | Interface `OcrService` + `MlKitOcrService`: `TextRecognizer(script: latin)`, `InputImage.fromFilePath`, đo `processImage` bằng `Stopwatch` và ghi log, `close()` giải phóng recognizer. Hàm `ocrLinesFrom` chuyển `RecognizedText` → `List<OcrLine>` ở mức `TextLine`, giữ 4 góc (`cornerPoints`). |
+| `lib/models/ocr_line.dart` | Thêm `cornerPoints` (tùy chọn) để tính góc nghiêng. |
+| `lib/services/row_grouper.dart` | `estimateSkew`: ước lượng góc nghiêng từ cạnh trên của các dòng, xoay ngược lại trước khi ghép hàng. Chọn **hướng chung của nhiều dòng nhất** (±10°) để chữ nền không làm lệch kết quả. |
+| `lib/services/receipt_scan_service.dart` | Pipeline `ReceiptScanService`: OCR → `RowGrouper` → `ReceiptParser` trong `Isolate.run`. Ảnh hỏng/thiếu không ném lỗi mà trả `ParsedReceipt` rỗng (mọi trường `missing`) kèm thông báo tiếng Việt. |
+| `lib/state/ocr_providers.dart` | `ocrServiceProvider` (gọi `close()` khi dispose), `receiptScanServiceProvider`, `pickGalleryImageProvider` (test thay được thư viện ảnh). |
+| `lib/screens/debug/ocr_debug_screen.dart` | Màn debug **tạm** `/debug/ocr` (mở từ tab Quét): chọn ảnh → chạy pipeline thật → xem kết quả, độ tin cậy, văn bản gốc. Sẽ bị xóa ở Phase 7. |
+| `lib/widgets/ocr_text_panel.dart` | Khối "Xem văn bản OCR gốc" + thời gian OCR, tách riêng để màn Review (Phase 7) dùng lại cho FR-4.5. |
+| `integration_test/ocr_eval_test.dart`, `integration_test/ocr_eval/` | Bài đánh giá chạy **trên thiết bị**: kiểm tra lại hash, chạy ML Kit thật trên từng ảnh, chấm theo quy tắc đã khóa, xuất `report.json` + `report.md`. |
+| `tool/ocr_eval/run_ocr_eval.ps1` | Một lệnh: kiểm tra hash → đẩy ảnh lên máy → chạy test → kéo báo cáo về `D:\receipts-test\reports\` (ngoài repo) → xóa ảnh trên máy. |
+| `lib/services/receipt_parser.dart`, `receipt_keywords.dart` | Các bản sửa tổng quát sau lần đo đầu (xem mục dưới). |
+| `test/...` | Test adapter với đối tượng ML Kit dựng tay, service qua platform channel giả lập, pipeline với `FakeOcrService` (chỉ nằm trong `test/`), deskew, chấm điểm, màn debug, 8 fixture mới. |
+
+### Lần đo đầu → sửa → đo lại
+
+1. **Lần đầu** (mã nguồn `54eba91`, emulator API 33): main tổng tiền **10/19**, ngày 14/19, tên cửa hàng 7/19.
+2. **Viết test trước** (`c74447e`, 🔴): mỗi lỗi quan sát được viết thành một **quy tắc tổng quát** kèm fixture tổng hợp, không chép nguyên một ảnh nào.
+3. **Sửa code** (`4ee3458`, `17e6d79`, `7a04bd7`, `18f299a`, 🟢):
+   - Fallback ưu tiên số viết như tiền (có dấu phân cách hoặc `đ`) hơn số trơn (số phiếu, giờ).
+   - Đọc số có 2 chữ số thập phân `123,100.00`, khoảng trắng chèn sau dấu phân cách, `đ` bị đọc thành `0`/`6`.
+   - Nhãn tổng dài chấp nhận sai 1 ký tự (`1ONG CONG`), nhãn viết tắt (`T.Cộng`), "Tổng:" của bảng VAT xếp yếu hơn.
+   - Máy POS in tiền khách đưa dưới nhãn tổng → dùng `khách đưa − tiền thối` nếu số đó có trên hóa đơn.
+   - Bỏ tiêu đề bảng ("Mặt hàng", "Đơn giá") khỏi ứng viên tên cửa hàng; đọc tên tháng tiếng Anh; quần áo/phụ kiện là Gear.
+   - Góc nghiêng theo hướng đa số.
+4. **Đo lại** (`18f299a`): main tổng tiền **16/19**, ngày **15/19**, danh mục đúng 11/19, tên cửa hàng vẫn 7/19. Không trường nào tụt.
+
+### Vì sao làm vậy (liên hệ slide)
+
+- **Interface + adapter (W8 s41 pipeline):** parser chỉ biết `OcrLine`, không biết ML Kit. Nhờ vậy ~200 test parser chạy trên máy tính trong vài giây, còn ML Kit chỉ cần test ở tầng adapter.
+- **Future/async (W7 s17) và isolate (W7 s30):** `processImage` là `Future`; ghép hàng và parse chạy trong `Isolate.run` để không chặn UI thread. Các trường được chép ra biến cục bộ để closure không giữ tham chiếu tới recognizer native (không gửi được qua isolate).
+- **Vòng đời (W7 s26–29, NFR-3):** provider gọi `close()` khi bị hủy, bảo đảm recognizer native được giải phóng (FR-2.5).
+- **Không ném lỗi ra UI:** ảnh hỏng vẫn cho người dùng nhập tay, đúng tinh thần "người dùng kiểm tra lại ở Review".
+- **Lựa chọn đã cân nhắc:**
+  - *Gọi ML Kit trực tiếp trong màn hình:* nhanh nhưng không test được và vi phạm FR-2.2.
+  - *Cộng vector tất cả các dòng để tính góc nghiêng* (bản đầu): đơn giản, nhưng chữ in xoay ngang trên túi phía sau hóa đơn kéo lệch góc → thay bằng "hướng đa số".
+  - *Sửa lỗi OCR bằng so khớp mờ toàn bộ:* chỉ áp dụng sai 1 ký tự cho nhãn dài ≥ 8 ký tự; từ ngắn như "tổng" mà cho sai 1 ký tự sẽ khớp nhầm rất nhiều.
+
+### Khái niệm cần hiểu
+
+- **`cornerPoints` và góc nghiêng:** ML Kit trả 4 góc của mỗi dòng theo chiều kim đồng hồ từ góc trên-trái. Vector từ góc trên-trái tới góc trên-phải cho hướng dòng chữ; `atan2(dy, dx)` ra góc. Xoay mọi điểm ngược góc đó thì các dòng trở lại nằm ngang, rồi mới ghép hàng.
+- **`Stopwatch`:** đồng hồ bấm giờ của Dart; `start()` trước `processImage`, đọc `elapsedMilliseconds` sau đó. Chỉ đo phần OCR, không tính thời gian chọn ảnh.
+- **Platform channel giả lập trong test:** ML Kit gọi code Android qua `MethodChannel`. Test đăng ký handler giả để kiểm tra app gửi đúng tham số (script Latin, đường dẫn ảnh) và đóng đúng recognizer, không cần điện thoại.
+- **Integration test trên thiết bị:** khác unit test, chạy app thật trên Android (`flutter test integration_test/... -d <máy>`), nên dùng được ML Kit thật.
+- **Khóa đáp án bằng SHA-256:** hash của `ground_truth.csv` được ghi trước khi chạy. Đổi một ký tự trong đáp án thì hash đổi và công cụ dừng lại, không thể "sửa đáp án cho khớp kết quả".
+- **Dữ liệu đã thấy (in-sample):** sửa code sau khi xem lỗi của chính bộ ảnh thì lần đo lại trên bộ đó sẽ đẹp hơn thực tế. Vì vậy 16/19 phải đọc là con số lạc quan.
+
+### Kết quả kiểm thử
+
+| Bước | Kết quả |
+|---|---|
+| `dart format --set-exit-if-changed lib test integration_test tool` | ✔ 0 thay đổi |
+| `flutter analyze` | ✔ No issues found |
+| `flutter test` | ✔ **272/272** (201 cũ + 71 mới) |
+| `flutter test --coverage` | **95.6%** dòng (693/725); `ocr_service.dart` 100%, `receipt_scan_service.dart` 100%, `row_grouper.dart` 100%, `receipt_parser.dart` 99.6% |
+| `flutter build apk --debug` | ✔ |
+| Benchmark fixture | **31/31** ở cả 4 trường (23 cũ + 8 mới), sổ known limitations rỗng |
+| Hóa đơn thật, emulator `vku_test_api33` | xem bảng dưới |
+| Điện thoại thật | ⚠ **Chưa test** (NFR-6 còn nợ) |
+
+**Hóa đơn thật** (22 ảnh, hash `ground_truth.csv` đã kiểm tra trước mỗi lần chấm):
+
+| Set | Lần | Tên cửa hàng | Tổng tiền | Ngày | Danh mục đúng / không / sai | OCR trung vị |
+|---|---|---|---|---|---|---|
+| main (19) | đầu | 7 | 10 | 14 | 10 / 5 / 4 | 4947 ms |
+| main (19) | sau sửa | 7 | **16** | **15** | 11 / 4 / 4 | 5036 ms |
+| edge (3) | đầu | 1 | 2 | 2 | 1 / 1 / 1 | 4694 ms |
+| edge (3) | sau sửa | 1 | 2 | 2 | 2 / 1 / 0 | 5286 ms |
+
+Chi tiết từng ảnh và nguyên nhân từng lỗi: `docs/TEST_REPORT.md`, mục "Độ chính xác trên hóa đơn thật".
+
+### Hạn chế đã biết
+
+- **Tên cửa hàng chỉ 7/19:** logo in kiểu chữ đặc biệt bị OCR đọc sai ("HIGHANDS CUFFE"); hàng địa chỉ không có từ khóa "Đ/c" không bị loại; ảnh không có tên cửa hàng nhưng parser vẫn chọn một hàng. Màn Review sẽ đánh dấu trường này để người dùng sửa.
+- **OCR làm mất dấu `/` trong ngày** ("06/02026", "1207/2023") hoặc đọc 7 thành T → ngày `null`.
+- **Ngày trong số hiệu văn bản pháp lý** ở đầu hóa đơn có thể bị lấy nhầm.
+- **Hóa đơn tổng = 0** (giảm 100%) không biểu diễn được vì số tiền tối thiểu là 1.000 đ.
+- **Thời gian OCR** (~5 giây) đo trên emulator x86_64, **không** dùng cho báo cáo hiệu năng; phải đo lại trên máy thật.
+- Ảnh trong bộ đánh giá đã được xem khi sửa code → cần bộ ảnh mới để đo độ chính xác khách quan.
+
+### Cách tự kiểm tra bằng tay
+
+1. Mở emulator hoặc cắm điện thoại, rồi chạy đánh giá (tự kiểm tra hash, báo cáo ghi ra `D:\receipts-test\reports\`):
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File tool\ocr_eval\run_ocr_eval.ps1                       # máy đầu tiên trong adb devices
+   powershell -ExecutionPolicy Bypass -File tool\ocr_eval\run_ocr_eval.ps1 -DeviceId R58M12ABCDE
+   ```
+2. `flutter run` → tab **Quét** → mở màn debug OCR → chọn một ảnh hóa đơn → xem kết quả, mở "Xem văn bản OCR gốc".
+3. Bật chế độ máy bay rồi quét lại: vẫn chạy (model ML Kit đóng gói trong APK).
+4. Checklist đầy đủ: `docs/TEST_REPORT.md`, mục "Phase 3".
+
+### Danh sách commit
+
+```
+18f299a fix(ocr): estimate skew from the dominant text direction
+7a04bd7 fix(parser): skip table headers, read month names, clothes are Gear
+17e6d79 fix(parser): tolerate misread total labels and cash printed as total
+4ee3458 fix(parser): read decimal and OCR-split amounts, prefer real money
+c74447e test(parser): add failing tests for patterns seen on real receipts
+b0e0b8a docs(claude): mark phase 3 in progress
+54eba91 fix(ocr): let the app read evaluation data pushed by adb
+bd112b4 docs(readme): note that the regex table tool needs Python
+d9e886c test(ocr): add one-command real-receipt OCR evaluation
+a3babc5 feat(debug): add temporary OCR debug screen
+4f89e1d feat(ocr): add receipt scan pipeline with failure handling
+baaf321 feat(ocr): add ML Kit text recognition service and adapter
+5f274d1 feat(ocr): deskew row grouping using text corner points
+f981731 test(ocr): add rotated receipt fixtures and deskew tests
+docs(phase-3): record phase 3 results   (commit cuối của phase)
+```
