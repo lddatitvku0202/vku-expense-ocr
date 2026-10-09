@@ -195,4 +195,26 @@ const receiptExpectations = <ReceiptExpectation>[
     date: (2026, 10, 25),
     category: ExpenseCategory.food,
   ),
+  // Phase 3: rotated photos (deskew with ML Kit corner points).
+  ReceiptExpectation(
+    file: 'tilted_minimart.txt',
+    merchant: ['MINIMART AN BÌNH'],
+    total: 70000,
+    date: (2026, 10, 26),
+    category: ExpenseCategory.food,
+  ),
+  ReceiptExpectation(
+    file: 'tilted_cafe_ccw.txt',
+    merchant: ['CỘNG CÀ PHÊ'],
+    total: 149000,
+    date: (2026, 10, 28),
+    category: ExpenseCategory.food,
+  ),
+  ReceiptExpectation(
+    file: 'sideways_bookshop.txt',
+    merchant: ['NHÀ SÁCH MINH TRÍ'],
+    total: 115000,
+    date: (2026, 10, 27),
+    category: ExpenseCategory.study,
+  ),
 ];
