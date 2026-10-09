@@ -69,8 +69,8 @@ void main() {
     });
 
     test('typing in the middle keeps the cursor after the new digit', () {
-      // "1.250|.000" → type 9 → "12.509|.000" would be wrong; digits before
-      // the cursor go from 4 to 5, so the cursor sits after the 5th digit.
+      // "1.250|.000", type 9: the text regroups to "12.509.000" and the
+      // cursor must stay right after the 9, i.e. after the 5th digit.
       final result = type(_v('1.250.000', 5), _v('1.2509.000', 6));
       expect(result.text, '12.509.000');
       expect(result.selection.baseOffset, 6); // "12.509|.000"
