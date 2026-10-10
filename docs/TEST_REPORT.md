@@ -16,6 +16,7 @@
 | 9 | 582 | 582 / 0 | 94.2% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu) |
 | 10 | 706 | 706 / 0 | 94.5% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu) |
 | 11A | 713 | 713 / 0 | 94.5% dòng | ✔ | ✔ 0 issue | ✔ debug · ✔ release | 🟦 **release APK trên emulator** (1 lần, xem mục Phase 11A). ⚠ **Chưa test trên điện thoại thật** |
+| 11A (tiếp) | 717 | 717 / 0 | 94.5% dòng | ✔ | ✔ 0 issue | ✔ debug · ✔ release | 🟦 **release APK trên emulator** (lần 2, sau khi gỡ quyền mạng). ⚠ **Chưa test trên điện thoại thật** |
 
 ## Độ chính xác parser trên bộ fixture
 
@@ -450,7 +451,64 @@ Nhãn: **release APK trên emulator**. Ngày 10/10/2026. AVD `vku_test_api33` (A
 
 **Ghi chú môi trường:** emulator 2 GB RAM, bộ nhớ đã swap nên System UI nhiều lần báo "isn't responding" và chặn cửa sổ ứng dụng; xử lý bằng bấm "Wait" và khởi động lại System UI (`adb shell am crash com.android.systemui`). Ứng dụng không bị ảnh hưởng. Ảnh chụp màn hình có hình người (webcam) nên chỉ lưu ngoài repo; ảnh hóa đơn thử được đẩy vào emulator rồi xóa; emulator đã tắt.
 
-**Phát hiện thêm (không phải lỗi build):** manifest release có quyền `INTERNET` + `ACCESS_NETWORK_STATE` do `transport-backend-cct` (telemetry ML Kit) kéo vào, trong khi NFR-1 yêu cầu không gọi mạng. Mã trong `lib/` không có đoạn gọi mạng. Ghi là độ lệch **B-002** trong `CLAUDE.md`, chờ quyết định.
+**Phát hiện thêm (không phải lỗi build):** manifest release có quyền `INTERNET` + `ACCESS_NETWORK_STATE` do `transport-backend-cct` (telemetry ML Kit) kéo vào, trong khi NFR-1 yêu cầu không gọi mạng. Mã trong `lib/` không có đoạn gọi mạng. Ghi là độ lệch **B-002** trong `CLAUDE.md`; **đã đóng**, xem mục "Phase 11A (tiếp)" bên dưới.
+
+## Phase 11A (tiếp) — Gỡ quyền mạng (B-002)
+
+Người dùng đồng ý gỡ `INTERNET` và `ACCESS_NETWORK_STATE` khỏi bản release để đúng NFR-1. Bản build lại: `app-release.apk` = 93.590.210 byte (89,3 MiB), SHA-256 `d79f82cece1e7dbdb3b9a34808637ca5d4f64b12b256a70cff5166715f9866ab`; `apksigner verify` vẫn cho `CN=Le Duy Dat, OU=23SE1, O=VKU`, dấu vân tay `59af1429…9bd104` (trùng keystore).
+
+### Bằng chứng APK không còn quyền mạng
+
+`aapt dump permissions app-release.apk`:
+
+```
+package: vn.edu.vku.vku_expense_ocr
+uses-permission: name='android.permission.CAMERA'
+uses-permission: name='android.permission.WRITE_EXTERNAL_STORAGE' maxSdkVersion='28'
+uses-permission: name='android.permission.READ_EXTERNAL_STORAGE'
+permission: vn.edu.vku.vku_expense_ocr.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+uses-permission: name='vn.edu.vku.vku_expense_ocr.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
+```
+
+`apkanalyzer manifest permissions app-release.apk`:
+
+```
+vn.edu.vku.vku_expense_ocr.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+android.permission.CAMERA
+android.permission.WRITE_EXTERNAL_STORAGE' maxSdkVersion='28
+android.permission.READ_EXTERNAL_STORAGE
+```
+
+Số dòng chứa `INTERNET` hoặc `NETWORK_STATE` trong hai kết quả trên: **0**. Báo cáo gộp manifest (`manifest-merger-release-report.txt`) ghi cả hai quyền: *ADDED* từ `AndroidManifest.xml` của app (marker `remove`) và *REJECTED* từ `transport-backend-cct 2.3.3` / `media3-common 1.9.0`. (Trước khi gỡ, báo cáo cũ ghi chúng *ADDED* từ hai thư viện đó.)
+
+Trên thiết bị: `dumpsys package` chỉ liệt kê quyền yêu cầu `CAMERA`, `READ_EXTERNAL_STORAGE` và quyền nội bộ; tiến trình app có `Groups: 9997 20176 50176`, **không có nhóm 3003 (`inet`)**: hệ điều hành không cho app mở socket mạng.
+
+### Test cấu hình mới (4 test, cùng nhóm với 7 test cấu hình trước)
+
+| Test | Kiểm tra |
+|---|---|
+| Manifest gỡ hai quyền | `INTERNET` và `ACCESS_NETWORK_STATE` có `tools:node="remove"` |
+| Quyền cần thiết còn nguyên | `CAMERA` không bị gỡ, `RECORD_AUDIO` vẫn bị gỡ |
+| Namespace `tools` | Có khai báo cho các marker |
+| Mã nguồn không dùng mạng | Không file Dart nào dùng `HttpClient`, `Socket`, `package:http`, `package:dio`, `WebSocket`, `Uri.parse('http…')` |
+
+Test đầu tiên đỏ trước khi gỡ quyền (TDD); regex của test được sửa một lần vì dùng `\.` sai trong chuỗi Dart thường (khớp ký tự bất kỳ thay vì dấu chấm).
+
+### Release APK trên emulator (lần 2, không có quyền mạng)
+
+Nhãn: **release APK trên emulator**. Cùng AVD `vku_test_api33` (2 GB RAM). Gỡ bản cũ rồi cài mới (dữ liệu sạch), cấp quyền camera, đẩy lại **đúng ảnh hóa đơn WinMart đã dùng lần trước** (nằm ngoài repo, xóa sau khi thử).
+
+| Bước | Kết quả |
+|---|---|
+| Khởi động | ✔ Tổng quan: tháng 10/2026, 0 đ, donut rỗng; tiến trình app **không** thuộc nhóm `inet` |
+| Quét → thư viện → chọn ảnh → `image_cropper` | ✔ `UCropActivity` mở, xác nhận cắt (bộ chọn tệp không liệt kê ảnh ở mục "Recent" sau khi gỡ app; duyệt thư mục `Pictures` để chọn đúng file) |
+| OCR thật | ✔ **WinMart, 73.300, 14/04/2025, Ăn uống**, "Thời gian OCR: **12262 ms** · 21 dòng" (lần trước 11319 ms; cùng kết quả đọc) |
+| Lưu, Dashboard | ✔ Dashboard tháng 4/2025: **73.300 đ, 1 giao dịch**, donut đầy màu Ăn uống, tổng ở giữa |
+| Logcat (8.912 dòng) | App còn sống. Lỗi ứng dụng: **0** (`E MethodChannel` 0, "Could not instantiate" 0, `SecurityException`/permission denial của app 0, dòng mạng như `UnknownHost`/`SocketException`/`ENETUNREACH` của app 0) |
+
+**Về `FATAL EXCEPTION: 1` và 13 dòng `AndroidRuntime` trong logcat:** tất cả thuộc `com.android.systemui` (pid 681), nội dung `CrashedByAdbException: shell-induced crash`, lúc 10:22:04. Đó là lệnh `adb shell am crash com.android.systemui` do chính tôi chạy để xóa hộp thoại ANR của emulator 2 GB RAM, **trước khi app được mở** (app khởi động lúc 10:22:22, 18 giây sau). Không có dòng crash nào của app. Điều kiện dừng ("OCR hỏng hoặc app crash sau khi gỡ quyền") **không xảy ra**.
+
+**Chưa kiểm tra trong lần này:** bấm nút chụp, preview webcam (đã có ở lần 1), flash, lấy nét, Lịch sử, chế độ tối, chế độ máy bay thật, điện thoại thật.
 
 ## Checklist test thủ công trên thiết bị
 
@@ -596,6 +654,6 @@ Thiết bị: `__________` · Android `____`
 - [ ] Chọn một ảnh hóa đơn từ thư viện → OCR đọc được.
 - [ ] Ghi lại **thời gian OCR thật** (ms) ở mục "Xem văn bản OCR gốc" để đưa vào báo cáo.
 - [ ] Lưu → Dashboard và Lịch sử cập nhật; thumbnail hiện ở Lịch sử; vuốt xóa rồi Undo.
-- [ ] Bật chế độ máy bay → quét và lưu vẫn hoạt động (NFR-1).
+- [ ] Bật chế độ máy bay → quét và lưu vẫn hoạt động (NFR-1; APK không còn quyền mạng).
 - [ ] Đóng hẳn app, mở lại → dữ liệu vẫn còn.
 - [ ] Các checklist Phase 6–10 phía trên (camera, flash, lấy nét, biểu đồ, giao diện tối).

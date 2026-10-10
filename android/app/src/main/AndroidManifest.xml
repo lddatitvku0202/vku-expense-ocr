@@ -9,6 +9,18 @@
         android:name="android.permission.RECORD_AUDIO"
         tools:node="remove" />
 
+    <!-- NFR-1: the app works completely offline and its code never opens a
+         connection. ML Kit's data-transport library (telemetry) adds these two
+         permissions to the merged manifest; removing them means the release
+         app cannot use the network at all (B-002). The ML Kit model is bundled
+         in the APK, so OCR does not need them. -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
+
     <application
         android:label="VKU Expense OCR"
         android:name="${applicationName}"

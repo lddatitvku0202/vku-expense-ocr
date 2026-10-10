@@ -390,7 +390,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] FR-8.2 — bằng chứng: 5 màn (Tổng quan, Camera kể cả khi bị từ chối quyền, Review với mọi cảnh báo, Lịch sử, Chi tiết/sửa) × 320×480, 360×640, 411×891, ngang 891×411 × chữ 1× và 1,5×, cuộn hết trang: không `RenderFlex overflowed` (`test/layout/screen_layout_test.dart`); ≥ 600 dp Dashboard đặt donut và cột cạnh nhau (`dashboard_screen_test.dart`). Chưa thử trên máy thật
 - [x] FR-8.3 — bằng chứng: `Formatters.vnd` (`NumberFormat.currency(locale: vi_VN, symbol: đ, decimalDigits: 0)`) và `Formatters.date` (`dd/MM/yyyy`) (`test/core/formatters_test.dart`) dùng ở card, Dashboard, biểu đồ, Review; `SafeArea` ở 4 màn chính. Chưa thử trên máy thật
 - [x] FR-8.4 — bằng chứng: loading / rỗng / lỗi (kèm "Thử lại") ở Tổng quan, Lịch sử, màn sửa và Camera (`test/screens/async_states_test.dart`); `AsyncValue.when` ở các màn. Chưa thử trên máy thật
-- [ ] NFR-1 — một phần: mã của app không có đoạn nào gọi mạng (tìm trong `lib/`), model ML Kit đóng gói nên OCR chạy offline; **nhưng manifest release có quyền `INTERNET` + `ACCESS_NETWORK_STATE`** do `transport-backend-cct` (telemetry của ML Kit) kéo vào → độ lệch **B-002**, chờ quyết định. Chưa thử chế độ máy bay trên máy thật
+- [x] NFR-1 — bằng chứng: không có đoạn nào gọi mạng trong `lib/` (`test/core/release_config_test.dart`); manifest gỡ `INTERNET` + `ACCESS_NETWORK_STATE` bằng `tools:node="remove"`; **`aapt dump permissions` và `apkanalyzer manifest permissions` trên `app-release.apk` chỉ còn CAMERA, READ/WRITE_EXTERNAL_STORAGE (≤ API 28) và quyền nội bộ của app**; báo cáo gộp manifest ghi hai quyền `REJECTED`; trên emulator tiến trình app không thuộc nhóm `inet` và OCR vẫn đọc đúng ảnh hóa đơn (`docs/TEST_REPORT.md`). Xác minh bằng dump manifest + OCR chạy trên emulator; chưa thử chế độ máy bay trên máy thật
 - [x] NFR-2 — bằng chứng: rà soát Phase 10 (`docs/PHASE_LOG.md`): `ListView.builder` + `cacheWidth`, `Isolate.run` cho parse/cắt ảnh/thumbnail, `select` giới hạn rebuild, regex/`NumberFormat` là `static final`, lint `prefer_const_*` bật và analyze 0 issue. Chưa thử trên máy thật
 - [x] NFR-3 — bằng chứng: rà soát Phase 10: mọi `TextEditingController`, `FocusNode`, `AnimationController`, `CurvedAnimation`, `Timer`, `CameraController`, `TextRecognizer` đều có `dispose/cancel/close` tương ứng; camera xử lý `AppLifecycleState` và ẩn tab (`test/screens/camera_screen_test.dart`). Chưa thử trên máy thật
 - [x] NFR-4 — bằng chứng: `lib/core`, `lib/models`, `lib/services`, `lib/state`, `lib/widgets`, `lib/screens` (Phase 1)
@@ -414,7 +414,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 | 8 — Lịch sử & Dashboard | ✅ Xong | tag `phase-8` | format ✔ · analyze 0 · test 514/514 · coverage 93.1% · build debug ✔ | Widget test trên máy tính; `integration_test/app_flow_test.dart` đã viết, **chưa chạy** (chưa có thiết bị). Chưa thử trên máy thật |
 | 9 — Biểu đồ CustomPainter | ✅ Xong | tag `phase-9` | format ✔ · analyze 0 · test 582/582 · coverage 94.2% · build debug ✔ | Không dùng thư viện chart (có test kiến trúc). Chưa thử trên máy thật |
 | 10 — UI/UX polish (bản rút gọn) | ✅ Xong | tag `phase-10` | format ✔ · analyze 0 · test 706/706 · coverage 94.5% · build debug ✔ | Theo yêu cầu rút gọn: không có vòng "cố ý làm hỏng code". Chưa thử trên máy thật |
-| 11 — Release & Deliverables | 🟨 11A xong, 11B chưa | nhánh `phase/11a-release` (chưa tag `v1.0.0`) | format ✔ · analyze 0 · test 713/713 · coverage 94,5% · release APK build ✔, ký ✔ (89,3 MiB) · chạy thử release trên emulator ✔ sau khi sửa R8 | 11B (còn lại): `docs/REPORT.md`, `docs/DEMO_SCRIPT.md`, ảnh chụp, link APK, thử trên máy thật, tag `v1.0.0`. Độ lệch B-002 (quyền INTERNET) chờ quyết định |
+| 11 — Release & Deliverables | 🟨 11A xong, 11B chưa | nhánh `phase/11a-release` (chưa tag `v1.0.0`) | format ✔ · analyze 0 · test 717/717 · coverage 94,5% · release APK build ✔, ký ✔ (89,3 MiB) · chạy thử release trên emulator ✔ sau khi sửa R8 và sau khi gỡ quyền mạng | 11B (còn lại): `docs/REPORT.md`, `docs/DEMO_SCRIPT.md`, ảnh chụp, link APK, thử trên máy thật, tag `v1.0.0`. B-002 (quyền INTERNET) đã đóng: quyền được gỡ khỏi bản release |
 | 12 — Platform Channel (tùy chọn) | ⬜ Chưa bắt đầu | — | — | |
 
 Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · ✅ xong (gate xanh, đã merge, đã tag).
@@ -444,8 +444,7 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 - [ ] **Phase 9 — biểu đồ trên điện thoại thật:** animation donut và cột mượt (không giật khi mở tab, khi thêm/xóa giao dịch); chạm đúng lát/cột trên màn thật (cả lát nhỏ, gần ranh giới); chữ ở lỗ giữa không tràn với số tiền lớn và chữ hệ thống phóng to; TalkBack đọc mô tả biểu đồ.
 - [ ] **Phase 10 — giao diện trên điện thoại thật:** menu giao diện đổi sáng/tối/hệ thống và còn nguyên sau khi mở lại app; kiểm tra bằng mắt chữ và biểu đồ ở nền tối; cỡ chữ hệ thống lớn nhất trên cả 5 màn; tên "VKU Expense OCR" dưới biểu tượng app.
 - [ ] **Phase 11A:** sao lưu `%USERPROFILE%\vku-keys\upload-keystore.jks` và `android/key.properties` ra nơi an toàn (mất keystore thì không cập nhật được app đã phát hành).
-- [ ] **Phase 11A:** quyết định B-002 (gỡ quyền `INTERNET`/`ACCESS_NETWORK_STATE` khỏi bản release bằng `tools:node="remove"`; sau đó phải build lại và chạy lại OCR trên emulator để chắc ML Kit vẫn đọc được).
-- [ ] **Phase 11A:** cài `app-release.apk` lên điện thoại thật và chạy lại các checklist ở trên (camera, OCR thật, biểu đồ, chế độ máy bay).
+- [ ] **Phase 11A:** cài `app-release.apk` lên điện thoại thật và chạy lại các checklist ở trên (camera, OCR thật, biểu đồ, chế độ máy bay: quét và lưu khi **không có mạng**).
 - [ ] **Phase 11A:** chụp ảnh màn hình vào `docs/screenshots/` (hướng dẫn trong thư mục), điền link tải APK vào `README.md`.
 - [ ] Checklist test thủ công trên thiết bị của Phase 0–10 trong `docs/TEST_REPORT.md`.
 
@@ -532,6 +531,7 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 | D-075 | R8 bật tường minh (`isMinifyEnabled`, `isShrinkResources`) với `proguard-android-optimize.txt` + `proguard-rules.pro`; **`-dontwarn` cho 4 script ML Kit không đóng gói** | AGP 9 không còn nhận `proguard-android.txt`. Plugin `google_mlkit_text_recognition` tham chiếu các lớp Trung/Nhật/Hàn/Devanagari mà ta không đóng gói (D-013) và không bao giờ gọi (luôn Latin); build release dừng vì "Missing classes" nếu thiếu rule. |
 | D-076 | `-keep class * implements com.google.firebase.components.ComponentRegistrar { <init>(); }` | **Lỗi chỉ có ở bản release, test trên máy tính không thấy:** ML Kit nạp `CommonComponentRegistrar`, `VisionCommonRegistrar`, `TextRegistrar` bằng reflection từ tên trong manifest; R8 loại constructor → `NoSuchMethodException` và lần OCR đầu bị `NullPointerException` ở `InputImage.fromFilePath`. Giải mã bằng `retrace` + `mapping.txt`. Sau sửa, cùng ảnh đọc đúng. |
 | D-077 | README ghi trạng thái xác minh bằng ba ký hiệu: ✅ có test máy tính, 🟦 đã chạy trên emulator (bản release), ⚠ chưa xác minh trên máy thật; FR-1 giữ `[ ]` như CLAUDE.md | Không để README nói "đã xong" nhiều hơn những gì đã kiểm chứng. |
+| D-078 | Gỡ `INTERNET` và `ACCESS_NETWORK_STATE` khỏi bản release bằng `tools:node="remove"` trong `AndroidManifest.xml` (người dùng đồng ý B-002) | NFR-1 "không gọi mạng". Hai quyền do `transport-backend-cct` (telemetry ML Kit) và `media3-common` thêm vào; model ML Kit đã đóng gói nên OCR không cần chúng. Sau khi gỡ, tiến trình app không thuộc nhóm `inet` của Android, nên không thể mở socket mạng. Bản debug/profile vẫn có `INTERNET` do Flutter thêm cho hot reload (không phát hành). |
 
 ---
 
@@ -567,11 +567,14 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
   3. Claude Code tự chạy phương án 1 (tải khoảng 1–2 GB vào `D:\flutter`, sửa biến PATH của user) nếu bạn đồng ý.
 - **Trạng thái:** đã làm xong phần không cần Flutter của Phase 0 (git, `CLAUDE.md`, `docs/`, `.gitignore`, `.gitattributes`, README khung). Phần `flutter create`, lint và Quality Gate chờ B-001.
 
-### B-002 — Quyền `INTERNET` trong bản release (độ lệch với NFR-1, đang chờ quyết định, phát hiện 2026-10-10)
+### B-002 — Quyền `INTERNET` trong bản release (✅ đã giải quyết 2026-10-10)
 
 - **Mô tả:** NFR-1 yêu cầu "hoàn toàn offline; không gọi mạng". Manifest release gộp có `android.permission.INTERNET` và `ACCESS_NETWORK_STATE`, do thư viện `com.google.android.datatransport:transport-backend-cct` 2.3.3 (Google Data Transport, ML Kit dùng để gửi số liệu dùng ẩn danh) thêm vào. Mã trong `lib/` **không có** đoạn nào gọi mạng; model nhận dạng đóng gói trong APK nên OCR chạy offline.
 - **Đã làm:** tra `manifest-merger-release-report.txt`, tìm trong `lib/`. **Chưa đổi gì** vì NFR-1 là yêu cầu đóng băng.
 - **Phương án:**
   1. **(Đề xuất)** Gỡ hai quyền bằng `tools:node="remove"` trong `android/app/src/main/AndroidManifest.xml`. Không có quyền mạng thì telemetry của ML Kit không gửi được (thư viện được thiết kế để thất bại im lặng). Sau đó build lại release và chạy lại luồng OCR trên emulator để xác nhận vẫn đọc được. Mạnh hơn nữa: `adb shell dumpsys netstats` / chế độ máy bay khi quét.
   2. Giữ nguyên, ghi rõ trong báo cáo rằng quyền mạng do thư viện kéo vào và app không dùng mạng.
-- **Trạng thái:** chờ bạn chọn phương án.
+- **Quyết định của bạn:** phương án 1, gỡ hai quyền bằng `tools:node="remove"`.
+- **Kết quả:** manifest gỡ cả hai; build lại release; `aapt` / `apkanalyzer` không còn hai quyền; trên emulator tiến trình app không thuộc nhóm `inet` và OCR vẫn đọc đúng (WinMart, 73.300, 14/04/2025), lưu và Dashboard cập nhật, không crash. NFR-1 đánh `[x]`. Chi tiết: `docs/TEST_REPORT.md`, mục "Phase 11A (tiếp)".
+- **Lịch sử:** phần trên giữ nguyên mô tả lúc mở độ lệch.
+

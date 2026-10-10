@@ -17,7 +17,7 @@
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Mã nguồn, kiểm thử trên máy tính | ✅ 713 test, 94,5% độ phủ dòng, `flutter analyze` 0 issue |
+| Mã nguồn, kiểm thử trên máy tính | ✅ 717 test, 94,5% độ phủ dòng, `flutter analyze` 0 issue |
 | APK release đã ký | ✅ Đã build và ký (xem [Build](#build-apk-release)); cài và chạy được trên **emulator** |
 | Chạy trên **điện thoại Android thật** | ⚠ **Chưa**. Các mục "chưa xác minh trên máy thật" bên dưới còn nợ |
 | Video demo, báo cáo PDF, link APK | ⏳ Chưa làm (Phase 11B) |
@@ -75,7 +75,7 @@ Chú thích: ✅ có test tự động trên máy tính · 🟦 đã chạy th�
 - [x] FR-8.4 Loading / rỗng / lỗi (kèm "Thử lại") ở mọi màn có dữ liệu bất đồng bộ ✅
 
 ### Yêu cầu phi chức năng
-- NFR-1 Hoàn toàn offline: mã của app **không có đoạn nào gọi mạng**, model ML Kit đóng gói trong APK nên OCR chạy offline. ⚠ **Chưa đánh dấu hoàn tất:** manifest của bản release có quyền `INTERNET` và `ACCESS_NETWORK_STATE` do thư viện `transport-backend-cct` (gửi số liệu dùng của ML Kit) kéo vào. Đã ghi là độ lệch **B-002** trong `CLAUDE.md`, chờ quyết định gỡ quyền.
+- [x] NFR-1 Hoàn toàn offline: mã của app không có đoạn nào gọi mạng và **APK release không khai báo quyền `INTERNET` / `ACCESS_NETWORK_STATE`** (đã gỡ khỏi manifest; xác minh bằng `aapt` / `apkanalyzer` và chạy OCR trên emulator). Model ML Kit đóng gói trong APK nên OCR chạy offline. ⚠ Chưa thử chế độ máy bay trên máy thật.
 - NFR-2 / NFR-3 Hiệu năng và vòng đời tài nguyên: đã rà soát (xem `docs/PHASE_LOG.md`, Phase 10) ✅
 - NFR-4 Cấu trúc thư mục bắt buộc ✅ · NFR-5 `flutter analyze` 0 issue, `dart format` ✅
 - NFR-6 APK release đã ký ✅ · chạy trên **điện thoại thật** ⚠ **chưa**
@@ -123,7 +123,7 @@ lib/
 ├── state/       Riverpod 2: expenseListProvider, selectedMonth/Week, themeMode, scanController
 ├── widgets/     ExpenseSummaryCard, ConfidenceNote, ReceiptFrameOverlay, charts/ (CustomPainter)
 └── screens/     dashboard, scan (camera), review, history, shell
-test/            713 test: parser, DB (sqflite_common_ffi), state (ProviderContainer), widget, layout
+test/            717 test: parser, DB (sqflite_common_ffi), state (ProviderContainer), widget, layout
 integration_test/  luồng chính, camera, lưu trữ, đánh giá OCR trên máy thật
 tool/            ocr_eval (chấm OCR trên hóa đơn thật), regex_table (sinh bảng regex)
 docs/            PHASE_LOG, TEST_REPORT, REGEX_TABLE, SIGNING, SETUP_ENV, PROJECT_BRIEF
@@ -159,7 +159,7 @@ Phiên bản thực tế (theo `pubspec.lock`):
 flutter pub get                 # tải gói
 flutter run                     # chạy bản debug trên thiết bị/emulator đã kết nối
 flutter analyze                 # phải 0 issue
-flutter test                    # 713 test, không cần thiết bị
+flutter test                    # 717 test, không cần thiết bị
 flutter build apk --debug       # APK debug
 ```
 
@@ -182,7 +182,7 @@ Bản release được **ký bằng keystore riêng**, nằm ngoài repo, đọc
 
 | | |
 |---|---|
-| Số test | **713** (parser, ghép hàng, DB, lưu ảnh, state, camera, Review, biểu đồ, layout, độ tương phản, cấu hình release) |
+| Số test | **717** (parser, ghép hàng, DB, lưu ảnh, state, camera, Review, biểu đồ, layout, độ tương phản, cấu hình release) |
 | Độ phủ | **94,5%** dòng (2391/2531) |
 | Chạy | `flutter test` · với độ phủ: `flutter test --coverage` |
 | Test trên thiết bị | `integration_test/` (xem bên dưới) — **chưa chạy trên điện thoại thật** |
@@ -224,7 +224,6 @@ flutter test integration_test/camera_smoke_test.dart -d <thiết bị>  # previe
 - **Nhận dạng tên cửa hàng còn yếu** (7/19 trên hóa đơn thật): logo kiểu chữ đặc biệt bị OCR đọc sai, ảnh không có tên cửa hàng. Người dùng luôn kiểm tra lại ở màn Review.
 - OCR cũng mất dấu `/` trong ngày hoặc đọc sai số trên ảnh mờ; hóa đơn tổng 0 đ (giảm giá toàn bộ) không lưu được vì đề yêu cầu số tiền dương.
 - Chỉ nhận dạng **chữ Latin** (tiếng Việt có dấu được chuẩn hóa khi so khớp); không có model cho chữ Hán/Nhật/Hàn để APK không phình thêm.
-- Bản release có quyền `INTERNET` do thư viện của ML Kit thêm vào (xem NFR-1 ở trên); mã của app không dùng mạng.
 - APK release lớn (≈ 89 MiB) vì đóng gói model ML Kit và nhiều kiến trúc CPU.
 - Chỉ nhắm tới Android; thư mục iOS có cấu hình quyền nhưng chưa build/thử.
 - Biểu đồ cột không có trục giá trị; Lịch sử chưa có tìm kiếm.
