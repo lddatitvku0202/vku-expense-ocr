@@ -316,11 +316,11 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [ ] `integration_test/app_flow_test.dart`: luồng thêm thủ công → xuất hiện trong lịch sử → tổng trên dashboard đổi (chạy khi có thiết bị). → **đã viết, CHƯA chạy** (chưa có thiết bị; không bật emulator ở Phase 8), xem Việc còn nợ.
 
 ### Phase 9 — Biểu đồ CustomPainter
-- [ ] `widgets/charts/donut_chart_painter.dart` + `donut_chart.dart` (StatefulWidget, `SingleTickerProviderStateMixin`, `AnimationController` + `CurvedAnimation`, chạy lại khi dữ liệu đổi trong `didUpdateWidget`, hit-test chạm, legend).
-- [ ] `widgets/charts/weekly_bar_painter.dart` + `weekly_bar_chart.dart` (animation, chạm cột, chuyển tuần).
-- [ ] Tách phần hình học thành hàm thuần để test: `angleToSliceIndex`, `isPointInRing`, `barRects(values, size)`, `percentages(totals)`.
-- [ ] Test: unit test hình học (góc tại 12h/3h/6h/9h với `startAngle = -π/2`, điểm ngoài vòng khuyên, tổng % = 1, tất cả giá trị = 0); `shouldRepaint` đúng khi dữ liệu/progress/selection đổi; widget test chạm vào lát → hiện chi tiết; animation hoàn tất sau `pumpAndSettle`.
-- [ ] Gắn vào Dashboard; xác nhận biểu đồ tự cập nhật khi thêm giao dịch (widget test với provider override).
+- [x] `widgets/charts/donut_chart_painter.dart` + `donut_chart.dart` (StatefulWidget, `SingleTickerProviderStateMixin`, `AnimationController` + `CurvedAnimation`, chạy lại khi dữ liệu đổi trong `didUpdateWidget`, hit-test chạm, legend).
+- [x] `widgets/charts/weekly_bar_painter.dart` + `weekly_bar_chart.dart` (animation, chạm cột, chuyển tuần).
+- [x] Tách phần hình học thành hàm thuần để test: `angleToSliceIndex`, `isPointInRing`, `barRects(values, size)`, `percentages(totals)`.
+- [x] Test: unit test hình học (góc tại 12h/3h/6h/9h với `startAngle = -π/2`, điểm ngoài vòng khuyên, tổng % = 1, tất cả giá trị = 0); `shouldRepaint` đúng khi dữ liệu/progress/selection đổi; widget test chạm vào lát → hiện chi tiết; animation hoàn tất sau `pumpAndSettle`.
+- [x] Gắn vào Dashboard; xác nhận biểu đồ tự cập nhật khi thêm giao dịch (widget test với provider override).
 
 ### Phase 10 — UI/UX polish
 - [ ] Chuyển theme (sáng/tối/hệ thống); layout responsive ≥ 600dp; kiểm tra không overflow ở cả dọc và ngang bằng widget test với nhiều kích thước (`tester.view.physicalSize`); `Semantics` cho các nút icon; empty/loading/error states thống nhất; icon app và tên hiển thị "VKU Expense OCR".
@@ -377,17 +377,17 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] FR-5.3 — bằng chứng: `ImageStorageService.save` copy vào `<documents>/receipts/`, thumbnail JPEG 256px trong `Isolate.run` (`test/services/image_storage_service_test.dart`); trên Android thật: `integration_test/storage_test.dart` (chưa chạy, xem Việc còn nợ)
 - [ ] FR-5.4 — một phần (logic xong): `ExpenseListNotifier.remove/restore/commitDeletion` giữ ảnh trong `undoWindow` 5 s rồi mới xóa, restore giữ nguyên id (`test/state/expense_list_notifier_test.dart`, `fakeAsync`); dọn ảnh mồ côi khi khởi động (`app_startup_test.dart`); xóa file đã mất không crash (Phase 4). Còn SnackBar Undo → Phase 8
 - [x] FR-5.5 — bằng chứng: `lib/models/expense_category.dart` (switch expression), `test/models/expense_category_test.dart` (đủ 5 nhánh label/icon/màu, round-trip DB)
-- [ ] FR-6.1 — bằng chứng: _chưa có_
-- [ ] FR-6.2 — bằng chứng: _chưa có_
-- [ ] FR-6.3 — bằng chứng: _chưa có_
-- [ ] FR-6.4 — bằng chứng: _chưa có_
-- [ ] FR-6.5 — một phần: `categoryTotalsProvider`, `weeklyTotalsProvider`, `monthTotalProvider` dẫn xuất từ `expenseListProvider`, cập nhật khi thêm/sửa/xóa/undo (`expense_list_notifier_test.dart`); biểu đồ + animation chạy lại → Phase 9
-- [ ] FR-6.6 — bằng chứng: _chưa có_
-- [ ] FR-7.1 — một phần: `StatefulShellRoute.indexedStack` + `NavigationBar` 3 tab (`test/app_router_test.dart`); Dashboard có tổng tháng + nút chuyển tháng (`test/screens/dashboard_screen_test.dart`); donut và cột tuần → Phase 9
+- [x] FR-6.1 — bằng chứng: `DonutChartPainter` (`drawArc` stroke, quét 0 → 1, tổng ở giữa bằng `TextPainter`, rút gọn khi dài), `DonutChart` (`AnimationController` + `CurvedAnimation`, legend màu/tên/số tiền/%) (`test/widgets/charts/chart_widgets_test.dart`, `chart_painters_test.dart`). Chưa thử trên máy thật (độ mượt animation, độ chính xác khi chạm)
+- [x] FR-6.2 — bằng chứng: chạm lát → dày hơn + chi tiết, chạm lại/lỗ giữa/ngoài → bỏ chọn; hit-test `atan2` + vòng khuyên (`chart_geometry_test.dart`, `test/widgets/charts/chart_widgets_test.dart`). Chưa thử trên máy thật (độ mượt animation, độ chính xác khi chạm)
+- [x] FR-6.3 — bằng chứng: `WeeklyBarPainter` (7 cột `drawRRect`, nhãn ngày + giá trị bằng `TextPainter`, cột mọc lên), `WeeklyBarChart` (tuần trước/sau, khoảng ngày, chạm cột → số tiền, hôm nay nổi bật) (`test/widgets/charts/chart_widgets_test.dart`, `chart_painters_test.dart`). Chưa thử trên máy thật (độ mượt animation, độ chính xác khi chạm)
+- [x] FR-6.4 — bằng chứng: `shouldRepaint` của cả hai painter so sánh dữ liệu, màu, progress, phần tử đang chọn (và hôm nay); mỗi tiêu chí một test (`test/widgets/charts/chart_painters_test.dart`). Chưa thử trên máy thật (độ mượt animation, độ chính xác khi chạm)
+- [x] FR-6.5 — bằng chứng: thêm/sửa/xóa giao dịch → donut và cột tuần cập nhật, animation chạy lại (`test/screens/dashboard_screen_test.dart`, `test/widgets/charts/chart_widgets_test.dart`). Chưa thử trên máy thật (độ mượt animation, độ chính xác khi chạm)
+- [x] FR-6.6 — bằng chứng: tháng không có chi tiêu → thông điệp thay cho donut; tuần không có chi tiêu → thông điệp, vẫn chuyển tuần được (`test/widgets/charts/chart_widgets_test.dart`). Chưa thử trên máy thật (độ mượt animation, độ chính xác khi chạm)
+- [x] FR-7.1 — bằng chứng: `StatefulShellRoute.indexedStack` + `NavigationBar` M3 3 tab (`test/app_router_test.dart`); Tổng quan có tổng tháng, donut, cột tuần (`test/screens/dashboard_screen_test.dart`); Quét = camera (Phase 6); Lịch sử = danh sách (Phase 8). Chưa thử trên máy thật
 - [x] FR-7.2 — bằng chứng: `lib/core/router.dart` (`/expense/:id`, `/review` + `extra`), `test/app_router_test.dart` (path param, extra, id sai → trang lỗi)
 - [x] FR-7.3 — bằng chứng: `HistoryScreen` (`ListView.builder`, `ExpenseSummaryCard` theo lab Week 7 có thumbnail, `Dismissible` + `ValueKey(id)`, lọc theo danh mục) (`test/screens/history_screen_test.dart`, `test/widgets/expense_summary_card_test.dart`). Chưa thử trên máy thật
 - [ ] FR-8.1 — một phần: `AppTheme` M3 light/dark từ seed `0xFF2C4570` (`test/core/app_theme_test.dart`); `themeModeProvider` lưu/đọc lại qua `shared_preferences`, `MaterialApp.themeMode` theo nó (`test/state/theme_mode_provider_test.dart`, `test/app_theme_mode_test.dart`); nút chuyển → Phase 10
-- [ ] FR-8.2 — bằng chứng: _chưa có_
+- [ ] FR-8.2 — một phần: Dashboard đặt donut và cột tuần cạnh nhau khi ≥ 600 dp, không overflow ở 320 dp và màn ngang với chữ 1,5× (`dashboard_screen_test.dart`); Review, camera, Lịch sử có test màn nhỏ/ngang ở Phase 6–8. Rà soát toàn app → Phase 10
 - [ ] FR-8.3 — một phần: `Formatters.vnd` / `Formatters.date` (`test/core/formatters_test.dart`), `SafeArea` ở các màn hiện có; áp dụng toàn app → Phase 7–10
 - [ ] FR-8.4 — một phần: provider dẫn xuất trả `AsyncValue` (loading/error lan từ danh sách, có test); hiển thị bằng `AsyncValue.when` ở các màn → Phase 7–10
 - [ ] NFR-1 — bằng chứng: _chưa có_
@@ -412,7 +412,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 | 6 — Camera capture | ✅ Xong (FR-1: code + test máy tính xong, CHƯA xác minh trên điện thoại thật) | tag `phase-6` | format ✔ · analyze 0 · test 438/438 · coverage 91.5% · build debug ✔ · smoke test **emulator + webcam** 1 lần pass (preview → chụp → cắt → OCR → /review) | `image_cropper`, flash, lấy nét, quyền, vòng đời chưa thử trên máy thật; xem checklist trong Việc còn nợ |
 | 7 — Review & Verification | ✅ Xong | tag `phase-7` | format ✔ · analyze 0 · test 489/489 · coverage 92.8% · build debug ✔ | Widget test trên máy tính; **chưa thử trên thiết bị** (không bật emulator theo yêu cầu). Màn debug OCR Phase 3 đã gỡ |
 | 8 — Lịch sử & Dashboard | ✅ Xong | tag `phase-8` | format ✔ · analyze 0 · test 514/514 · coverage 93.1% · build debug ✔ | Widget test trên máy tính; `integration_test/app_flow_test.dart` đã viết, **chưa chạy** (chưa có thiết bị). Chưa thử trên máy thật |
-| 9 — Biểu đồ CustomPainter | ⬜ Chưa bắt đầu | — | — | |
+| 9 — Biểu đồ CustomPainter | ✅ Xong | tag `phase-9` | format ✔ · analyze 0 · test 582/582 · coverage 94.2% · build debug ✔ | Không dùng thư viện chart (có test kiến trúc). Chưa thử trên máy thật |
 | 10 — UI/UX polish | ⬜ Chưa bắt đầu | — | — | |
 | 11 — Release & Deliverables | ⬜ Chưa bắt đầu | — | — | |
 | 12 — Platform Channel (tùy chọn) | ⬜ Chưa bắt đầu | — | — | |
@@ -441,7 +441,8 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
   - [ ] Chạy `flutter test integration_test/camera_smoke_test.dart -d <máy>` với một hóa đơn thật trước camera.
 - [ ] **Phase 7 — màn Review trên điện thoại thật:** bàn phím số cho ô số tiền và nút Next chuyển ô; form cuộn được khi bàn phím mở; bộ chọn ngày hiện tiếng Việt và không cho chọn ngày tương lai; phóng to ảnh hóa đơn; lưu thật (ảnh + thumbnail vào `receipts/`, DB); nút back Android hỏi trước khi bỏ thay đổi.
 - [ ] **Phase 8:** chạy `flutter test integration_test/app_flow_test.dart -d <máy>` (thêm thủ công → Lịch sử → tổng Dashboard → vuốt xóa → Undo) khi có thiết bị.
-- [ ] Checklist test thủ công trên thiết bị của Phase 0–8 trong `docs/TEST_REPORT.md`.
+- [ ] **Phase 9 — biểu đồ trên điện thoại thật:** animation donut và cột mượt (không giật khi mở tab, khi thêm/xóa giao dịch); chạm đúng lát/cột trên màn thật (cả lát nhỏ, gần ranh giới); chữ ở lỗ giữa không tràn với số tiền lớn và chữ hệ thống phóng to; TalkBack đọc mô tả biểu đồ.
+- [ ] Checklist test thủ công trên thiết bị của Phase 0–9 trong `docs/TEST_REPORT.md`.
 
 ---
 
@@ -510,6 +511,12 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 | D-059 | Xóa liên tiếp: SnackBar mới thay SnackBar cũ, lần xóa trước được chốt ngay (kể cả ảnh); Undo chỉ áp dụng cho lần xóa mới nhất | Chỉ một SnackBar hiện được một lúc; giữ lần xóa cũ khi không còn nút Undo cho nó sẽ để lại ảnh không ai dọn. |
 | D-060 | Chip lọc Lịch sử dùng `Wrap`, không cuộn ngang | Sáu chip trên màn 360 dp: cuộn ngang sẽ giấu các chip cuối (test chạm hụt cũng vì vậy). |
 | D-061 | Dashboard không cho chuyển sang tháng tương lai; `integration_test/app_flow_test.dart` dùng file DB và thư mục ảnh riêng | Tháng tương lai không thể có chi tiêu. Test luồng chạy trên máy thật không được đụng dữ liệu của người dùng. |
+| D-062 | Cột có giá trị 0 vẫn vẽ một "chân" cao 3 px trên đường đáy (`BarLayout.minHeight`); giá trị rất nhỏ cũng không thấp hơn mức đó; chạm theo cả chiều cao cột (`barIndexAt`) | Người dùng thấy đủ 7 ngày, ngày nào chưa chi; vẫn chạm được ngày 0 đ để xem "0 đ". |
+| D-063 | Tỷ lệ cột theo **giá trị lớn nhất** của tuần (`barScaleMax`), không làm tròn lên số "đẹp" | FR-6.3: "chiều cao tỷ lệ với ngày cao nhất" (cột cao nhất chạm đỉnh). Tất cả 0 → thang 1, không chia cho 0. |
+| D-064 | Hit-test donut dùng độ dày của lát **đang chọn** (×1,35) làm vùng chạm; ranh giới thuộc về lát bắt đầu tại đó; chạm lần nữa / lỗ giữa / ngoài → bỏ chọn | Chạm bằng ngón tay dễ hụt vòng mỏng; quy tắc ranh giới rõ ràng để test được. |
+| D-065 | Animation: donut 900 ms, cột 700 ms, `Curves.easeOutCubic`; chỉ chạy lại khi dữ liệu **khác về giá trị** (`CategoryTotals`/`WeeklyTotals` so sánh bằng giá trị) | Không replay vô ích khi provider phát lại cùng số liệu; dữ liệu đổi giữa chừng thì chạy lại từ 0 (có test). |
+| D-066 | Tổng ở lỗ giữa: dùng `Formatters.vnd`, quá 80% đường kính lỗ thì đổi sang `compactVnd` ("1,25tr đ"), vẫn quá thì thu nhỏ cỡ chữ | Số tiền lớn hoặc chữ hệ thống phóng to không được tràn ra khỏi lỗ. |
+| D-067 | Legend: tên danh mục co lại có "…", cụm "số tiền + %" nằm trong `FittedBox(scaleDown)`; nhãn trong biểu đồ cột giới hạn hệ số chữ ở 1,3× | Test 320 dp với chữ 1,5× và số tiền 123 tỷ phát hiện legend tràn (RenderFlex overflow) ở bản đầu. |
 
 ---
 

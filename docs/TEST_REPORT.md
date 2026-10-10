@@ -13,6 +13,7 @@
 | 6 | 438 | 438 / 0 | 91.5% dòng | ✔ | ✔ 0 issue | ✔ | 🟨 **emulator + webcam**: smoke test 1 lần pass (preview → chụp → cắt → OCR → /review). ⚠ **Chưa xác minh trên điện thoại thật** |
 | 7 | 489 | 489 / 0 | 92.8% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu). 55 test mới; 4 test của màn debug OCR bị xóa cùng màn |
 | 8 | 514 | 514 / 0 | 93.1% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị**. `integration_test/app_flow_test.dart` đã viết, **chưa chạy** |
+| 9 | 582 | 582 / 0 | 94.2% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu) |
 
 ## Độ chính xác parser trên bộ fixture
 
@@ -343,6 +344,35 @@ flutter test integration_test/app_flow_test.dart -d <device id>
 
 ⚠ **Chưa chạy** (chưa có thiết bị; Phase 8 không bật emulator). Đã ghi vào Việc còn nợ trong `CLAUDE.md`.
 
+## Phase 9 — Biểu đồ CustomPainter
+
+68 test mới, tất cả pass (máy tính). Phần hình học (`chart_geometry.dart`) và hai painter được phủ 100% dòng.
+
+| Nhóm | Ca kiểm tra | File test |
+|---|---|---|
+| Hình học donut | Tỷ lệ cộng lại = 1, tất cả 0 không NaN; lát bắt đầu 12h theo chiều kim đồng hồ; 1 lát 100% = cả vòng; nhiều lát < 1% cộng đủ 2π; chuẩn hóa góc về [0, 2π) | `test/widgets/charts/chart_geometry_test.dart` |
+| Hit-test `atan2` (FR-6.2) | 4 lát đều: 12h → 0, 3h → 1, 6h → 2, 9h → 3; sát 12h hai phía → lát đầu / lát cuối; ranh giới thuộc lát bắt đầu tại đó; lát rỗng bị bỏ qua; lát < 1% chạm trúng ở giữa; **lỗ giữa, ngoài vòng, ngoài vùng vẽ → null**; không có dữ liệu → null | 〃 |
+| Hình học cột (FR-6.3) | 7 cột đều, khoảng cách đều; đáy ở `size.height − lề dưới`; cột lớn nhất cao hết vùng vẽ, cột khác tỷ lệ; cột 0 có chân 3 px (D-062); tất cả 0 không chia cho 0; chạm theo cột (cả khe giữa hai cột), ngoài vùng → null | 〃 |
+| `shouldRepaint` (FR-6.4) | Mỗi painter: không vẽ lại khi giống hệt; vẽ lại khi **dữ liệu** đổi, khi **màu** đổi, khi **progress** đổi, khi **phần tử chọn** đổi (cột: cả "hôm nay") — mỗi tiêu chí một test | `test/widgets/charts/chart_painters_test.dart` |
+| Vẽ | Donut: vòng nền + một `drawArc` cho mỗi lát khác 0; cột: 7 `drawRRect` | 〃 |
+| DonutChart | Quét 0 → 1, xong với `pumpAndSettle`; legend màu/tên/số tiền/%; chạm lát → nổi bật + chi tiết, chạm lại / lỗ giữa → bỏ chọn; dữ liệu mới → quét lại, lát đang chọn biến mất → bỏ chọn; **dữ liệu đổi giữa chừng animation không lỗi**; dữ liệu bằng nhau không chạy lại; tháng rỗng → thông điệp; Semantics; tổng 123 tỷ → "123,46 tỷ đ"; 320 dp chữ 1,5× không overflow | `test/widgets/charts/chart_widgets_test.dart` |
+| WeeklyBarChart | 7 cột mọc lên rồi dừng; khoảng ngày "05/10 – 11/10/2026"; hôm nay nổi bật; chạm cột → "CN 11/10: 120.000 đ", cột 0 → "0 đ", chạm lại → bỏ chọn; tuần khác → chạy lại, bỏ chọn; nút tuần trước/sau; tuần rỗng → thông điệp, vẫn chuyển tuần được; Semantics; 320 dp chữ 1,5× | 〃 |
+| Dashboard (FR-6.5, FR-8.2) | Biểu đồ lấy đúng tháng/tuần; thêm, sửa, xóa giao dịch → cả hai biểu đồ cập nhật và animation chạy lại; nút tuần không vượt tuần hiện tại; 320 dp và màn ngang với chữ 1,5×, cuộn hết trang: không overflow; ≥ 600 dp hai biểu đồ cạnh nhau | `test/screens/dashboard_screen_test.dart` |
+| Kiến trúc | Không có gói nào chứa "chart" trong `pubspec.yaml` / `pubspec.lock` (và không có `fl_chart`, `syncfusion_flutter_charts`…); không file nào trong `lib/` import gói chart; `chart_geometry.dart` chỉ import `dart:math`, `dart:ui`; hai painter `extends CustomPainter` | `test/widgets/charts/chart_architecture_test.dart` |
+| Định dạng | `compactVnd`: 75k, 59,5k, 1tr, 1,25tr, 2,5 tỷ; `percent`: 37,5% | `test/core/formatters_test.dart` |
+
+**Lỗi test phát hiện trong code:** dòng legend tràn (RenderFlex overflow 18 px và 82 px) ở 320 dp khi chữ hệ thống 1,5× hoặc số tiền rất lớn. Đã sửa bằng `FittedBox` cho cụm số tiền + % (D-067).
+
+**Kiểm tra test có thật sự bắt lỗi (chỉ phần hình học):**
+
+| Đột biến | Test đỏ |
+|---|---|
+| `angleToSliceIndex` bỏ `− startAngle` (đo góc từ 3h thay vì 12h) | 7 test (5 test hit-test hình học + 2 test chạm donut) |
+| `barRects` bỏ chiều cao tối thiểu | 3 test (chân cột 0, tất cả 0, giá trị rất nhỏ) |
+| `barRects` treo cột từ mép trên xuống | 2 test (đáy cột, chân cột 0) |
+
+Lần đầu thử đột biến thứ ba bằng cách đổi `baseline` thành `layout.top + plot`; giá trị đó bằng đúng `baseline` (đột biến tương đương), nên không test nào đỏ. Đã làm lại bằng một đột biến thật như trong bảng. Code đã khôi phục sau mỗi lần.
+
 ## Checklist test thủ công trên thiết bị
 
 > Đánh dấu `[x]` khi bạn đã tự kiểm tra trên máy Android thật. Ghi tên máy và phiên bản Android.
@@ -450,3 +480,17 @@ Thiết bị: `__________` · Android `____`
 - [ ] Tab **Tổng quan**: tổng tháng đúng; nút tháng trước/sau đổi tháng và tổng; không sang được tháng sau tháng hiện tại.
 - [ ] Nút "Thêm thủ công" → màn Review trống, không ảnh.
 - [ ] Xoay ngang ở Lịch sử và Tổng quan → không overflow; Tổng quan đặt hai khung biểu đồ cạnh nhau.
+
+### Phase 9 — Biểu đồ CustomPainter
+
+Thiết bị: `__________` · Android `____`
+
+- [ ] Mở tab **Tổng quan**: donut quét một vòng, cột mọc lên **mượt** (không giật, không nháy).
+- [ ] Thêm / sửa / xóa một giao dịch rồi quay lại Tổng quan: số liệu đổi và animation chạy lại.
+- [ ] Chạm từng lát donut, cả **lát nhỏ** và chỗ **gần ranh giới** hai lát: lát được chọn đúng, dày hơn, hiện chi tiết; chạm lại hoặc chạm lỗ giữa → bỏ chọn.
+- [ ] Chạm từng cột (kể cả ngày 0 đ): hiện đúng ngày và số tiền; ngày hôm nay có màu đậm.
+- [ ] Nút tuần trước/sau: khoảng ngày đổi, không sang được tuần sau tuần hiện tại.
+- [ ] Tháng/tuần không có chi tiêu: thấy thông điệp thay vì biểu đồ trống.
+- [ ] Cài đặt → cỡ chữ lớn nhất: chữ trong lỗ donut không tràn, legend không có dải sọc vàng-đen.
+- [ ] Xoay ngang (hoặc máy tính bảng): donut và cột nằm cạnh nhau.
+- [ ] Bật **TalkBack**: chạm vào biểu đồ → đọc mô tả (danh mục, số tiền, %; các ngày trong tuần).

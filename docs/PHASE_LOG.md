@@ -1001,3 +1001,98 @@ ad9c305 feat(dashboard): show the month total with month navigation
 d1e33bc test(history): add failing tests for History, Dashboard and Undo
 docs(phase-8): record phase 8 results   (commit cuối của phase)
 ```
+
+---
+
+## Phase 9 — Biểu đồ CustomPainter
+
+**Trạng thái:** ✅ hoàn tất (merge vào `main`, tag `phase-9`). ⚠ **Chưa thử trên thiết bị** (độ mượt animation và độ chính xác khi chạm cần kiểm tra trên điện thoại thật).
+
+### Mục tiêu phase
+
+Phần nặng thứ hai của rubric (2.5đ): donut phân bổ theo danh mục và biểu đồ cột theo tuần, **tự vẽ bằng `CustomPainter`**, có animation, chạm được, tự cập nhật theo dữ liệu. Không dùng thư viện chart nào.
+
+FR liên quan: **FR-6.1 → FR-6.6**, **FR-7.1** (Dashboard đủ tổng tháng + 2 biểu đồ), FR-8.2 (một phần).
+
+### TDD trong lịch sử Git
+
+| # | Commit | Trạng thái test |
+|---|---|---|
+| 1 | `test(charts): add failing tests for the donut and weekly bar charts` | 🔴 68 test mới không biên dịch được |
+| 2 | `feat(charts): add pure chart geometry for donut hit-tests and bars` | 🟢 27 test hình học xanh ngay lần đầu |
+| 3 | `feat(core): add compact VND and percentage formats for charts` | 🟢 2 test định dạng |
+| 4 | `feat(charts): draw the donut and weekly bars with CustomPainter` | 🟢 12 test painter |
+| 5 | `feat(charts): add animated, tappable donut and weekly bar widgets` | 🔴→🟢 legend tràn ở 320 dp + chữ 1,5× (**lỗi thật**, sửa bằng `FittedBox`) |
+| 6 | `feat(dashboard): show the category donut and the weekly bars` | 🟢 582/582 |
+
+### Đã làm gì
+
+| File | Vai trò |
+|---|---|
+| `lib/widgets/charts/chart_geometry.dart` | Hàm thuần (chỉ `dart:math`, `dart:ui`): `percentages`, `donutSlices`, `normalizeAngle`, `isPointInRing`, `angleToSliceIndex`, `barScaleMax`, `barRects`, `barIndexAt`, lớp `BarLayout`. |
+| `lib/widgets/charts/donut_chart_painter.dart` | `DonutChartPainter`: vòng nền, mỗi danh mục một `drawArc` dạng stroke, quét theo `progress`, lát được chọn dày hơn, tổng tiền ở giữa bằng `TextPainter`. |
+| `lib/widgets/charts/donut_chart.dart` | `DonutChart`: `AnimationController` + `CurvedAnimation`, chạm để chọn, chi tiết, legend, trạng thái rỗng, `Semantics`. |
+| `lib/widgets/charts/weekly_bar_painter.dart` | `WeeklyBarPainter`: 7 cột `drawRRect` mọc lên từ đáy, nhãn T2…CN và giá trị rút gọn bằng `TextPainter`, màu cho hôm nay và cột được chọn. |
+| `lib/widgets/charts/weekly_bar_chart.dart` | `WeeklyBarChart`: khoảng ngày, nút tuần trước/sau, chạm cột → số tiền ngày đó, trạng thái rỗng, `Semantics`. |
+| `lib/screens/dashboard/dashboard_screen.dart` | Gắn hai biểu đồ vào hai khung, dữ liệu từ `categoryTotalsProvider` và `weeklyTotalsProvider`. |
+| `lib/core/formatters.dart` | `compactVnd` ("1,25tr") và `percent` ("37,5%"). |
+
+### Vì sao làm vậy (liên hệ slide)
+
+- **CustomPainter, hệ tọa độ, `drawArc` (W8 s30–34):** gốc (0, 0) ở góc trên trái, **trục Y hướng xuống**. Vì vậy góc trong `drawArc` tăng **theo chiều kim đồng hồ**, và 12h là −π/2. Đáy cột nằm ở `size.height − lề dưới`, cột "mọc lên" bằng cách đưa cạnh trên lên dần.
+- **`shouldRepaint` (sửa lỗi slide W8 s33):** slide chỉ so sánh `progress`, nên khi thêm giao dịch mà animation đã xong thì biểu đồ không vẽ lại. Ở đây so sánh cả dữ liệu, màu, progress và phần tử đang chọn (FR-6.4).
+- **`AnimatedBuilder` + `AnimationController` (W8 s34, W7 s26–29):** controller tạo trong `State`, `dispose()` khi widget bị hủy; `didUpdateWidget` gọi `forward(from: 0)` khi dữ liệu đổi.
+- **Tách hình học thành hàm thuần:** painter khó test vì chỉ "vẽ". Đưa toán (góc, bán kính, hình chữ nhật) ra hàm thuần thì test được bằng số, nhanh và chính xác; painter và hit-test dùng chung các hàm đó nên luôn khớp nhau.
+- **Lựa chọn đã cân nhắc:**
+  - *Thư viện `fl_chart`:* nhanh hơn nhiều nhưng bị cấm (brief 2.1). Có test kiến trúc chặn.
+  - *Hit-test bằng `Path.contains` của từng lát:* phải giữ `Path` của từng lát và vẫn cần xử lý lỗ giữa. Dùng `atan2` + khoảng cách tới tâm đơn giản, đúng yêu cầu "hit-test vòng khuyên".
+  - *Làm tròn trục cột lên số "đẹp" (1–2–5):* có lưới đẹp hơn, nhưng cột cao nhất không chạm đỉnh, trái FR-6.3 (D-063).
+
+### Khái niệm cần hiểu
+
+- **`atan2(dy, dx)`:** trả về góc (−π, π] của vector từ tâm tới điểm chạm, đo từ hướng 3h. Trừ đi góc bắt đầu −π/2 rồi đưa về [0, 2π) thì được vị trí dọc theo donut tính từ 12h; so với tổng dồn các `sweep` là biết lát nào.
+- **Vòng khuyên (annulus):** donut vẽ bằng stroke dày `w` quanh bán kính `r`, nên điểm chạm hợp lệ khi `r − w/2 ≤ khoảng cách ≤ r + w/2`. Nhỏ hơn là chạm vào lỗ giữa.
+- **`TextPainter`:** đo và vẽ chữ trực tiếp lên canvas: `layout()` để biết kích thước, rồi `paint()` tại vị trí tính sẵn (căn giữa bằng `width/2`, `height/2`).
+- **`CurvedAnimation`:** biến giá trị tuyến tính 0 → 1 của controller thành đường cong (`easeOutCubic`: nhanh lúc đầu, chậm dần), cho cảm giác tự nhiên.
+- **Đột biến tương đương (equivalent mutant):** một thay đổi code trông khác nhưng cho cùng kết quả, ví dụ `layout.top + plot` đúng bằng `baseline`. Test không đỏ trong trường hợp này là bình thường, không phải test yếu.
+
+### Kết quả kiểm thử
+
+| Bước | Kết quả |
+|---|---|
+| `dart format --set-exit-if-changed lib test integration_test tool` | ✔ 0 thay đổi |
+| `flutter analyze` | ✔ No issues found |
+| `flutter test` | ✔ **582/582** (514 cũ + 68 mới) |
+| `flutter test --coverage` | **94.2%** dòng (2340/2484); `chart_geometry.dart` 53/53, `donut_chart_painter.dart` 69/69, `weekly_bar_painter.dart` 54/54, `donut_chart.dart` 123/124, `weekly_bar_chart.dart` 89/90 |
+| `flutter build apk --debug` | ✔ |
+| Đột biến hình học | Bỏ `− startAngle` → 7 test đỏ; bỏ chiều cao tối thiểu → 3 test đỏ; treo cột từ trên → 2 test đỏ; đã khôi phục |
+| Thiết bị | ⚠ **Chưa test trên thiết bị** |
+
+Phân bổ 68 test mới: hình học 27 · widget biểu đồ 18 · painter 12 · Dashboard 5 · kiến trúc 4 · định dạng 2. Bảng chi tiết: `docs/TEST_REPORT.md`, mục "Phase 9".
+
+### Hạn chế đã biết
+
+- Chưa đo độ mượt (FPS) trên máy thật; chưa thử chạm bằng ngón tay thật (lát nhỏ < 1% rất hẹp, chỉ trúng khi chạm đúng giữa).
+- Biểu đồ cột không có trục và lưới giá trị; giá trị hiện rút gọn ở đầu cột và đầy đủ khi chạm.
+- Donut chỉ hiện tháng đang chọn ở Dashboard; chưa có biểu đồ theo năm.
+
+### Cách tự kiểm tra bằng tay
+
+1. Chạy test biểu đồ:
+   ```powershell
+   flutter test test/widgets/charts test/screens/dashboard_screen_test.dart
+   ```
+2. Thử phá `shouldRepaint` như slide W8 s33: trong `donut_chart_painter.dart` chỉ giữ `oldDelegate.progress != progress`, chạy `chart_painters_test.dart` và xem các test dữ liệu/màu/chọn đỏ.
+3. Trên điện thoại: checklist "Phase 9" trong `docs/TEST_REPORT.md`.
+
+### Danh sách commit
+
+```
+776f351 feat(dashboard): show the category donut and the weekly bars
+5f71514 feat(charts): add animated, tappable donut and weekly bar widgets
+aba8d6b feat(charts): draw the donut and weekly bars with CustomPainter
+74c8624 feat(core): add compact VND and percentage formats for charts
+b195059 feat(charts): add pure chart geometry for donut hit-tests and bars
+c93dd45 test(charts): add failing tests for the donut and weekly bar charts
+docs(phase-9): record phase 9 results   (commit cuối của phase)
+```
