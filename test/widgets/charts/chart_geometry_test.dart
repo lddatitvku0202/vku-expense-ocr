@@ -167,12 +167,12 @@ void main() {
 
   group('barRects (FR-6.3)', () {
     const size = Size(360, 200);
-    const layout = BarLayout(left: 10, top: 20, right: 10, bottom: 30, gap: 8);
+    const layout = BarLayout(left: 10, top: 20, right: 10, bottom: 30);
 
     test('7 bars, left to right, equal widths and gaps', () {
       final rects = barRects([1, 2, 3, 4, 5, 6, 7], size, layout);
       expect(rects, hasLength(7));
-      final width = (360 - 10 - 10 - 6 * 8) / 7;
+      const width = (360 - 10 - 10 - 6 * 8) / 7;
       for (var i = 0; i < 7; i++) {
         expect(rects[i].width, closeTo(width, 1e-9));
         expect(rects[i].left, closeTo(10 + i * (width + 8), 1e-9));
@@ -221,7 +221,7 @@ void main() {
 
   group('barIndexAt (tap a column)', () {
     const size = Size(360, 200);
-    const layout = BarLayout(left: 10, top: 20, right: 10, bottom: 30, gap: 8);
+    const layout = BarLayout(left: 10, top: 20, right: 10, bottom: 30);
 
     test('any height of a column selects it, also a 0-stub column', () {
       final rects = barRects([0, 5, 0, 0, 0, 0, 9], size, layout);
