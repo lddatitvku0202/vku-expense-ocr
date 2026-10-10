@@ -502,6 +502,56 @@ void main() {
       },
     );
 
+    test('holdForUndo keeps the photo until the snack bar decides', () {
+      fakeAsync((async) {
+        final c = container();
+        unawaited(c.read(expenseListProvider.future));
+        async.flushMicrotasks();
+        final notifier = c.read(expenseListProvider.notifier);
+
+        unawaited(notifier.remove(1));
+        async.flushMicrotasks();
+        notifier.holdForUndo(1);
+        async.elapse(window * 3);
+        expect(storage.deletedPaths, isEmpty, reason: 'no timer while held');
+        expect(notifier.isPendingDeletion(1), isTrue);
+
+        bool? restored;
+        notifier.restore(1).then((r) => restored = r);
+        async.flushMicrotasks();
+        expect(restored, isTrue);
+        expect(listOf(c).first.id, 1);
+      });
+    });
+
+    test('a held deletion is final once committed', () {
+      fakeAsync((async) {
+        final c = container();
+        unawaited(c.read(expenseListProvider.future));
+        async.flushMicrotasks();
+        final notifier = c.read(expenseListProvider.notifier);
+
+        unawaited(notifier.remove(1));
+        async.flushMicrotasks();
+        notifier.holdForUndo(1);
+        unawaited(notifier.commitDeletion(1));
+        async.flushMicrotasks();
+        expect(storage.deletedPaths, hasLength(2));
+        expect(notifier.isPendingDeletion(1), isFalse);
+      });
+    });
+
+    test('holdForUndo on an id that is not pending does nothing', () {
+      fakeAsync((async) {
+        final c = container();
+        unawaited(c.read(expenseListProvider.future));
+        async.flushMicrotasks();
+        c.read(expenseListProvider.notifier).holdForUndo(42);
+        async.elapse(window * 2);
+        expect(storage.deletedPaths, isEmpty);
+      });
+    });
+
     test(
       'disposing the state (app closing) deletes pending files right away',
       () {

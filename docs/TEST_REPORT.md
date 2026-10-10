@@ -12,6 +12,7 @@
 | 5 | 383 | 383 / 0 | 95.0% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu). State test bằng `ProviderContainer` + repository/storage giả, `fakeAsync` cho Undo |
 | 6 | 438 | 438 / 0 | 91.5% dòng | ✔ | ✔ 0 issue | ✔ | 🟨 **emulator + webcam**: smoke test 1 lần pass (preview → chụp → cắt → OCR → /review). ⚠ **Chưa xác minh trên điện thoại thật** |
 | 7 | 489 | 489 / 0 | 92.8% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu). 55 test mới; 4 test của màn debug OCR bị xóa cùng màn |
+| 8 | 514 | 514 / 0 | 93.1% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị**. `integration_test/app_flow_test.dart` đã viết, **chưa chạy** |
 
 ## Độ chính xác parser trên bộ fixture
 
@@ -312,6 +313,36 @@ Hạn chế của lần smoke test này (không được coi là đã test):
 
 **Lỗi test phát hiện trong code:** form ban đầu dùng `ListView` (dựng trường kiểu lười), khiến nút Lưu và ô danh mục chưa tồn tại khi chưa cuộn, nên `Form.validate()` có thể bỏ qua chúng. Đã đổi sang `SingleChildScrollView` + `Column` (D-051).
 
+## Phase 8 — Lịch sử & Dashboard
+
+25 test mới, tất cả pass (widget test trên máy tính).
+
+| Nhóm | Ca kiểm tra | File test |
+|---|---|---|
+| Card (FR-7.3) | Bố cục bài lab Week 7: icon danh mục trong `CircleAvatar`, tên + ngày xếp dọc với `CrossAxisAlignment.start`, "150.000 đ", `Card` + `InkWell`; thumbnail giải mã nhỏ (`cacheWidth` = 48 × tỷ lệ điểm ảnh); **file thumbnail mất → icon thay thế, không crash** | `test/widgets/expense_summary_card_test.dart` |
+| Lịch sử | Mới nhất trước; `ListView.builder` + `Dismissible` + `ValueKey<int>(id)`; chip lọc theo danh mục; chạm card → `/expense/:id`; nút "Thêm thủ công" | `test/screens/history_screen_test.dart` |
+| | Hai trạng thái rỗng: "Chưa có giao dịch nào" (DB trống, không hiện chip) và "Không có giao dịch thuộc danh mục Giải trí" (có nút "Xem tất cả") | 〃 |
+| Undo (FR-5.4) | SnackBar có `duration == ExpenseListNotifier.undoWindow`; **đúng một cửa sổ Undo sau khi vuốt SnackBar vẫn hiện, bấm "Hoàn tác" khôi phục bản ghi và ảnh không bị xóa**; hết thời gian → xóa hẳn cả ảnh và thumbnail | 〃 |
+| | **Xóa liên tiếp 2 giao dịch:** SnackBar thứ hai thay thế SnackBar thứ nhất, giao dịch thứ nhất bị chốt xóa ngay (kể cả ảnh), Undo chỉ khôi phục giao dịch thứ hai | 〃 |
+| | Card bị vuốt rời danh sách ngay, không có lỗi "dismissed Dismissible is still part of the tree"; `holdForUndo` giữ lần xóa cho tới khi SnackBar quyết định | 〃, `test/state/expense_list_notifier_test.dart` |
+| Dashboard | Tổng tháng theo `selectedMonthProvider` (1.250.000 đ, "2 giao dịch"); nút tháng trước/sau, không cho sang tháng tương lai; tháng rỗng → 0 đ + "Chưa có giao dịch trong tháng này"; thêm giao dịch → tổng đổi ngay; hai chỗ cho biểu đồ Phase 9, xếp cạnh nhau ở màn rộng; nút "Thêm thủ công" mở Review không ảnh | `test/screens/dashboard_screen_test.dart` |
+
+**Lỗi test phát hiện trong code:**
+- SnackBar có nút hành động mặc định **không tự đóng** trong Flutter 3.47 (`persist = action != null`), nên lần xóa không bao giờ được chốt. Đã đặt `persist: false` (D-058).
+- Chip lọc trong hàng cuộn ngang bị khuất ở màn 360 dp. Đã đổi sang `Wrap` (D-060).
+
+**Kiểm tra test có thật sự bắt lỗi:** cố ý bỏ `holdForUndo` → test "Undo while the snack bar shows…" đỏ (khi đó hẹn giờ 5 s xóa ảnh trước khi SnackBar đóng). Đã khôi phục code.
+
+### Integration test luồng chính (chưa chạy)
+
+`integration_test/app_flow_test.dart`: thêm thủ công từ Dashboard → tổng tháng thành 35.000 đ → xuất hiện ở Lịch sử → vuốt xóa → "Hoàn tác" → giao dịch quay lại, tổng vẫn 35.000 đ. Dùng file DB `it_app_flow.db` và thư mục ảnh riêng, xóa khi xong.
+
+```powershell
+flutter test integration_test/app_flow_test.dart -d <device id>
+```
+
+⚠ **Chưa chạy** (chưa có thiết bị; Phase 8 không bật emulator). Đã ghi vào Việc còn nợ trong `CLAUDE.md`.
+
 ## Checklist test thủ công trên thiết bị
 
 > Đánh dấu `[x]` khi bạn đã tự kiểm tra trên máy Android thật. Ghi tên máy và phiên bản Android.
@@ -405,3 +436,17 @@ Thiết bị: `__________` · Android `____`
 - [ ] Lưu hợp lệ → SnackBar "Đã lưu giao dịch." → quay về camera. (Lịch sử hiển thị ở Phase 8.)
 - [ ] Sửa một ô rồi bấm nút **back của Android** → hỏi "Bỏ thay đổi?".
 - [ ] Mở "Xem văn bản OCR gốc" → thấy các dòng chữ và thời gian OCR (ms); ghi lại thời gian OCR trên máy thật cho báo cáo.
+
+### Phase 8 — Lịch sử & Dashboard
+
+Thiết bị: `__________` · Android `____`
+
+- [ ] `flutter test integration_test/app_flow_test.dart -d <máy>` → pass.
+- [ ] Tab **Lịch sử**: giao dịch mới nhất ở trên, có thumbnail cho giao dịch có ảnh, cuộn mượt với nhiều giao dịch.
+- [ ] Chạm chip danh mục → danh sách lọc đúng; danh mục không có giao dịch → thông báo riêng + "Xem tất cả".
+- [ ] Vuốt trái một giao dịch → biến mất, SnackBar "Đã xóa …" + "Hoàn tác" khoảng 5 giây; bấm "Hoàn tác" → quay lại, thumbnail vẫn hiện.
+- [ ] Vuốt xóa hai giao dịch liên tiếp → chỉ hoàn tác được giao dịch thứ hai.
+- [ ] Chạm một giao dịch → mở màn Sửa; sửa số tiền → Lưu → Lịch sử và Dashboard cập nhật.
+- [ ] Tab **Tổng quan**: tổng tháng đúng; nút tháng trước/sau đổi tháng và tổng; không sang được tháng sau tháng hiện tại.
+- [ ] Nút "Thêm thủ công" → màn Review trống, không ảnh.
+- [ ] Xoay ngang ở Lịch sử và Tổng quan → không overflow; Tổng quan đặt hai khung biểu đồ cạnh nhau.

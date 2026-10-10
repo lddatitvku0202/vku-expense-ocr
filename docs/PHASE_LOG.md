@@ -894,3 +894,110 @@ b31f433 feat(core): format VND amounts while typing and validate the form
 308713f test(review): add failing tests for the Review & Verification screen
 docs(phase-7): record phase 7 results   (commit cuối của phase)
 ```
+
+---
+
+## Phase 8 — Lịch sử & Dashboard (khung)
+
+**Trạng thái:** ✅ hoàn tất (merge vào `main`, tag `phase-8`). ⚠ **Chưa thử trên thiết bị**; `integration_test/app_flow_test.dart` đã viết nhưng **chưa chạy**.
+
+### Mục tiêu phase
+
+Tab Lịch sử (danh sách, lọc, vuốt xóa có Undo, chạm để sửa) và khung Dashboard (tổng tháng, chuyển tháng, chỗ cho hai biểu đồ Phase 9, nút thêm thủ công). Nối Undo của SnackBar với cửa sổ Undo 5 giây đã làm ở Phase 5.
+
+FR liên quan: **FR-7.3**, FR-7.1 (một phần), FR-5.4 (SnackBar Undo), FR-6.5 (tổng tự cập nhật), FR-4.9 (mở chế độ thêm thủ công).
+
+### TDD trong lịch sử Git
+
+| # | Commit | Trạng thái test |
+|---|---|---|
+| 1 | `test(history): add failing tests for History, Dashboard and Undo` | 🔴 25 test mới không biên dịch được |
+| 2 | `feat(history): add ExpenseSummaryCard from the Week 7 lab` | 🟢 5 test card |
+| 3 | `feat(state): hold a deletion while its Undo snack bar is shown` | 🟢 3 test `holdForUndo` |
+| 4 | `feat(history): list, filter, swipe to delete and undo expenses` | 🔴→🟢 lần chạy đầu 3 test đỏ, đều là **lỗi thật trong code**: SnackBar có nút hành động không tự đóng (`persist`), và chip lọc bị khuất ở màn hẹp. Sửa code, test giữ nguyên |
+| 5 | `feat(dashboard): show the month total with month navigation` | 🟢 6 test Dashboard; 514/514 |
+| 6 | `test(app): add the end-to-end app flow integration test` | đã viết, chưa chạy |
+
+Ghi chú: phiên làm việc bị ngắt đúng lúc đang cố ý làm hỏng code để kiểm tra test. Khi mở lại đã đối chiếu: file `history_screen.dart` giống hệt bản sao lưu trước khi làm hỏng, không còn thay đổi nào chưa rõ nguồn gốc.
+
+### Đã làm gì
+
+| File | Vai trò |
+|---|---|
+| `lib/widgets/expense_summary_card.dart` | Card của bài lab Week 7 (W7 s45): `CircleAvatar` chứa icon danh mục, `Column(crossAxisAlignment: start)` gồm tên + ngày, số tiền "###.### đ", `Card` + `InkWell`, thumbnail giải mã nhỏ bằng `cacheWidth`, mất file thì hiện icon. |
+| `lib/screens/history/history_screen.dart` | `ListView.builder` + `Dismissible(key: ValueKey(id))`, chip lọc (`Wrap`), hai trạng thái rỗng, chạm → `/expense/:id`, nút "Thêm thủ công", SnackBar Undo. |
+| `lib/screens/dashboard/dashboard_screen.dart` | Tổng tháng + số giao dịch theo `selectedMonthProvider`, nút tháng trước/sau, hai khung chờ biểu đồ (cạnh nhau khi ≥ 600 dp), nút "Thêm thủ công". |
+| `lib/state/expense_providers.dart` | `holdForUndo(id)`: tạm dừng hẹn giờ xóa ảnh trong lúc SnackBar đang hiện. |
+| `integration_test/app_flow_test.dart` | Luồng: thêm thủ công → Lịch sử → tổng Dashboard → vuốt xóa → Undo, trên DB riêng. |
+
+### Vòng đời một lần xóa có SnackBar
+
+```
+vuốt ─► remove(id): danh sách bỏ id ngay, hẹn giờ 5 s bắt đầu
+      ─► holdForUndo(id): hủy hẹn giờ, SnackBar giữ quyền quyết định
+      ─► SnackBar (duration = undoWindow, persist: false)
+             ├─ "Hoàn tác"           → restore(id): cùng id, ảnh còn nguyên
+             ├─ hết 5 s / vuốt đi     → commitDeletion(id): xóa ảnh + thumbnail
+             └─ bị SnackBar mới thay  → commitDeletion(id) ngay (xóa liên tiếp)
+```
+
+### Vì sao làm vậy (liên hệ slide)
+
+- **ListView.builder (W7 s32–39, NFR-2):** chỉ dựng card đang hiện trên màn, nên danh sách dài vẫn nhẹ. (Khác với form Review: ở đó cần dựng mọi trường để kiểm tra, xem D-051.)
+- **Key (W7 s19–24):** `Dismissible` bắt buộc có key ổn định. `ValueKey(expense.id)` gắn widget với đúng giao dịch, nên khi một card bị xóa thì Flutter không gán nhầm trạng thái vuốt sang card bên dưới. Dùng chỉ số trong danh sách làm key sẽ gây lỗi đúng chỗ này.
+- **Ephemeral vs app state (W8 s4–6):** chip đang chọn chỉ màn Lịch sử cần → `setState`. Tháng đang chọn dùng chung với biểu đồ → `selectedMonthProvider`.
+- **`select` để giới hạn rebuild (NFR-2):** số giao dịch trong tháng đọc bằng `monthExpensesProvider.select((v) => v.valueOrNull?.length)`.
+- **Lựa chọn đã cân nhắc:**
+  - *Để hẹn giờ 5 s của notifier tự xóa ảnh, không cần `holdForUndo`:* đơn giản, nhưng SnackBar đếm muộn hơn khoảng 250 ms, nên bấm "Hoàn tác" ở giây cuối sẽ khôi phục giao dịch mà ảnh đã mất.
+  - *Đặt SnackBar 5 giây và hẹn giờ notifier lâu hơn (ví dụ 6 giây):* đúng là hết lỗi, nhưng thành hai hằng số khác nhau, trái yêu cầu dùng chung một hằng số.
+  - *Cho SnackBar tự giữ (`persist: true`, mặc định mới):* tốt cho người dùng trình đọc màn hình, nhưng lần xóa không bao giờ được chốt.
+
+### Khái niệm cần hiểu
+
+- **`Dismissible`:** widget vuốt để loại bỏ. Sau `onDismissed`, item **phải** rời khỏi danh sách ngay ở khung hình kế tiếp; vì vậy `remove` cập nhật state đồng bộ (D-039).
+- **`ScaffoldMessenger` và `SnackBarClosedReason`:** `showSnackBar` trả về controller; `controller.closed` cho biết SnackBar đóng vì sao: `action` (bấm Hoàn tác), `timeout`, `hide` (bị thay), `swipe`... Ứng dụng dựa vào lý do đó để khôi phục hay chốt xóa.
+- **`cacheWidth`:** bảo Flutter giải mã ảnh ở đúng kích thước hiển thị (48 dp × tỷ lệ điểm ảnh), thay vì giải mã cả ảnh rồi thu nhỏ, nên tốn ít RAM hơn nhiều.
+- **`LayoutBuilder`:** cho biết chiều rộng thật của vùng vẽ, để chọn bố cục một cột hoặc hai cột (FR-8.2).
+
+### Kết quả kiểm thử
+
+| Bước | Kết quả |
+|---|---|
+| `dart format --set-exit-if-changed lib test integration_test tool` | ✔ 0 thay đổi |
+| `flutter analyze` | ✔ No issues found |
+| `flutter test` | ✔ **514/514** (489 cũ + 25 mới) |
+| `flutter test --coverage` | **93.1%** dòng (1922/2064) |
+| `flutter build apk --debug` | ✔ |
+| Kiểm tra test bắt lỗi | Bỏ `holdForUndo` → test Undo đỏ; đã khôi phục |
+| `integration_test/app_flow_test.dart` | ⚠ **Chưa chạy** (chưa có thiết bị) |
+| Thiết bị | ⚠ **Chưa test trên thiết bị** |
+
+Phân bổ 25 test mới: Lịch sử 11 · Dashboard 6 · card 5 · `holdForUndo` 3. Bảng chi tiết: `docs/TEST_REPORT.md`, mục "Phase 8".
+
+### Hạn chế đã biết
+
+- Hai khung biểu đồ trên Dashboard mới là chỗ trống (Phase 9).
+- SnackBar Undo đóng sau 5 giây (`persist: false`); người dùng trình đọc màn hình có thể cần lâu hơn. Đây là đánh đổi để giữ đúng cửa sổ Undo dùng chung.
+- Lịch sử chưa có tìm kiếm hay nhóm theo ngày/tháng; lọc chỉ theo danh mục (đúng FR-7.3).
+- Chưa thử trên máy thật, chưa chạy integration test.
+
+### Cách tự kiểm tra bằng tay
+
+1. Chạy test:
+   ```powershell
+   flutter test test/screens/history_screen_test.dart test/screens/dashboard_screen_test.dart test/widgets/expense_summary_card_test.dart
+   ```
+2. Thử phá: trong `history_screen.dart` bỏ dòng `persist: false`, chạy lại test Lịch sử và xem test "when the snack bar times out…" đỏ.
+3. Khi có điện thoại: `flutter test integration_test/app_flow_test.dart -d <máy>` và checklist "Phase 8" trong `docs/TEST_REPORT.md`.
+
+### Danh sách commit
+
+```
+8d8738c test(app): add the end-to-end app flow integration test
+ad9c305 feat(dashboard): show the month total with month navigation
+278780e feat(history): list, filter, swipe to delete and undo expenses
+67a0499 feat(state): hold a deletion while its Undo snack bar is shown
+381586e feat(history): add ExpenseSummaryCard from the Week 7 lab
+d1e33bc test(history): add failing tests for History, Dashboard and Undo
+docs(phase-8): record phase 8 results   (commit cuối của phase)
+```

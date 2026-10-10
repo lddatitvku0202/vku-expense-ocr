@@ -153,6 +153,21 @@ class ExpenseListNotifier extends AsyncNotifier<List<Expense>> {
 
   bool isPendingDeletion(int id) => _pending.containsKey(id);
 
+  /// Keeps a removed expense restorable for as long as a snack bar offers
+  /// Undo for it: the [undoWindow] timer is cancelled and the caller must
+  /// end the hold with [restore] or [commitDeletion].
+  ///
+  /// The snack bar uses the same [undoWindow] as its duration, but its
+  /// timer only starts once it has slid in; without the hold the photo
+  /// could be deleted while "Hoàn tác" is still on screen. If the app is
+  /// closed meanwhile, disposing the state (or the startup orphan sweep)
+  /// still removes the files.
+  void holdForUndo(int id) {
+    final pending = _pending[id];
+    if (pending == null) return;
+    pending.timer.cancel();
+  }
+
   /// When the state is torn down (app closing), Undo is no longer possible.
   void _commitAllDeletions() {
     final pending = _pending.values.toList();
