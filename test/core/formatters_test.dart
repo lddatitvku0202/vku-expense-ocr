@@ -37,4 +37,24 @@ void main() {
       expect(Formatters.date(DateTime(2026, 1, 31, 23, 59)), '31/01/2026');
     });
   });
+
+  group('Formatters.compactVnd (chart labels)', () {
+    test('short forms with a Vietnamese decimal comma', () {
+      expect(Formatters.compactVnd(0), '0');
+      expect(Formatters.compactVnd(950), '950');
+      expect(Formatters.compactVnd(75000), '75k');
+      expect(Formatters.compactVnd(59500), '59,5k');
+      expect(Formatters.compactVnd(1000000), '1tr');
+      expect(Formatters.compactVnd(1250000), '1,25tr');
+      expect(Formatters.compactVnd(2500000000), '2,5 tỷ');
+      expect(Formatters.compactVnd(123456789012), '123,46 tỷ');
+    });
+  });
+
+  test('Formatters.percent: one decimal with a comma', () {
+    expect(Formatters.percent(0.375), '37,5%');
+    expect(Formatters.percent(0.5), '50,0%');
+    expect(Formatters.percent(1), '100,0%');
+    expect(Formatters.percent(0.0004), '0,0%');
+  });
 }
