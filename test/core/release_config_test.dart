@@ -76,4 +76,14 @@ void main() {
       expect(gradleFiles, isNot(contains('text-recognition-$script')));
     }
   });
+
+  test('R8 keeps the reflectively loaded ML Kit component registrars', () {
+    final rules = File('android/app/proguard-rules.pro').readAsStringSync();
+    expect(
+      RegExp(
+        r'-keep class \* implements com\.google\.firebase\.components\.ComponentRegistrar \{\s*<init>\(\);\s*\}',
+      ).hasMatch(rules),
+      isTrue,
+    );
+  });
 }

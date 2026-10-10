@@ -9,3 +9,13 @@
 -dontwarn com.google.mlkit.vision.text.devanagari.**
 -dontwarn com.google.mlkit.vision.text.japanese.**
 -dontwarn com.google.mlkit.vision.text.korean.**
+
+# ML Kit loads its internal components (CommonComponentRegistrar,
+# VisionCommonRegistrar, TextRegistrar) by reflection from class names in
+# the manifest. R8 sees no caller, strips their public no-argument
+# constructors and the release app then logs "NoSuchMethodException:
+# ...Registrar.<init> []"; the first OCR call fails with a NullPointerException
+# in InputImage.fromFilePath. Keeping the constructors is enough.
+-keep class * implements com.google.firebase.components.ComponentRegistrar {
+    <init>();
+}
