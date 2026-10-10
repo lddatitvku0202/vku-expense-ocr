@@ -83,15 +83,19 @@ Chú thích: ✅ có test tự động trên máy tính · 🟦 đã chạy th�
 
 ## Ảnh chụp màn hình
 
-Thư mục [`docs/screenshots/`](docs/screenshots/) đang để trống. Hướng dẫn chụp và đặt tên file: [docs/screenshots/README.md](docs/screenshots/README.md). Sau khi chụp, thêm vào đây:
+> Ảnh chụp trên **emulator** Android 13 (camera là webcam laptop); **chưa chụp trên điện thoại thật**. Dữ liệu là giao dịch mẫu.
 
-```markdown
-| Tổng quan (sáng) | Tổng quan (tối) | Quét | Review |
+| Tổng quan (sáng) | Tổng quan (tối) | Biểu đồ cột tuần (tối) | Lịch sử (tối) |
 |---|---|---|---|
-| ![](docs/screenshots/dashboard_light.png) | ![](docs/screenshots/dashboard_dark.png) | ![](docs/screenshots/scan.png) | ![](docs/screenshots/review.png) |
-```
+| ![Tổng quan sáng](docs/screenshots/dashboard_light.png) | ![Tổng quan tối](docs/screenshots/dashboard_dark.png) | ![Biểu đồ cột tuần](docs/screenshots/dashboardgraph.png) | ![Lịch sử](docs/screenshots/history.png) |
+| Tổng tháng và donut theo danh mục | Giao diện tối, màu danh mục sáng hơn để đủ tương phản | 7 cột T2 → CN, cột hôm nay nổi bật, legend màu/số tiền/% | Thumbnail hóa đơn, chip lọc theo danh mục |
 
-> ⚠ Không đưa ảnh hóa đơn thật hay hình người vào repo.
+| Chỉnh vùng cắt | Chỉnh vùng cắt (gần hơn) | Review: cảnh báo | Review: danh mục và văn bản OCR |
+|---|---|---|---|
+| ![Chỉnh vùng cắt](docs/screenshots/scan.png) | ![Chỉnh vùng cắt gần hơn](docs/screenshots/cutpicturescan.png) | ![Review cảnh báo](docs/screenshots/review.png) | ![Review danh mục và OCR](docs/screenshots/review2.png) |
+| Sau khi chụp, app tự cắt theo khung và cho chỉnh tay (`image_cropper`) | Ảnh hóa đơn dùng thử để đo OCR (ảnh mờ, webcam) | Ô số tiền và ngày được đánh dấu bằng icon + chú thích, không chỉ bằng màu | Danh mục chỉ là gợi ý; "Xem văn bản OCR gốc" có thời gian OCR (8417 ms trên emulator) |
+
+Ảnh nằm trong [`docs/screenshots/`](docs/screenshots/) (hướng dẫn chụp: [docs/screenshots/README.md](docs/screenshots/README.md)).
 
 ## Kiến trúc
 
