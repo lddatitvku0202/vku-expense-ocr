@@ -330,10 +330,12 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] **Ký APK**: cấu hình `android/app/build.gradle(.kts)` đọc `key.properties`. Nếu có `keytool`: tạo keystore tại `~/vku-keys/upload-keystore.jks` (ngoài repo) với mật khẩu ngẫu nhiên mạnh, ghi vào `android/key.properties` (đã gitignore). Thông báo rõ cho tôi đường dẫn file và yêu cầu **sao lưu**. Viết `docs/SIGNING.md` hướng dẫn tự tạo lại keystore. → **Phase 11A xong**; keystore tại `%USERPROFILE%\vku-keys\upload-keystore.jks`, `docs/SIGNING.md`. **Việc của bạn: sao lưu keystore và `key.properties`.**
 - [x] `flutter build apk --release` → xác minh chữ ký (`apksigner verify --print-certs` hoặc `keytool -printcert -jarfile`), ghi kích thước APK và đường dẫn output. → **Phase 11A xong**: 89,3 MiB, `apksigner` khớp dấu vân tay keystore; chạy thử 1 lần trên emulator (`docs/TEST_REPORT.md`, "release APK trên emulator"); chưa trên điện thoại thật.
 - [x] `README.md` hoàn chỉnh: giới thiệu, tính năng (checklist FR), ảnh chụp (`docs/screenshots/`, để placeholder và hướng dẫn tôi chụp nếu không chụp được), kiến trúc (sơ đồ Mermaid pipeline + cấu trúc thư mục), công nghệ và phiên bản, yêu cầu môi trường, lệnh `flutter pub get` / `flutter run` / `flutter test` / `flutter build apk --release`, link tải APK (placeholder), hạn chế, tác giả (placeholder). → **Phase 11A xong** (ảnh chụp màn hình và link APK vẫn là placeholder).
-- [ ] `docs/REPORT.md` *(Phase 11B)*: bản nguồn của báo cáo PDF 2–4 trang theo đúng cấu trúc yêu cầu: (1) checklist tính năng, (2) sơ đồ kiến trúc, (3) bảng regex OCR, (4) ảnh sáng/tối, (5) kết quả đo OCR và độ chính xác parser, (6) hạn chế và hướng phát triển. Nếu có `pandoc` thì xuất thử `docs/REPORT.pdf`; nếu không thì hướng dẫn tôi cách xuất.
-- [ ] `docs/DEMO_SCRIPT.md` *(Phase 11B)*: kịch bản quay video 2–3 phút theo từng cảnh, có mốc thời gian.
+- [x] `docs/REPORT.md` *(Phase 11B)*: bản nguồn của báo cáo PDF 2–4 trang theo đúng cấu trúc yêu cầu: (1) checklist tính năng, (2) sơ đồ kiến trúc, (3) bảng regex OCR, (4) ảnh sáng/tối, (5) kết quả đo OCR và độ chính xác parser, (6) hạn chế và hướng phát triển. Nếu có `pandoc` thì xuất thử `docs/REPORT.pdf`; nếu không thì hướng dẫn tôi cách xuất. → **Phase 11B xong (bản nguồn)**; PDF cần tác giả điền link/ảnh rồi xuất (`python tool/report/md_to_pdf.py`, `docs/HANDOVER.md` mục 6). Đo thử: 3 trang, chữ 10pt, kể cả khi chèn 4 ảnh.
+- [x] `docs/DEMO_SCRIPT.md` *(Phase 11B)*: kịch bản quay video 2–3 phút theo từng cảnh, có mốc thời gian. → **Phase 11B xong**; việc quay video là của tác giả (`docs/HANDOVER.md` mục 5).
 - [x] `CHANGELOG.md` tổng hợp theo phase. → **Phase 11A xong.**
-- [ ] Gate cuối: toàn bộ test pass, analyze 0, build release thành công. Merge, tag `v1.0.0`.
+- [x] Gate cuối: toàn bộ test pass, analyze 0, build release thành công. Merge, tag `v1.0.0`. → **Phase 11B xong:** 717 test pass, analyze 0 issue, build release ✔; merge và tag `v1.0.0`.
+
+- [x] `docs/HANDOVER.md` *(bổ sung theo yêu cầu của bạn, không thuộc brief gốc)*: các việc tác giả tự làm theo thứ tự ưu tiên.
 
 ### Phase 12 — (Tùy chọn, chỉ khi Phase 0–11 đã hoàn tất) Platform Channel
 - [ ] `MethodChannel('vn.edu.vku/device_info')` theo W8 s37–38: ví dụ rung haptic khi lưu thành công, hoặc đọc mức pin hiển thị cảnh báo trước khi quét. Có test bằng `TestDefaultBinaryMessengerBinding` mock handler. Ghi rõ đây là phần mở rộng.
@@ -414,7 +416,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 | 8 — Lịch sử & Dashboard | ✅ Xong | tag `phase-8` | format ✔ · analyze 0 · test 514/514 · coverage 93.1% · build debug ✔ | Widget test trên máy tính; `integration_test/app_flow_test.dart` đã viết, **chưa chạy** (chưa có thiết bị). Chưa thử trên máy thật |
 | 9 — Biểu đồ CustomPainter | ✅ Xong | tag `phase-9` | format ✔ · analyze 0 · test 582/582 · coverage 94.2% · build debug ✔ | Không dùng thư viện chart (có test kiến trúc). Chưa thử trên máy thật |
 | 10 — UI/UX polish (bản rút gọn) | ✅ Xong | tag `phase-10` | format ✔ · analyze 0 · test 706/706 · coverage 94.5% · build debug ✔ | Theo yêu cầu rút gọn: không có vòng "cố ý làm hỏng code". Chưa thử trên máy thật |
-| 11 — Release & Deliverables | 🟨 11A xong, 11B chưa | nhánh `phase/11a-release` (chưa tag `v1.0.0`) | format ✔ · analyze 0 · test 717/717 · coverage 94,5% · release APK build ✔, ký ✔ (89,3 MiB) · chạy thử release trên emulator ✔ sau khi sửa R8 và sau khi gỡ quyền mạng | 11B (còn lại): `docs/REPORT.md`, `docs/DEMO_SCRIPT.md`, ảnh chụp, link APK, thử trên máy thật, tag `v1.0.0`. B-002 (quyền INTERNET) đã đóng: quyền được gỡ khỏi bản release |
+| 11 — Release & Deliverables | ✅ Xong phần mã và tài liệu (A + B); **còn việc của tác giả** | tag `v1.0.0` | format ✔ · analyze 0 · test 717/717 · coverage 94,5% · release APK build ✔, ký ✔ (89,3 MiB), không có quyền mạng ✔ · chạy thử release trên emulator ✔ | Còn: kiểm tra trên điện thoại thật, ảnh chụp, video, PDF, repo GitHub, Release (`docs/HANDOVER.md`). Hạn nộp: Chủ nhật cuối Tuần 8, 23:59 |
 | 12 — Platform Channel (tùy chọn) | ⬜ Chưa bắt đầu | — | — | |
 
 Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · ✅ xong (gate xanh, đã merge, đã tag).
@@ -424,6 +426,8 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 ## Việc còn nợ
 
 > Những việc đã biết nhưng chưa làm được trong môi trường hiện tại. Gạch khi xong.
+
+> **Hướng dẫn từng bước, theo thứ tự ưu tiên, kèm lệnh: [`docs/HANDOVER.md`](docs/HANDOVER.md).** Báo cáo nguồn: `docs/REPORT.md`; kịch bản video: `docs/DEMO_SCRIPT.md`.
 
 - [ ] **NFR-6 / Phase 3:** chạy `tool/ocr_eval/run_ocr_eval.ps1 -DeviceId <serial>` trên **điện thoại Android thật** (mới có số đo emulator), ghi thời gian OCR thật vào `docs/TEST_REPORT.md`.
 - [ ] Khi có điện thoại thật, đánh giá thêm một bộ hóa đơn MỚI (holdout), gán nhãn và khóa hash trước, chạy đúng một lần, không sửa parser trước lần chạy đó. *(Yêu cầu của bạn ở Phase 4.)*
@@ -445,7 +449,8 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 - [ ] **Phase 10 — giao diện trên điện thoại thật:** menu giao diện đổi sáng/tối/hệ thống và còn nguyên sau khi mở lại app; kiểm tra bằng mắt chữ và biểu đồ ở nền tối; cỡ chữ hệ thống lớn nhất trên cả 5 màn; tên "VKU Expense OCR" dưới biểu tượng app.
 - [ ] **Phase 11A:** sao lưu `%USERPROFILE%\vku-keys\upload-keystore.jks` và `android/key.properties` ra nơi an toàn (mất keystore thì không cập nhật được app đã phát hành).
 - [ ] **Phase 11A:** cài `app-release.apk` lên điện thoại thật và chạy lại các checklist ở trên (camera, OCR thật, biểu đồ, chế độ máy bay: quét và lưu khi **không có mạng**).
-- [ ] **Phase 11A:** chụp ảnh màn hình vào `docs/screenshots/` (hướng dẫn trong thư mục), điền link tải APK vào `README.md`.
+- [ ] **Phase 11A:** chụp ảnh màn hình vào `docs/screenshots/` (hướng dẫn trong thư mục), điền link tải APK vào `README.md` và `docs/REPORT.md`.
+- [ ] **Phase 11B:** quay video demo (`docs/DEMO_SCRIPT.md`), xuất `docs/REPORT.pdf`, tạo repo GitHub `vku-expense-ocr`, đẩy `main` + tag, tạo Release v1.0.0 đính kèm APK, điền link, nộp bài.
 - [ ] Checklist test thủ công trên thiết bị của Phase 0–10 trong `docs/TEST_REPORT.md`.
 
 ---
@@ -532,6 +537,8 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 | D-076 | `-keep class * implements com.google.firebase.components.ComponentRegistrar { <init>(); }` | **Lỗi chỉ có ở bản release, test trên máy tính không thấy:** ML Kit nạp `CommonComponentRegistrar`, `VisionCommonRegistrar`, `TextRegistrar` bằng reflection từ tên trong manifest; R8 loại constructor → `NoSuchMethodException` và lần OCR đầu bị `NullPointerException` ở `InputImage.fromFilePath`. Giải mã bằng `retrace` + `mapping.txt`. Sau sửa, cùng ảnh đọc đúng. |
 | D-077 | README ghi trạng thái xác minh bằng ba ký hiệu: ✅ có test máy tính, 🟦 đã chạy trên emulator (bản release), ⚠ chưa xác minh trên máy thật; FR-1 giữ `[ ]` như CLAUDE.md | Không để README nói "đã xong" nhiều hơn những gì đã kiểm chứng. |
 | D-078 | Gỡ `INTERNET` và `ACCESS_NETWORK_STATE` khỏi bản release bằng `tools:node="remove"` trong `AndroidManifest.xml` (người dùng đồng ý B-002) | NFR-1 "không gọi mạng". Hai quyền do `transport-backend-cct` (telemetry ML Kit) và `media3-common` thêm vào; model ML Kit đã đóng gói nên OCR không cần chúng. Sau khi gỡ, tiến trình app không thuộc nhóm `inet` của Android, nên không thể mở socket mạng. Bản debug/profile vẫn có `INTERNET` do Flutter thêm cho hot reload (không phát hành). |
+| D-079 | Xuất PDF báo cáo bằng `tool/report/md_to_pdf.py` (bộ chuyển Markdown tối giản + Microsoft Edge headless) thay vì `pandoc` | Máy không có `pandoc`; cần một cách **đo số trang thật** để chứng minh 2–4 trang. Công cụ từ chối cỡ chữ dưới 10pt (yêu cầu của bạn) và báo lỗi nếu ngoài 2–4 trang; hỗ trợ ảnh để kiểm tra lại số trang sau khi chèn ảnh chụp. |
+| D-080 | Báo cáo kỹ thuật viết **trạng thái xác minh theo từng mục** (✅ có test máy tính, 🟨 chưa xác minh trên máy thật) và số liệu lấy nguyên văn từ `TEST_REPORT`, kể cả số xấu (tên cửa hàng 7/19) và chú thích "lạc quan" | Không ước lượng, không làm đẹp số; mục nào chưa kiểm chứng ngoài máy tính đều nói rõ. |
 
 ---
 

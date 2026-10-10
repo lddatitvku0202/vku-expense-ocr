@@ -20,7 +20,8 @@
 | Mã nguồn, kiểm thử trên máy tính | ✅ 717 test, 94,5% độ phủ dòng, `flutter analyze` 0 issue |
 | APK release đã ký | ✅ Đã build và ký (xem [Build](#build-apk-release)); cài và chạy được trên **emulator** |
 | Chạy trên **điện thoại Android thật** | ⚠ **Chưa**. Các mục "chưa xác minh trên máy thật" bên dưới còn nợ |
-| Video demo, báo cáo PDF, link APK | ⏳ Chưa làm (Phase 11B) |
+| Báo cáo kỹ thuật | ✅ Bản nguồn [docs/REPORT.md](docs/REPORT.md) (3 trang khi xuất PDF); **PDF chưa xuất** (cần điền link/ảnh trước) |
+| Video demo, ảnh chụp, link APK, repo GitHub, Release | ⏳ Việc của tác giả, từng bước ở [docs/HANDOVER.md](docs/HANDOVER.md); kịch bản quay ở [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) |
 
 ## Tính năng
 
@@ -156,6 +157,8 @@ Phiên bản thực tế (theo `pubspec.lock`):
 ## Chạy và build
 
 ```bash
+git clone https://github.com/lddatitvku0202/vku-expense-ocr.git   # repo dự kiến, xem docs/HANDOVER.md
+cd vku-expense-ocr
 flutter pub get                 # tải gói
 flutter run                     # chạy bản debug trên thiết bị/emulator đã kết nối
 flutter analyze                 # phải 0 issue
@@ -240,12 +243,16 @@ flutter test integration_test/camera_smoke_test.dart -d <thiết bị>  # previe
 |---|---|---|
 | `tool/regex_table/gen_regex_table.py` | **Python 3** | Chỉ khi sửa regex trong `lib/services/receipt_parser.dart` / `receipt_keywords.dart`: sinh lại `docs/REGEX_TABLE.md` (`python tool/regex_table/gen_regex_table.py`). |
 | `tool/ocr_eval/run_ocr_eval.ps1` | PowerShell, `adb`, thiết bị Android đã cắm | Chấm độ chính xác OCR trên ảnh hóa đơn thật (dữ liệu nằm ngoài repo). |
+| `tool/report/md_to_pdf.py` | Python 3, Microsoft Edge | Xuất `docs/REPORT.md` thành PDF và in số trang (`python tool/report/md_to_pdf.py`). |
 
 ## Tài liệu
 
 | File | Nội dung |
 |---|---|
 | [CHANGELOG.md](CHANGELOG.md) | Thay đổi theo phase |
+| [docs/REPORT.md](docs/REPORT.md) | Báo cáo kỹ thuật ngắn (nguồn của PDF 2–4 trang) |
+| [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | Kịch bản video demo 2–3 phút (điện thoại thật hoặc emulator + webcam) |
+| [docs/HANDOVER.md](docs/HANDOVER.md) | Việc tác giả cần tự làm: máy thật, ảnh, video, PDF, GitHub, Release, nộp bài |
 | [docs/PHASE_LOG.md](docs/PHASE_LOG.md) | Nhật ký học tập từng phase: đã làm gì, vì sao, khái niệm cần hiểu |
 | [docs/TEST_REPORT.md](docs/TEST_REPORT.md) | Kết quả kiểm thử, ca biên, checklist thủ công trên thiết bị |
 | [docs/REGEX_TABLE.md](docs/REGEX_TABLE.md) | Mọi regex của parser: mục đích, ví dụ khớp/không khớp, giới hạn |

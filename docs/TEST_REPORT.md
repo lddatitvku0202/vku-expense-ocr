@@ -17,6 +17,7 @@
 | 10 | 706 | 706 / 0 | 94.5% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu) |
 | 11A | 713 | 713 / 0 | 94.5% dòng | ✔ | ✔ 0 issue | ✔ debug · ✔ release | 🟦 **release APK trên emulator** (1 lần, xem mục Phase 11A). ⚠ **Chưa test trên điện thoại thật** |
 | 11A (tiếp) | 717 | 717 / 0 | 94.5% dòng | ✔ | ✔ 0 issue | ✔ debug · ✔ release | 🟦 **release APK trên emulator** (lần 2, sau khi gỡ quyền mạng). ⚠ **Chưa test trên điện thoại thật** |
+| 11B | 717 | 717 / 0 | 94.5% dòng | ✔ | ✔ 0 issue | ✔ debug · ✔ release | Phase 11B chỉ thêm tài liệu và công cụ xuất PDF, không đổi mã ứng dụng. ⚠ **Chưa test trên điện thoại thật** |
 
 ## Độ chính xác parser trên bộ fixture
 
@@ -509,6 +510,16 @@ Nhãn: **release APK trên emulator**. Cùng AVD `vku_test_api33` (2 GB RAM). G�
 **Về `FATAL EXCEPTION: 1` và 13 dòng `AndroidRuntime` trong logcat:** tất cả thuộc `com.android.systemui` (pid 681), nội dung `CrashedByAdbException: shell-induced crash`, lúc 10:22:04. Đó là lệnh `adb shell am crash com.android.systemui` do chính tôi chạy để xóa hộp thoại ANR của emulator 2 GB RAM, **trước khi app được mở** (app khởi động lúc 10:22:22, 18 giây sau). Không có dòng crash nào của app. Điều kiện dừng ("OCR hỏng hoặc app crash sau khi gỡ quyền") **không xảy ra**.
 
 **Chưa kiểm tra trong lần này:** bấm nút chụp, preview webcam (đã có ở lần 1), flash, lấy nét, Lịch sử, chế độ tối, chế độ máy bay thật, điện thoại thật.
+
+## Phase 11B — Báo cáo và rà soát cuối
+
+| Kiểm tra | Kết quả |
+|---|---|
+| Độ dài `docs/REPORT.md` khi xuất PDF (`tool/report/md_to_pdf.py`, Edge, A4) | **3 trang**, chữ 10pt (công cụ từ chối cỡ nhỏ hơn 10pt). Thử chèn bảng 4 ảnh chụp màn hình: vẫn 3 trang |
+| Lịch sử git (111 commit, mọi nhánh và tag) | Không có `.jks` / `.keystore` / `.apk` / `.aab` / ảnh hóa đơn (`jpg`, `jpeg`, `webp`, `heic`) / `ground_truth.csv` / `.env`; không có mật khẩu keystore; không có khóa riêng. Ảnh PNG duy nhất là icon launcher mặc định của Flutter (Android, iOS) |
+| Cây làm việc | `git status` sạch; `git ls-files` không có keystore, `key.properties`, APK |
+| Nhất quán tài liệu | 717 test, 94,5% (2391/2531 dòng), 22 ảnh thật (main 7/16/15/11 sau sửa), 31 hóa đơn tổng hợp 31/31, trạng thái FR-1 "chưa xác minh trên máy thật" và NFR-1 "đã gỡ quyền mạng" khớp nhau ở `README.md`, `docs/REPORT.md`, `CLAUDE.md`, `docs/TEST_REPORT.md` |
+| Gate | `dart format` 0 thay đổi · `flutter analyze` 0 issue · `flutter test` 717/717 · `flutter build apk --release` ✔ (bản cuối trước khi tag) |
 
 ## Checklist test thủ công trên thiết bị
 

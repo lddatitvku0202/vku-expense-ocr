@@ -1327,3 +1327,59 @@ docs(phase-11a): record phase 11A results   (commit cuối của phase)
 **Bài học từ cách kiểm tra:** `FATAL EXCEPTION` trong logcat không có nghĩa là app lỗi. Phải xem **tiến trình** nào (`Process:`). Ở đây là System UI bị chính lệnh `am crash` của người kiểm tra làm sập, trước khi app khởi động.
 
 **Kết quả:** 717 test pass, analyze 0 issue, độ phủ 94,5%, APK 89,3 MiB ký đúng. Chi tiết: `docs/TEST_REPORT.md`.
+
+---
+
+## Phase 11B — Báo cáo và hoàn tất
+
+**Trạng thái:** ✅ hoàn tất phần mã và tài liệu (merge vào `main`, tag `v1.0.0`). Còn các việc cần điện thoại thật, tài khoản GitHub và bản thân tác giả: xem `docs/HANDOVER.md`.
+
+### Mục tiêu phase
+
+Biến công việc kỹ thuật thành thứ nộp được: báo cáo 2–4 trang, kịch bản video, hướng dẫn bàn giao, và rà soát cuối để chắc repo sạch và tài liệu không mâu thuẫn nhau.
+
+### Đã làm gì
+
+| File | Vai trò |
+|---|---|
+| `docs/REPORT.md` | Bản nguồn báo cáo theo template của khoa (6 mục): thông tin chung, checklist tính năng, kiến trúc, bằng chứng, thách thức, hạn chế. |
+| `tool/report/md_to_pdf.py` | Chuyển Markdown → PDF bằng Edge headless, in số trang, từ chối chữ nhỏ hơn 10pt. |
+| `docs/DEMO_SCRIPT.md` | Kịch bản video 9 cảnh có mốc thời gian; hai phương án quay; dữ liệu mẫu; lưu ý không để mặt người lọt vào khung hình. |
+| `docs/HANDOVER.md` | 9 việc tác giả tự làm theo thứ tự ưu tiên, có lệnh từng bước. |
+
+### Vì sao làm vậy
+
+- **Trung thực là yêu cầu kỹ thuật:** báo cáo nêu rõ cái gì đã kiểm chứng ở đâu (máy tính / emulator / chưa trên máy thật), kể cả số xấu (tên cửa hàng 7/19) và chú thích rằng số sau sửa là lạc quan. Người chấm có thể kiểm tra từng số trong `docs/TEST_REPORT.md`; một con số "đẹp" mà không truy ra được nguồn thì mất giá trị.
+- **Không có `pandoc`:** thay vì ghi hướng dẫn mơ hồ, viết một bộ chuyển nhỏ dùng Edge, nhờ đó **đo được số trang thật** (3 trang, 10pt) thay vì đoán.
+- **Rà soát cuối bằng lệnh, không bằng mắt:** quét toàn bộ lịch sử git tìm tên file nhạy cảm, tìm chuỗi mật khẩu thật trong mọi commit, và đối chiếu số liệu / trạng thái giữa README, REPORT, CLAUDE.md, TEST_REPORT.
+- **Lựa chọn đã cân nhắc:** xuất sẵn `docs/REPORT.pdf` rồi commit. Không làm vì báo cáo còn placeholder (link, ảnh, ngày); một PDF cũ dễ bị nộp nhầm. Thay vào đó là một lệnh xuất lại khi đã điền xong.
+
+### Khái niệm cần hiểu
+
+- **Rà soát lịch sử git:** xóa một file khỏi bản mới nhất **không** xóa nó khỏi lịch sử. Repo công khai thì ai cũng xem được commit cũ, nên phải quét mọi commit (`git log --all`, `git grep` trên từng commit), không chỉ cây làm việc hiện tại.
+- **Tag `v1.0.0`:** nhãn cố định trỏ vào một commit, đánh dấu phiên bản phát hành. GitHub Releases gắn APK vào tag này.
+- **Bằng chứng so với tuyên bố:** mỗi dòng trong checklist của báo cáo trỏ tới test, lệnh hoặc số đo; mục chưa kiểm chứng thì ghi "chưa", không để trống.
+
+### Kết quả kiểm thử
+
+| Bước | Kết quả |
+|---|---|
+| `dart format` / `flutter analyze` / `flutter test` | ✔ 0 thay đổi / 0 issue / **717/717** |
+| `flutter build apk --release` | ✔ (xem TEST_REPORT, mục Phase 11B) |
+| Báo cáo xuất PDF | 3 trang, chữ 10pt |
+| Quét lịch sử git (111 commit) | Sạch: không keystore, APK, ảnh hóa đơn, mật khẩu |
+
+### Hạn chế đã biết
+
+- Chưa có ảnh chụp, video, PDF cuối, repo GitHub, Release; chưa chạy trên điện thoại thật (xem `docs/HANDOVER.md`).
+- Bộ chuyển Markdown → PDF chỉ hiểu phần Markdown mà báo cáo dùng (tiêu đề, bảng, danh sách, ảnh, mã, in đậm/nghiêng, liên kết).
+
+### Danh sách commit
+
+```
+1f43a04 docs: align README, CHANGELOG, CLAUDE.md and TEST_REPORT for v1.0.0
+95f6eba docs: add the demo video script and the hand-over guide
+191ccad build(tools): add a Markdown to PDF exporter that uses Edge
+9110eb5 docs(report): add the short technical report source
+docs(phase-11b): record phase 11B results   (commit cuối của phase)
+```
