@@ -13,8 +13,9 @@ Thay đổi theo phase. Mỗi phase là một nhánh `phase/<số>-<tên>` đư�
 - R8 làm hỏng build release: thêm `-dontwarn` cho các script ML Kit không đóng gói (Trung/Nhật/Hàn/Devanagari).
 - R8 làm OCR **thất bại ở bản release** (constructor của các `ComponentRegistrar` của ML Kit bị loại): thêm keep rule. Phát hiện khi chạy thử APK release trên emulator.
 
-### Ghi nhận
-- Manifest release có quyền `INTERNET` do thư viện của ML Kit kéo vào (độ lệch **B-002** với NFR-1, chờ quyết định).
+### Sửa (tiếp)
+- **NFR-1:** gỡ quyền `INTERNET` và `ACCESS_NETWORK_STATE` khỏi bản release bằng `tools:node="remove"` (hai quyền do thư viện telemetry của ML Kit và media3 thêm vào). APK không còn khai báo quyền mạng; OCR vẫn đọc đúng trên emulator (B-002 đã đóng).
+- Thêm 4 test cấu hình: manifest gỡ hai quyền, vẫn giữ `CAMERA`, gỡ `RECORD_AUDIO`, mã nguồn không mở kết nối mạng.
 
 ## Phase 10 — UI/UX polish, bản rút gọn (2026-10-10)
 - Menu giao diện Sáng / Tối / Theo hệ thống ở Dashboard; bảng màu danh mục cho nền tối, độ tương phản đạt WCAG (4,5:1 chữ, 3:1 đồ họa).

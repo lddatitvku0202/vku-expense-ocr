@@ -1282,7 +1282,7 @@ Bản release **cài được, mở được, giao diện đúng, nhưng OCR kh�
 
 - Chưa chạy trên điện thoại thật; chưa bấm nút chụp, flash, lấy nét, Lịch sử, chế độ tối trên bản release.
 - Emulator chỉ có 2 GB RAM nên System UI treo nhiều lần; thời gian OCR 11,3 s không đại diện cho máy thật.
-- Manifest release có quyền `INTERNET` do ML Kit (B-002), chờ quyết định.
+- ~~Manifest release có quyền `INTERNET` do ML Kit (B-002)~~: đã gỡ ở phần "Phase 11A (tiếp)" bên dưới.
 - APK "fat" 89,3 MiB; có thể giảm bằng `--split-per-abi` nếu cần (chưa đo).
 
 ### Cách tự kiểm tra bằng tay
@@ -1305,3 +1305,25 @@ dbeb592 build(android): sign the release APK with a keystore kept outside the re
 1a6508b test(release): add failing tests for the release signing set-up
 docs(phase-11a): record phase 11A results   (commit cuối của phase)
 ```
+
+
+### Phase 11A (tiếp) — Gỡ quyền mạng (B-002)
+
+**Vì sao:** NFR-1 yêu cầu ứng dụng "hoàn toàn offline, không gọi mạng". Khi kiểm tra manifest của APK release phát hiện `INTERNET` và `ACCESS_NETWORK_STATE`. App không tự dùng mạng; hai quyền do `transport-backend-cct` (telemetry của ML Kit) và `media3-common` thêm vào qua cơ chế **gộp manifest** (manifest merger). Vì là yêu cầu đóng băng, độ lệch được ghi (B-002) và chờ người dùng quyết định; người dùng đồng ý gỡ.
+
+**Làm gì:** thêm hai dòng `<uses-permission ... tools:node="remove" />` vào `AndroidManifest.xml`, giống cách đã gỡ `RECORD_AUDIO` ở Phase 1. Marker `tools:node="remove"` bảo bộ gộp manifest bỏ khai báo đó dù thư viện nào thêm vào.
+
+**Chứng minh (không chỉ tin vào cấu hình):**
+1. `aapt dump permissions` và `apkanalyzer manifest permissions` trên chính file APK: không còn hai quyền.
+2. Báo cáo gộp manifest: hai quyền ở trạng thái `REJECTED` từ thư viện.
+3. Trên thiết bị: tiến trình app không thuộc nhóm `inet` (gid 3003). Android cấp quyền mạng bằng cách cho tiến trình vào nhóm này; thiếu nhóm thì `socket()` bị từ chối.
+4. Chạy thật: cùng ảnh hóa đơn, OCR vẫn đọc đúng; lưu và biểu đồ cập nhật.
+
+**Khái niệm cần hiểu:**
+- **Manifest merger:** build Android gộp manifest của app với manifest của mọi thư viện; quyền của thư viện tự động thành quyền của app. Vì vậy app "không có code gọi mạng" vẫn có thể bị cấp quyền mạng.
+- **Telemetry:** thư viện gửi số liệu sử dụng ẩn danh về nhà phát triển. Không có quyền mạng, việc gửi thất bại im lặng, không ảnh hưởng chức năng.
+- **Nhóm `inet`:** cơ chế Linux/Android thực thi quyền `INTERNET`.
+
+**Bài học từ cách kiểm tra:** `FATAL EXCEPTION` trong logcat không có nghĩa là app lỗi. Phải xem **tiến trình** nào (`Process:`). Ở đây là System UI bị chính lệnh `am crash` của người kiểm tra làm sập, trước khi app khởi động.
+
+**Kết quả:** 717 test pass, analyze 0 issue, độ phủ 94,5%, APK 89,3 MiB ký đúng. Chi tiết: `docs/TEST_REPORT.md`.
