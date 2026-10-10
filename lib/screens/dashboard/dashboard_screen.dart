@@ -6,6 +6,7 @@ import 'package:vku_expense_ocr/core/formatters.dart';
 import 'package:vku_expense_ocr/core/router.dart';
 import 'package:vku_expense_ocr/state/expense_providers.dart';
 import 'package:vku_expense_ocr/state/storage_providers.dart';
+import 'package:vku_expense_ocr/state/theme_mode_provider.dart';
 import 'package:vku_expense_ocr/widgets/charts/donut_chart.dart';
 import 'package:vku_expense_ocr/widgets/charts/weekly_bar_chart.dart';
 
@@ -20,6 +21,8 @@ class DashboardScreen extends ConsumerWidget {
   static const Key donutSlotKey = Key('dashboard-donut-slot');
   static const Key weeklySlotKey = Key('dashboard-weekly-slot');
   static const Key addButtonKey = Key('dashboard-add');
+  static const Key themeMenuKey = Key('dashboard-theme-menu');
+  static const Key retryKey = Key('dashboard-retry');
 
   /// From this width the two charts sit side by side (FR-8.2).
   static const double wideLayoutWidth = 600;
@@ -27,7 +30,10 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tổng quan')),
+      appBar: AppBar(
+        title: const Text('Tổng quan'),
+        actions: const [_ThemeMenu()],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         key: addButtonKey,
         // No extra: the Review screen opens in manual mode (FR-4.9).
@@ -73,6 +79,55 @@ class DashboardScreen extends ConsumerWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+/// AppBar menu to choose the light, dark or system theme (FR-8.1).
+class _ThemeMenu extends ConsumerWidget {
+  const _ThemeMenu();
+
+  static const _labels = {
+    ThemeMode.light: ('Sáng', Icons.light_mode_outlined),
+    ThemeMode.dark: ('Tối', Icons.dark_mode_outlined),
+    ThemeMode.system: ('Theo hệ thống', Icons.brightness_auto_outlined),
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(themeModeProvider);
+    return PopupMenuButton<ThemeMode>(
+      key: DashboardScreen.themeMenuKey,
+      tooltip: 'Giao diện',
+      icon: Icon(_labels[current]!.$2),
+      initialValue: current,
+      onSelected: (mode) async {
+        final messenger = ScaffoldMessenger.of(context);
+        try {
+          await ref.read(themeModeProvider.notifier).select(mode);
+        } on Object {
+          // The new mode already applies; only saving it failed.
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Đã đổi giao diện nhưng không lưu được lựa chọn.'),
+            ),
+          );
+        }
+      },
+      itemBuilder: (context) => [
+        for (final MapEntry(key: mode, value: (label, icon)) in _labels.entries)
+          PopupMenuItem<ThemeMode>(
+            value: mode,
+            child: Row(
+              children: [
+                Icon(icon),
+                const SizedBox(width: 12),
+                Expanded(child: Text(label)),
+                if (mode == current) const Icon(Icons.check),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
@@ -129,9 +184,20 @@ class _MonthSummary extends ConsumerWidget {
                 padding: EdgeInsets.all(8),
                 child: CircularProgressIndicator(),
               ),
-              error: (error, stack) => Text(
-                'Không tải được dữ liệu',
-                style: TextStyle(color: theme.colorScheme.error),
+              error: (error, stack) => Column(
+                children: [
+                  Text(
+                    'Không tải được dữ liệu',
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                  // The charts read the same list, so one retry fixes all.
+                  TextButton.icon(
+                    key: DashboardScreen.retryKey,
+                    onPressed: () => ref.invalidate(expenseListProvider),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Thử lại'),
+                  ),
+                ],
               ),
               data: (amount) => FittedBox(
                 fit: BoxFit.scaleDown,

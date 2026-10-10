@@ -14,6 +14,7 @@ import 'package:vku_expense_ocr/widgets/charts/weekly_bar_painter.dart';
 
 import '../support/fake_expense_repository.dart';
 import '../support/fake_image_storage.dart';
+import '../support/memory_settings_store.dart';
 
 final _now = DateTime(2026, 10, 9, 20);
 
@@ -69,6 +70,7 @@ void main() {
           expenseRepositoryProvider.overrideWithValue(repo),
           imageStorageProvider.overrideWithValue(FakeImageStorage()),
           clockProvider.overrideWithValue(() => _now),
+          settingsStoreProvider.overrideWithValue(MemorySettingsStore()),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
