@@ -7,6 +7,10 @@ import 'package:vku_expense_ocr/models/expense_category.dart';
 abstract final class ExpenseValidators {
   static const int maxMerchantLength = 100;
 
+  // Compiled once: the amount validator runs while the user types.
+  static final RegExp _separators = RegExp(r'[.,\s]');
+  static final RegExp _digitsOnly = RegExp(r'^\d+$');
+
   static String? merchant(String? value) {
     final name = value?.trim() ?? '';
     if (name.isEmpty) return 'Hãy nhập tên cửa hàng.';
@@ -19,9 +23,8 @@ abstract final class ExpenseValidators {
   /// A positive whole number of dong once separators are removed.
   static String? amount(String? value) {
     if (value == null || value.trim().isEmpty) return 'Hãy nhập số tiền.';
-    final digits = value.replaceAll(RegExp(r'[.,\s]'), '');
-    if (digits.length > AmountInput.maxDigits &&
-        RegExp(r'^\d+$').hasMatch(digits)) {
+    final digits = value.replaceAll(_separators, '');
+    if (digits.length > AmountInput.maxDigits && _digitsOnly.hasMatch(digits)) {
       return 'Số tiền quá lớn.';
     }
     final amount = AmountInput.parse(value);
