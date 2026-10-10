@@ -10,7 +10,8 @@
 ## 1. GENERAL INFORMATION & DELIVERABLE LINKS
 * **Team Members:**
   1. Lê Duy Đạt — Student ID: 23IT048 — Class: 23SE1 — Role: Sinh viên thực hiện duy nhất (thiết kế, lập trình, kiểm thử, tài liệu) — Contribution: 100%
-* **🔗 Live Demo URL (APK):** [CHƯA CÓ — điền link GitHub Releases `app-release.apk` sau khi tạo Release v1.0.0]
+* **🔗 Live Demo URL (APK):** https://github.com/lddatitvku0202/vku-expense-ocr/releases/download/v1.0.0/app-release.apk
+* **📦 Release page:** https://github.com/lddatitvku0202/vku-expense-ocr/releases/tag/v1.0.0
 * **💻 GitHub Repository:** https://github.com/lddatitvku0202/vku-expense-ocr *(dự kiến, repo chưa được tạo/đẩy lên)*
 * **🎥 Video Demo (Optional):** [CHƯA CÓ — điền link video 2–3 phút]
 

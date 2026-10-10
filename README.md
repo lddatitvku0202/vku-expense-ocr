@@ -233,7 +233,8 @@ flutter test integration_test/camera_smoke_test.dart -d <thiết bị>  # previe
 
 ## Tải APK
 
-> 🔗 **Link tải `app-release.apk`: _sẽ bổ sung_** (GitHub Releases hoặc Google Drive, sau khi thử trên điện thoại thật).
+> 🔗 **Tải `app-release.apk`:** https://github.com/lddatitvku0202/vku-expense-ocr/releases/download/v1.0.0/app-release.apk
+> 📦 **Trang Release v1.0.0:** https://github.com/lddatitvku0202/vku-expense-ocr/releases/tag/v1.0.0
 >
 > Cài đặt: cho phép "cài ứng dụng không rõ nguồn gốc" trên điện thoại, mở file APK. Lần đầu mở tab **Quét** app sẽ xin quyền camera.
 
