@@ -1096,3 +1096,112 @@ b195059 feat(charts): add pure chart geometry for donut hit-tests and bars
 c93dd45 test(charts): add failing tests for the donut and weekly bar charts
 docs(phase-9): record phase 9 results   (commit cuối của phase)
 ```
+
+---
+
+## Phase 10 — UI/UX polish (bản rút gọn)
+
+**Trạng thái:** ✅ hoàn tất (merge vào `main`, tag `phase-10`). ⚠ **Chưa thử trên thiết bị.** Đây là bản rút gọn theo yêu cầu: chỉ làm danh sách mục đã chốt, không thêm tính năng.
+
+### Mục tiêu phase
+
+Làm cho giao diện dùng được trong mọi điều kiện: đổi sáng/tối, chữ đọc rõ ở nền tối, không tràn ở màn nhỏ / màn ngang / chữ hệ thống lớn, mọi màn có trạng thái tải/rỗng/lỗi rõ ràng, tên app đúng, và rà soát vòng đời tài nguyên.
+
+FR liên quan: **FR-8.1, FR-8.2, FR-8.3, FR-8.4**, NFR-2, NFR-3.
+
+**Không làm trong bản rút gọn:** `Semantics` cho mọi nút icon (biểu đồ đã có từ Phase 9), icon app riêng, vòng "cố ý làm hỏng code".
+
+### TDD trong lịch sử Git
+
+| # | Commit | Trạng thái test |
+|---|---|---|
+| 1 | `test(ui): add failing tests for theme menu, contrast, layout and states` | 🔴 không biên dịch được (chưa có `colorOn`, menu, nút thử lại) |
+| 2 | `fix(ui): readable category colours on both themes, no overflow in cards` | 🔴→🟢 sửa màu danh mục, card Lịch sử, nút thử lại ở màn sửa |
+| 3 | `feat(dashboard): add the theme menu and a retry for loading errors` | 🟢 6 test menu |
+| 4 | `build(app): show the name "VKU Expense OCR" under the launcher icon` | 🟢 nhãn app |
+| 5 | `perf(core): compile the amount regexes once` | 🟢 kết quả rà soát NFR-2 |
+| 6 | `test(ui): fix test set-up found by the first full run` | 🟢 706/706 |
+
+### Đã làm gì
+
+| File | Vai trò |
+|---|---|
+| `lib/screens/dashboard/dashboard_screen.dart` | Menu giao diện trên AppBar (`PopupMenuButton<ThemeMode>`): Sáng, Tối, Theo hệ thống; nút "Thử lại" khi lỗi tải. |
+| `lib/core/category_style.dart` | Bảng màu danh mục cho nền tối (`darkColor`) và hàm `colorOn(brightness)`; bảng màu nền sáng được làm đậm. |
+| `lib/widgets/expense_summary_card.dart` | Số tiền co lại thay vì làm tràn hàng. |
+| `lib/screens/scan/camera_screen.dart` | Màu cố định trên khung hình video gom vào `_Viewfinder`. |
+| `lib/screens/review/review_screen.dart` | Nút "Thử lại" khi màn sửa không tải được. |
+| `android/.../AndroidManifest.xml`, `ios/Runner/Info.plist` | Nhãn hiển thị "VKU Expense OCR". |
+| `test/support/app_harness.dart` | Bộ khung chạy app thật (router, thanh điều hướng, theme) với repository giả và dữ liệu "khó". |
+| `test/layout/`, `test/core/contrast_test.dart`, `theme_hygiene_test.dart`, `app_identity_test.dart`, `test/screens/theme_menu_test.dart`, `async_states_test.dart` | 124 test mới. |
+
+### Kết quả rà soát NFR-2 / NFR-3 (chỉ liệt kê điều phát hiện)
+
+| Hạng mục | Cách rà | Phát hiện | Đã sửa |
+|---|---|---|---|
+| Tính toán nặng trong `build()` (NFR-2) | Tìm `RegExp(`, `NumberFormat(`, `DateFormat(`, `.sort(`, đọc file trong `lib/screens` và `lib/widgets`; đọc từng `build()` | Không có việc nặng trong `build()`. **`AmountInput` và `ExpenseValidators` tạo 4 `RegExp` mới trong thân hàm; hàm này chạy mỗi lần gõ phím ở ô số tiền** | Chuyển thành `static final` (compile một lần) |
+| `dispose` (NFR-3) | Liệt kê mọi nơi tạo `TextEditingController`, `FocusNode`, `AnimationController`, `CurvedAnimation`, `Timer`, `CameraController`, `TextRecognizer` và đối chiếu với `dispose/cancel/close` | Mọi tài nguyên đều có phần giải phóng tương ứng; không phát hiện rò rỉ | — |
+| `const` (NFR-2) | Các lint `prefer_const_constructors`, `_in_immutables`, `_declarations`, `_literals_to_create_immutables` đã bật từ Phase 0 | `flutter analyze` 0 issue nên không còn chỗ nào bỏ sót | — |
+| Giới hạn rebuild (NFR-2) | Đọc nơi dùng `ref.watch` | Đã dùng `select` ở số giao dịch của Dashboard và trạng thái quét của camera; các phần còn lại đọc provider nhỏ đã dẫn xuất | — |
+| Lọc danh sách trong `build()` của Lịch sử | Đọc `HistoryScreen.build` | Một vòng lọc O(n) theo danh mục, chạy khi danh sách hoặc bộ lọc đổi; với vài trăm giao dịch là không đáng kể | Giữ nguyên (ghi nhận, không phải lỗi) |
+
+### Vì sao làm vậy (liên hệ slide)
+
+- **Material 3 và `ColorScheme.fromSeed` (W7 s32–39, FR-8.1):** mọi màu chữ, nền, banner lấy từ `ColorScheme`, nên đổi theme là đổi tất cả. Màu cố định chỉ còn ở nơi có lý do (xem dưới).
+- **Responsive bằng `LayoutBuilder` / `MediaQuery` (W7 s39, FR-8.2):** thay vì đoán kích thước, mỗi màn được dựng thật ở 4 kích thước × 2 cỡ chữ và kiểm tra overflow.
+- **`AsyncValue.when` (W8 s14–18, FR-8.4):** ba nhánh loading / error / data buộc người viết xử lý đủ cả ba trạng thái.
+- **Đo trước khi sửa:** thay vì "thấy mờ thì đổi", đo tỷ lệ tương phản bằng công thức WCAG để có con số và test chặn lỗi quay lại.
+- **Lựa chọn đã cân nhắc:**
+  - *Dùng `ColorScheme` cho cả màn camera:* chữ theo theme sáng là chữ tối, đặt lên khung hình video tối thì khó đọc. Giữ màu trắng cố định và nói rõ lý do (D-070).
+  - *Đổi `applicationId` sang tên "đẹp" hơn:* không cần, id đã khớp tổ chức `vn.edu.vku`, và đổi package chỉ thêm rủi ro cho build (D-071).
+  - *Menu giao diện bằng `SegmentedButton` hoặc màn Cài đặt riêng:* tốn chỗ trên AppBar hoặc thêm một màn; menu gọn nhất và đúng vị trí yêu cầu.
+
+### Khái niệm cần hiểu
+
+- **Tỷ lệ tương phản WCAG:** `(L_sáng + 0,05) / (L_tối + 0,05)` với `L` là độ sáng tương đối của màu (0 đen, 1 trắng). Chữ thường cần ≥ 4,5:1, hình khối/biểu tượng cần ≥ 3:1. Màu cam sáng trên nền trắng chỉ đạt 2,9:1: nhìn "hơi nhạt" nhưng đo ra là chưa đạt.
+- **`ThemeMode.system`:** giao cho hệ điều hành quyết định sáng hay tối; app lắng nghe khi người dùng đổi chế độ tối của điện thoại và đổi theo ngay, không cần khởi động lại.
+- **`textScaleFactor`:** hệ số phóng chữ do người dùng đặt trong Cài đặt trợ năng. 1,5× nghĩa là mọi chữ to gấp rưỡi; layout cứng chiều rộng sẽ tràn. `Flexible`, `Expanded`, `FittedBox` và cuộn giúp layout co giãn.
+- **`FittedBox(fit: BoxFit.scaleDown)`:** thu nhỏ nội dung (chữ) cho vừa chỗ, nhưng không bao giờ phóng to. Dùng cho số tiền dài.
+- **Font Ahem trong test:** flutter test dùng font mà mỗi ký tự rộng đúng bằng cỡ chữ, rộng hơn font thật. Test overflow vì vậy khắt khe hơn máy thật; nếu qua được test thì máy thật càng an toàn.
+
+### Kết quả kiểm thử
+
+| Bước | Kết quả |
+|---|---|
+| `dart format --set-exit-if-changed lib test integration_test tool` | ✔ 0 thay đổi |
+| `flutter analyze` | ✔ No issues found |
+| `flutter test` | ✔ **706/706** (582 cũ + 124 mới) |
+| `flutter test --coverage` | **94,5%** dòng (2391/2531) |
+| `flutter build apk --debug` | ✔; manifest gộp có `android:label="VKU Expense OCR"` |
+| Vòng "cố ý làm hỏng code" | Không làm (theo yêu cầu của bạn) |
+| Thiết bị | ⚠ **Chưa test trên thiết bị** |
+
+Phân bổ 124 test mới: overflow + hai theme 61 · độ tương phản 41 · trạng thái bất đồng bộ 11 · menu giao diện 6 · nhãn app 3 · không màu cố định 2. Bảng chi tiết: `docs/TEST_REPORT.md`, mục "Phase 10".
+
+### Hạn chế đã biết
+
+- Chưa thử trên máy thật: nhìn bằng mắt ở nền tối, cỡ chữ lớn nhất, ngăn xếp ứng dụng (checklist "Phase 10" trong `docs/TEST_REPORT.md`).
+- Đo tương phản chỉ cho các cặp màu đã liệt kê; chữ nằm trên ảnh (ví dụ hình hóa đơn) không thuộc phạm vi.
+- Icon app vẫn là icon Flutter mặc định; chưa có `Semantics` riêng cho mọi nút icon (tooltip đã có ở các nút chính).
+- Test overflow dùng font mặc định của môi trường test; hình dạng chữ thật (Roboto trên Android) có thể khác chút.
+
+### Cách tự kiểm tra bằng tay
+
+1. Chạy test của phase:
+   ```powershell
+   flutter test test/layout test/core/contrast_test.dart test/screens/theme_menu_test.dart test/screens/async_states_test.dart
+   ```
+2. Thử phá: trong `lib/core/category_style.dart` đổi `darkColor` của "Thiết bị" về `0xFF8E24AA` rồi chạy `test/core/contrast_test.dart` để thấy ca nền tối đỏ.
+3. Trên điện thoại: làm checklist "Phase 10" trong `docs/TEST_REPORT.md`.
+
+### Danh sách commit
+
+```
+4a570b0 test(ui): fix test set-up found by the first full run
+d673162 perf(core): compile the amount regexes once
+7ab6299 build(app): show the name "VKU Expense OCR" under the launcher icon
+728749f feat(dashboard): add the theme menu and a retry for loading errors
+3d8b345 fix(ui): readable category colours on both themes, no overflow in cards
+fd0aa1f test(ui): add failing tests for theme menu, contrast, layout and states
+docs(phase-10): record phase 10 results   (commit cuối của phase)
+```

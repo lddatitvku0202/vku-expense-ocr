@@ -323,8 +323,8 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] Gắn vào Dashboard; xác nhận biểu đồ tự cập nhật khi thêm giao dịch (widget test với provider override).
 
 ### Phase 10 — UI/UX polish
-- [ ] Chuyển theme (sáng/tối/hệ thống); layout responsive ≥ 600dp; kiểm tra không overflow ở cả dọc và ngang bằng widget test với nhiều kích thước (`tester.view.physicalSize`); `Semantics` cho các nút icon; empty/loading/error states thống nhất; icon app và tên hiển thị "VKU Expense OCR".
-- [ ] Rà soát `const`, `dispose`, và tính toán trong `build()` theo NFR-2/NFR-3; ghi kết quả rà soát vào PHASE_LOG.
+- [x] Chuyển theme (sáng/tối/hệ thống); layout responsive ≥ 600dp; kiểm tra không overflow ở cả dọc và ngang bằng widget test với nhiều kích thước (`tester.view.physicalSize`); `Semantics` cho các nút icon; empty/loading/error states thống nhất; icon app và tên hiển thị "VKU Expense OCR". → **bản rút gọn theo yêu cầu của bạn:** làm menu theme, rà soát dark mode, test overflow 5 màn × 4 kích thước × chữ 1,5×, trạng thái loading/rỗng/lỗi, tên app, rà soát NFR-2/3. **Không làm** (chưa có yêu cầu): `Semantics` cho mọi nút icon, icon app mới (`flutter_launcher_icons`).
+- [x] Rà soát `const`, `dispose`, và tính toán trong `build()` theo NFR-2/NFR-3; ghi kết quả rà soát vào PHASE_LOG.
 
 ### Phase 11 — Release & Deliverables
 - [ ] **Ký APK**: cấu hình `android/app/build.gradle(.kts)` đọc `key.properties`. Nếu có `keytool`: tạo keystore tại `~/vku-keys/upload-keystore.jks` (ngoài repo) với mật khẩu ngẫu nhiên mạnh, ghi vào `android/key.properties` (đã gitignore). Thông báo rõ cho tôi đường dẫn file và yêu cầu **sao lưu**. Viết `docs/SIGNING.md` hướng dẫn tự tạo lại keystore.
@@ -386,13 +386,13 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] FR-7.1 — bằng chứng: `StatefulShellRoute.indexedStack` + `NavigationBar` M3 3 tab (`test/app_router_test.dart`); Tổng quan có tổng tháng, donut, cột tuần (`test/screens/dashboard_screen_test.dart`); Quét = camera (Phase 6); Lịch sử = danh sách (Phase 8). Chưa thử trên máy thật
 - [x] FR-7.2 — bằng chứng: `lib/core/router.dart` (`/expense/:id`, `/review` + `extra`), `test/app_router_test.dart` (path param, extra, id sai → trang lỗi)
 - [x] FR-7.3 — bằng chứng: `HistoryScreen` (`ListView.builder`, `ExpenseSummaryCard` theo lab Week 7 có thumbnail, `Dismissible` + `ValueKey(id)`, lọc theo danh mục) (`test/screens/history_screen_test.dart`, `test/widgets/expense_summary_card_test.dart`). Chưa thử trên máy thật
-- [ ] FR-8.1 — một phần: `AppTheme` M3 light/dark từ seed `0xFF2C4570` (`test/core/app_theme_test.dart`); `themeModeProvider` lưu/đọc lại qua `shared_preferences`, `MaterialApp.themeMode` theo nó (`test/state/theme_mode_provider_test.dart`, `test/app_theme_mode_test.dart`); nút chuyển → Phase 10
-- [ ] FR-8.2 — một phần: Dashboard đặt donut và cột tuần cạnh nhau khi ≥ 600 dp, không overflow ở 320 dp và màn ngang với chữ 1,5× (`dashboard_screen_test.dart`); Review, camera, Lịch sử có test màn nhỏ/ngang ở Phase 6–8. Rà soát toàn app → Phase 10
-- [ ] FR-8.3 — một phần: `Formatters.vnd` / `Formatters.date` (`test/core/formatters_test.dart`), `SafeArea` ở các màn hiện có; áp dụng toàn app → Phase 7–10
-- [ ] FR-8.4 — một phần: provider dẫn xuất trả `AsyncValue` (loading/error lan từ danh sách, có test); hiển thị bằng `AsyncValue.when` ở các màn → Phase 7–10
+- [x] FR-8.1 — bằng chứng: `AppTheme` M3 light/dark từ seed `0xFF2C4570` (`test/core/app_theme_test.dart`); menu AppBar Sáng/Tối/Theo hệ thống ở Dashboard, đổi giao diện ngay và lưu qua `shared_preferences`, "Theo hệ thống" theo cài đặt máy (`test/screens/theme_menu_test.dart`, `test/state/theme_mode_provider_test.dart`); chữ đạt 4,5:1 và màu danh mục đạt 3:1 ở cả hai theme (`test/core/contrast_test.dart`); không màu cố định ngoài theme/bảng màu/camera (`test/core/theme_hygiene_test.dart`). Chưa thử trên máy thật
+- [x] FR-8.2 — bằng chứng: 5 màn (Tổng quan, Camera kể cả khi bị từ chối quyền, Review với mọi cảnh báo, Lịch sử, Chi tiết/sửa) × 320×480, 360×640, 411×891, ngang 891×411 × chữ 1× và 1,5×, cuộn hết trang: không `RenderFlex overflowed` (`test/layout/screen_layout_test.dart`); ≥ 600 dp Dashboard đặt donut và cột cạnh nhau (`dashboard_screen_test.dart`). Chưa thử trên máy thật
+- [x] FR-8.3 — bằng chứng: `Formatters.vnd` (`NumberFormat.currency(locale: vi_VN, symbol: đ, decimalDigits: 0)`) và `Formatters.date` (`dd/MM/yyyy`) (`test/core/formatters_test.dart`) dùng ở card, Dashboard, biểu đồ, Review; `SafeArea` ở 4 màn chính. Chưa thử trên máy thật
+- [x] FR-8.4 — bằng chứng: loading / rỗng / lỗi (kèm "Thử lại") ở Tổng quan, Lịch sử, màn sửa và Camera (`test/screens/async_states_test.dart`); `AsyncValue.when` ở các màn. Chưa thử trên máy thật
 - [ ] NFR-1 — bằng chứng: _chưa có_
-- [ ] NFR-2 — bằng chứng: _chưa có_
-- [ ] NFR-3 — bằng chứng: _chưa có_
+- [x] NFR-2 — bằng chứng: rà soát Phase 10 (`docs/PHASE_LOG.md`): `ListView.builder` + `cacheWidth`, `Isolate.run` cho parse/cắt ảnh/thumbnail, `select` giới hạn rebuild, regex/`NumberFormat` là `static final`, lint `prefer_const_*` bật và analyze 0 issue. Chưa thử trên máy thật
+- [x] NFR-3 — bằng chứng: rà soát Phase 10: mọi `TextEditingController`, `FocusNode`, `AnimationController`, `CurvedAnimation`, `Timer`, `CameraController`, `TextRecognizer` đều có `dispose/cancel/close` tương ứng; camera xử lý `AppLifecycleState` và ẩn tab (`test/screens/camera_screen_test.dart`). Chưa thử trên máy thật
 - [x] NFR-4 — bằng chứng: `lib/core`, `lib/models`, `lib/services`, `lib/state`, `lib/widgets`, `lib/screens` (Phase 1)
 - [ ] NFR-5 — bằng chứng: _chưa có_
 - [ ] NFR-6 — bằng chứng: _chưa có_
@@ -413,7 +413,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 | 7 — Review & Verification | ✅ Xong | tag `phase-7` | format ✔ · analyze 0 · test 489/489 · coverage 92.8% · build debug ✔ | Widget test trên máy tính; **chưa thử trên thiết bị** (không bật emulator theo yêu cầu). Màn debug OCR Phase 3 đã gỡ |
 | 8 — Lịch sử & Dashboard | ✅ Xong | tag `phase-8` | format ✔ · analyze 0 · test 514/514 · coverage 93.1% · build debug ✔ | Widget test trên máy tính; `integration_test/app_flow_test.dart` đã viết, **chưa chạy** (chưa có thiết bị). Chưa thử trên máy thật |
 | 9 — Biểu đồ CustomPainter | ✅ Xong | tag `phase-9` | format ✔ · analyze 0 · test 582/582 · coverage 94.2% · build debug ✔ | Không dùng thư viện chart (có test kiến trúc). Chưa thử trên máy thật |
-| 10 — UI/UX polish | ⬜ Chưa bắt đầu | — | — | |
+| 10 — UI/UX polish (bản rút gọn) | ✅ Xong | tag `phase-10` | format ✔ · analyze 0 · test 706/706 · coverage 94.5% · build debug ✔ | Theo yêu cầu rút gọn: không có vòng "cố ý làm hỏng code". Chưa thử trên máy thật |
 | 11 — Release & Deliverables | ⬜ Chưa bắt đầu | — | — | |
 | 12 — Platform Channel (tùy chọn) | ⬜ Chưa bắt đầu | — | — | |
 
@@ -442,7 +442,8 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 - [ ] **Phase 7 — màn Review trên điện thoại thật:** bàn phím số cho ô số tiền và nút Next chuyển ô; form cuộn được khi bàn phím mở; bộ chọn ngày hiện tiếng Việt và không cho chọn ngày tương lai; phóng to ảnh hóa đơn; lưu thật (ảnh + thumbnail vào `receipts/`, DB); nút back Android hỏi trước khi bỏ thay đổi.
 - [ ] **Phase 8:** chạy `flutter test integration_test/app_flow_test.dart -d <máy>` (thêm thủ công → Lịch sử → tổng Dashboard → vuốt xóa → Undo) khi có thiết bị.
 - [ ] **Phase 9 — biểu đồ trên điện thoại thật:** animation donut và cột mượt (không giật khi mở tab, khi thêm/xóa giao dịch); chạm đúng lát/cột trên màn thật (cả lát nhỏ, gần ranh giới); chữ ở lỗ giữa không tràn với số tiền lớn và chữ hệ thống phóng to; TalkBack đọc mô tả biểu đồ.
-- [ ] Checklist test thủ công trên thiết bị của Phase 0–9 trong `docs/TEST_REPORT.md`.
+- [ ] **Phase 10 — giao diện trên điện thoại thật:** menu giao diện đổi sáng/tối/hệ thống và còn nguyên sau khi mở lại app; kiểm tra bằng mắt chữ và biểu đồ ở nền tối; cỡ chữ hệ thống lớn nhất trên cả 5 màn; tên "VKU Expense OCR" dưới biểu tượng app.
+- [ ] Checklist test thủ công trên thiết bị của Phase 0–10 trong `docs/TEST_REPORT.md`.
 
 ---
 
@@ -517,6 +518,11 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 | D-065 | Animation: donut 900 ms, cột 700 ms, `Curves.easeOutCubic`; chỉ chạy lại khi dữ liệu **khác về giá trị** (`CategoryTotals`/`WeeklyTotals` so sánh bằng giá trị) | Không replay vô ích khi provider phát lại cùng số liệu; dữ liệu đổi giữa chừng thì chạy lại từ 0 (có test). |
 | D-066 | Tổng ở lỗ giữa: dùng `Formatters.vnd`, quá 80% đường kính lỗ thì đổi sang `compactVnd` ("1,25tr đ"), vẫn quá thì thu nhỏ cỡ chữ | Số tiền lớn hoặc chữ hệ thống phóng to không được tràn ra khỏi lỗ. |
 | D-067 | Legend: tên danh mục co lại có "…", cụm "số tiền + %" nằm trong `FittedBox(scaleDown)`; nhãn trong biểu đồ cột giới hạn hệ số chữ ở 1,3× | Test 320 dp với chữ 1,5× và số tiền 123 tỷ phát hiện legend tràn (RenderFlex overflow) ở bản đầu. |
+| D-068 | Menu giao diện nằm trên AppBar của Dashboard (`PopupMenuButton<ThemeMode>`, tick ở chế độ đang chọn); đổi áp dụng ngay, lưu lỗi thì chỉ báo SnackBar | Đúng yêu cầu đặt ở Dashboard; chế độ vẫn áp dụng khi chưa lưu được nên người dùng không bị kẹt. |
+| D-069 | Màu danh mục có hai bảng: `color` cho nền sáng (đã làm đậm: food C25100, study 1565C0, travel 2E7D32) và `darkColor` cho nền tối; dùng `colorOn(brightness)` ở mọi nơi | Đo trước khi sửa: màu cũ trượt 3:1 ở nền tối ("Thiết bị" 2,64 trên nền, 1,74 trên nền donut; "Giải trí" 2,90 trên nền donut) và nền sáng ("Ăn uống" 2,94 trên nền, 2,39 trên nền donut; Học tập 2,85 và Di chuyển 2,56 trên nền donut). Màu vẫn là 5 màu phân biệt (test). |
+| D-070 | Màn camera giữ màu cố định (nền đen, lớp mờ, nét trắng, vòng lấy nét vàng) trong một lớp `_Viewfinder` có chú thích; test chặn màu cố định ở mọi file khác trừ theme, bảng màu danh mục, trình xem ảnh toàn màn | Trên khung hình video luôn tối, nét trắng nhìn rõ ở mọi cảnh; màu theo theme (chữ tối ở theme sáng) sẽ khó đọc. |
+| D-071 | Giữ `applicationId` và `namespace` = `vn.edu.vku.vku_expense_ocr`; chỉ đổi nhãn hiển thị (Android `android:label`, iOS `CFBundleDisplayName`) thành "VKU Expense OCR" | Id đã khớp tổ chức `vn.edu.vku`; đổi package chỉ thêm rủi ro cho build mà không cải thiện gì. |
+| D-072 | Số tiền trên card Lịch sử tối đa 32% bề rộng màn rồi co chữ (`FittedBox.scaleDown`), tên cửa hàng lấy phần còn lại | Test overflow ở 320–411 dp và chữ 1,5× phát hiện số tiền lớn đẩy hàng ra ngoài card. |
 
 ---
 

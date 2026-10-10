@@ -14,6 +14,7 @@
 | 7 | 489 | 489 / 0 | 92.8% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu). 55 test mới; 4 test của màn debug OCR bị xóa cùng màn |
 | 8 | 514 | 514 / 0 | 93.1% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị**. `integration_test/app_flow_test.dart` đã viết, **chưa chạy** |
 | 9 | 582 | 582 / 0 | 94.2% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu) |
+| 10 | 706 | 706 / 0 | 94.5% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu) |
 
 ## Độ chính xác parser trên bộ fixture
 
@@ -373,6 +374,35 @@ flutter test integration_test/app_flow_test.dart -d <device id>
 
 Lần đầu thử đột biến thứ ba bằng cách đổi `baseline` thành `layout.top + plot`; giá trị đó bằng đúng `baseline` (đột biến tương đương), nên không test nào đỏ. Đã làm lại bằng một đột biến thật như trong bảng. Code đã khôi phục sau mỗi lần.
 
+## Phase 10 — UI/UX polish (bản rút gọn)
+
+124 test mới, tất cả pass (máy tính). Theo yêu cầu của bạn không làm vòng "cố ý làm hỏng code" ở phase này.
+
+| Nhóm | Ca kiểm tra | File test |
+|---|---|---|
+| Menu giao diện (FR-8.1) | Menu ở AppBar Tổng quan có Sáng / Tối / Theo hệ thống; chế độ hiện tại có dấu tick; chọn → `MaterialApp.themeMode` và `Theme.brightness` đổi, giá trị `shared_preferences` đổi (`dark`, `light`, `system`); "Theo hệ thống" theo độ sáng của máy (đổi giữa chừng cũng theo); chế độ đã lưu được dùng ngay khi mở app; tooltip "Giao diện" | `test/screens/theme_menu_test.dart` |
+| Độ tương phản (dark mode) | Theo WCAG 2, ở cả theme sáng và tối: 9 cặp chữ/nền app dùng (chữ thường, chữ phụ, tổng tháng, chú thích lỗi, chú thích "không chắc chắn", banner tên cửa hàng ở hai mức, nền vuốt xóa, chữ trên nền donut) ≥ 4,5:1; 5 màu danh mục trên nền trang và nền donut ≥ 3:1; 5 màu khác nhau | `test/core/contrast_test.dart` |
+| Không màu cố định | Không file nào trong `lib/` dùng `Colors.*` / `Color(0x…)` ngoài theme, bảng màu danh mục, màn camera, trình xem ảnh toàn màn; màn camera gom màu về một chỗ | `test/core/theme_hygiene_test.dart` |
+| Overflow (FR-8.2) | 6 màn: Tổng quan, Camera, Camera khi bị từ chối quyền, Review với mọi cảnh báo, Lịch sử, Chi tiết/sửa × 4 kích thước (320×480, 360×640, 411×891, ngang 891×411) × chữ 1× và 1,5× = **48 ca**, cuộn hết trang, dữ liệu có tên cửa hàng dài và số tiền 123.456.789 đ | `test/layout/screen_layout_test.dart` |
+| Hai theme | 6 màn × sáng/tối: dựng được, đúng độ sáng, cuộn hết không lỗi (12 ca) | 〃 |
+| Loading / rỗng / lỗi (FR-8.4) | Tổng quan: spinner khi đang tải, thông điệp tháng/tuần rỗng, lỗi + "Thử lại" tải lại; Lịch sử: spinner, rỗng + nút quét, lỗi + "Thử lại"; màn sửa: spinner, lỗi + "Thử lại", không tìm thấy; Camera: đang mở, lỗi + "Thử lại" + thư viện | `test/screens/async_states_test.dart` |
+| Tên app | Nhãn Android "VKU Expense OCR", tên hiển thị iOS, `applicationId`/`namespace` giữ `vn.edu.vku.vku_expense_ocr`; manifest đã gộp trong APK debug có `android:label="VKU Expense OCR"` | `test/core/app_identity_test.dart` + `flutter build apk --debug` |
+
+### Lỗi test phát hiện trong code (đã sửa code)
+
+| Phát hiện | Cách sửa |
+|---|---|
+| **Card Lịch sử bị tràn ngang** (`RenderFlex overflowed by 9.8 pixels`) ở 320, 360 và 411 dp khi số tiền lớn; 5 ca overflow + 2 ca render hai theme đỏ | Số tiền tối đa 32% bề rộng màn rồi co chữ (`FittedBox`), tên cửa hàng lấy phần còn lại (D-072) |
+| **Màu danh mục không đủ tương phản.** Đo màu cũ: nền tối "Thiết bị" 2,64:1 trên nền trang và 1,74:1 trên nền donut, "Giải trí" 2,90:1 trên nền donut; nền sáng "Ăn uống" 2,94:1 trên nền trang, "Ăn uống" 2,39:1, "Học tập" 2,85:1, "Di chuyển" 2,56:1 trên nền donut (yêu cầu 3:1) | Thêm bảng màu cho nền tối, làm đậm ba màu của nền sáng (D-069). Lần đầu chạy test chỉ còn 4 ca sáng đỏ vì bảng màu tối đã viết sẵn khi dựng `colorOn`; số đo màu cũ ở trên lấy bằng một test tạm riêng |
+| Màn sửa khi lỗi tải chỉ có dòng chữ, không có cách thử lại | Thêm nút "Thử lại" |
+| Một lần chạy sau khi sửa vẫn đỏ: màu "Ăn uống" E65100 chỉ đạt 2,9:1 trên nền donut | Đổi sang C25100 (3,5:1) |
+
+### Lỗi trong test (sửa test, không nới lỏng kỳ vọng về app)
+
+- Camera mở xong trước khi test kịp tìm spinner "đang mở" → thêm `initializeGate` cho camera giả.
+- Test "Thử lại" của Lịch sử tìm thẻ thứ tư (Fahasa) chưa được `ListView.builder` dựng ở 360×640 → kiểm tra thẻ mới nhất đang hiện.
+- `test/screens/dashboard_screen_test.dart` thiếu `settingsStoreProvider` vì Dashboard giờ đọc chế độ giao diện → thêm override, assertion giữ nguyên.
+
 ## Checklist test thủ công trên thiết bị
 
 > Đánh dấu `[x]` khi bạn đã tự kiểm tra trên máy Android thật. Ghi tên máy và phiên bản Android.
@@ -494,3 +524,16 @@ Thiết bị: `__________` · Android `____`
 - [ ] Cài đặt → cỡ chữ lớn nhất: chữ trong lỗ donut không tràn, legend không có dải sọc vàng-đen.
 - [ ] Xoay ngang (hoặc máy tính bảng): donut và cột nằm cạnh nhau.
 - [ ] Bật **TalkBack**: chạm vào biểu đồ → đọc mô tả (danh mục, số tiền, %; các ngày trong tuần).
+
+### Phase 10 — UI/UX polish
+
+Thiết bị: `__________` · Android `____`
+
+- [ ] Tab **Tổng quan** → biểu tượng giao diện trên AppBar → chọn **Tối**: toàn app chuyển nền tối, chữ và biểu đồ đều đọc rõ; chọn **Sáng**; chọn **Theo hệ thống** rồi đổi chế độ tối của điện thoại → app đổi theo.
+- [ ] Đóng hẳn app, mở lại → lựa chọn giao diện vẫn còn.
+- [ ] Ở nền tối, xem từng màn: Tổng quan (donut, cột, legend), Lịch sử, Review (banner cảnh báo tên cửa hàng), sửa giao dịch. Không có chữ mờ khó đọc, màu 5 danh mục phân biệt được.
+- [ ] Màn camera: chữ hướng dẫn, khung căn chỉnh và vòng lấy nét đọc rõ cả khi giao diện sáng lẫn tối.
+- [ ] Cài đặt → Cỡ chữ → lớn nhất, rồi mở cả 5 màn (Tổng quan, Quét, Review, Lịch sử, sửa giao dịch): không có dải sọc vàng-đen.
+- [ ] Xoay ngang từng màn: không overflow.
+- [ ] Ngăn ứng dụng của điện thoại hiển thị tên **"VKU Expense OCR"** dưới biểu tượng.
+- [ ] Ngắt dữ liệu rồi bật chế độ máy bay: app vẫn dùng bình thường (NFR-1).
