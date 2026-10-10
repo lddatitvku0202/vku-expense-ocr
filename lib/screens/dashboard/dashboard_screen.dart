@@ -6,9 +6,11 @@ import 'package:vku_expense_ocr/core/formatters.dart';
 import 'package:vku_expense_ocr/core/router.dart';
 import 'package:vku_expense_ocr/state/expense_providers.dart';
 import 'package:vku_expense_ocr/state/storage_providers.dart';
+import 'package:vku_expense_ocr/widgets/charts/donut_chart.dart';
+import 'package:vku_expense_ocr/widgets/charts/weekly_bar_chart.dart';
 
-/// "Tổng quan" tab: total of the selected month and, from Phase 9, the
-/// category donut and the weekly bars (FR-7.1).
+/// "Tổng quan" tab: total of the selected month, the category donut and
+/// the weekly bars (FR-7.1), side by side from 600 dp (FR-8.2).
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -37,15 +39,15 @@ class DashboardScreen extends ConsumerWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final wide = constraints.maxWidth >= wideLayoutWidth;
-            const donut = _ChartSlot(
+            const donut = _ChartCard(
               key: donutSlotKey,
-              icon: Icons.donut_large,
               title: 'Chi tiêu theo danh mục',
+              child: _CategoryDonut(),
             );
-            const weekly = _ChartSlot(
+            const weekly = _ChartCard(
               key: weeklySlotKey,
-              icon: Icons.bar_chart,
               title: 'Chi tiêu theo tuần',
+              child: _WeekBars(),
             );
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
@@ -53,15 +55,13 @@ class DashboardScreen extends ConsumerWidget {
                 const _MonthSummary(),
                 const SizedBox(height: 16),
                 if (wide)
-                  const IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(child: donut),
-                        SizedBox(width: 16),
-                        Expanded(child: weekly),
-                      ],
-                    ),
+                  const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: donut),
+                      SizedBox(width: 16),
+                      Expanded(child: weekly),
+                    ],
                   )
                 else ...[
                   donut,
@@ -158,43 +158,89 @@ class _MonthSummary extends ConsumerWidget {
   }
 }
 
-/// Place reserved for a Phase 9 chart.
-class _ChartSlot extends StatelessWidget {
-  const _ChartSlot({super.key, required this.icon, required this.title});
+/// A titled card holding one chart.
+class _ChartCard extends StatelessWidget {
+  const _ChartCard({super.key, required this.title, required this.child});
 
-  final IconData icon;
   final String title;
+  final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 160,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 48, color: theme.colorScheme.outline),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Biểu đồ đang được xây dựng',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          child,
+        ],
       ),
-    );
+    ),
+  );
+}
+
+/// Donut of the selected month (FR-6.1); rebuilds only for its provider.
+class _CategoryDonut extends ConsumerWidget {
+  const _CategoryDonut();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => ref
+      .watch(categoryTotalsProvider)
+      .when(
+        loading: () => const _ChartLoading(),
+        error: (error, stack) => const _ChartError(),
+        data: (totals) => DonutChart(totals: totals),
+      );
+}
+
+/// Bars of the selected week (FR-6.3), with week navigation.
+class _WeekBars extends ConsumerWidget {
+  const _WeekBars();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final today = ref.watch(clockProvider)();
+    final currentWeek = DateRanges.startOfWeek(today);
+    final notifier = ref.read(selectedWeekProvider.notifier);
+    return ref
+        .watch(weeklyTotalsProvider)
+        .when(
+          loading: () => const _ChartLoading(),
+          error: (error, stack) => const _ChartError(),
+          data: (week) => WeeklyBarChart(
+            week: week,
+            today: today,
+            onPrevious: notifier.previous,
+            // No future weeks.
+            onNext: week.weekStart.isBefore(currentWeek) ? notifier.next : null,
+          ),
+        );
   }
+}
+
+class _ChartLoading extends StatelessWidget {
+  const _ChartLoading();
+
+  @override
+  Widget build(BuildContext context) => const SizedBox(
+    height: 160,
+    child: Center(child: CircularProgressIndicator()),
+  );
+}
+
+class _ChartError extends StatelessWidget {
+  const _ChartError();
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 160,
+    child: Center(
+      child: Text(
+        'Không tải được dữ liệu biểu đồ',
+        style: TextStyle(color: Theme.of(context).colorScheme.error),
+      ),
+    ),
+  );
 }
