@@ -1,8 +1,18 @@
 # VKU Expense OCR
 
-Ứng dụng Flutter quản lý chi tiêu cá nhân: **chụp hóa đơn giấy**, nhận dạng chữ **on-device (offline)** bằng Google ML Kit, tự tách **tổng tiền / ngày / tên cửa hàng** bằng bộ phân tích heuristic regex, cho người dùng **kiểm tra lại** trước khi lưu, lưu cục bộ bằng `sqflite` và trực quan hóa chi tiêu bằng biểu đồ **vẽ tay bằng `CustomPainter`** (donut theo danh mục, cột theo tuần).
+Ứng dụng Flutter quản lý chi tiêu cá nhân: chụp hóa đơn giấy, nhận dạng chữ ngay trên điện thoại (ML Kit, không cần mạng), tự tách tổng tiền / ngày / tên cửa hàng, cho người dùng kiểm tra lại rồi lưu và xem biểu đồ chi tiêu vẽ tay bằng `CustomPainter`.
 
 > Mini-Project 3 — môn *Cross-Platform Mobile App Development*, Khoa Khoa học Máy tính, Trường ĐH CNTT & TT Việt – Hàn (VKU).
+
+## LINK THAM KHẢO LIÊN KẾT
+
+- 📱 **Tải APK:** [Trang Release v1.0.0](https://github.com/lddatitvku0202/vku-expense-ocr/releases/tag/v1.0.0) · [Tải trực tiếp `app-release.apk`](https://github.com/lddatitvku0202/vku-expense-ocr/releases/download/v1.0.0/app-release.apk) (khoảng 89 MB, yêu cầu Android 7.0 trở lên)
+- 🎥 **Video demo:** [Google Drive](https://drive.google.com/drive/folders/1PMlcqcNGBwDHN4cwJROZhz4Tvt7bmq43?usp=drive_link)
+- 📄 **Báo cáo kỹ thuật:** [docs/REPORT.pdf](docs/REPORT.pdf) (bản nguồn: [docs/REPORT.md](docs/REPORT.md))
+- 💻 **Mã nguồn:** [https://github.com/lddatitvku0202/vku-expense-ocr](https://github.com/lddatitvku0202/vku-expense-ocr)
+
+> **Cách cài APK:** tải `app-release.apk` về điện thoại, mở file và cho phép "Cài ứng dụng từ nguồn không rõ" (nguồn ngoài Google Play) khi hệ thống hỏi.
+> Lần đầu mở tab **Quét**, app xin quyền camera; muốn thử không cần camera thì dùng nút chọn ảnh từ thư viện.
 
 ## Tác giả
 
@@ -13,15 +23,35 @@
 | Lớp | 23SE1 |
 | GitHub | [lddatitvku0202](https://github.com/lddatitvku0202) |
 
-## Trạng thái hiện tại
+## Ảnh chụp màn hình
 
-| Hạng mục | Trạng thái |
+> Ảnh chụp trên **emulator** Android 13 (camera là webcam laptop), dữ liệu là giao dịch mẫu. Chưa có ảnh chụp từ điện thoại thật.
+
+| Tổng quan (sáng) | Tổng quan (tối) | Biểu đồ cột tuần (tối) | Lịch sử (tối) |
+|---|---|---|---|
+| ![Tổng quan sáng](docs/screenshots/dashboard_light.png) | ![Tổng quan tối](docs/screenshots/dashboard_dark.png) | ![Biểu đồ cột tuần](docs/screenshots/dashboardgraph.png) | ![Lịch sử](docs/screenshots/history.png) |
+| Tổng tháng và donut theo danh mục | Giao diện tối, màu danh mục sáng hơn để đủ tương phản | 7 cột T2 → CN, cột hôm nay nổi bật, legend màu/số tiền/% | Thumbnail hóa đơn, chip lọc theo danh mục |
+
+| Chỉnh vùng cắt | Chỉnh vùng cắt (gần hơn) | Review: cảnh báo | Review: danh mục và văn bản OCR |
+|---|---|---|---|
+| ![Chỉnh vùng cắt](docs/screenshots/scan.png) | ![Chỉnh vùng cắt gần hơn](docs/screenshots/cutpicturescan.png) | ![Review cảnh báo](docs/screenshots/review.png) | ![Review danh mục và OCR](docs/screenshots/review2.png) |
+| Sau khi chụp, app tự cắt theo khung và cho chỉnh tay (`image_cropper`) | Ảnh hóa đơn dùng thử để đo OCR (ảnh mờ, webcam) | Ô số tiền và ngày được đánh dấu bằng icon + chú thích, không chỉ bằng màu | Danh mục chỉ là gợi ý; "Xem văn bản OCR gốc" có thời gian OCR (8417 ms trên emulator) |
+
+| Donut: chạm một lát |
+|---|
+| ![Donut chạm một lát](docs/screenshots/donut_selected.png) |
+| Lát "Ăn uống" nổi bật (dày hơn, lệch ra) và hiện chi tiết 728.000 đ · 52,5% |
+
+Toàn bộ ảnh nằm trong [`docs/screenshots/`](docs/screenshots/).
+
+## Trạng thái xác minh
+
+| Hạng mục | Mức xác minh |
 |---|---|
-| Mã nguồn, kiểm thử trên máy tính | ✅ 717 test, 94,5% độ phủ dòng, `flutter analyze` 0 issue |
-| APK release đã ký | ✅ Đã build và ký (xem [Build](#build-apk-release)); cài và chạy được trên **emulator** |
-| Chạy trên **điện thoại Android thật** | ⚠ **Chưa**. Các mục "chưa xác minh trên máy thật" bên dưới còn nợ |
-| Báo cáo kỹ thuật | ✅ Bản nguồn [docs/REPORT.md](docs/REPORT.md) (3 trang khi xuất PDF); **PDF chưa xuất** (cần điền link/ảnh trước) |
-| Video demo, ảnh chụp, link APK, repo GitHub, Release | ⏳ Việc của tác giả, từng bước ở [docs/HANDOVER.md](docs/HANDOVER.md); kịch bản quay ở [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) |
+| Mã nguồn và kiểm thử tự động | ✅ 717 test pass, độ phủ 94,5% dòng (2391/2531), `flutter analyze` 0 issue |
+| APK release | ✅ Đã ký bằng keystore riêng; cài và chạy trên **emulator Android 13 (API 33)**: quét ảnh từ thư viện, OCR, lưu giao dịch, biểu đồ cập nhật. APK không khai báo quyền mạng |
+| OCR và bộ phân tích | ✅ Đo trên **22 ảnh hóa đơn thật sưu tầm** (xem mục [Kiểm thử](#kiểm-thử)): tổng tiền đúng 16/19 ảnh chính, tên cửa hàng 7/19 |
+| Camera, flash, lấy nét | ⚠ **Chưa xác minh trên điện thoại thật.** Trên emulator chỉ thử được preview bằng webcam; flash và lấy nét chưa được thử |
 
 ## Tính năng
 
@@ -29,7 +59,7 @@ Chú thích: ✅ có test tự động trên máy tính · 🟦 đã chạy th�
 
 ### FR-1. Chụp ảnh và cắt ảnh
 
-> Chưa đánh dấu hoàn tất: **code và test trên máy tính đã xong, nhưng chưa xác minh trên điện thoại thật** (theo quy ước của dự án).
+> Chưa đánh dấu hoàn tất vì **chưa xác minh trên điện thoại thật** (code và test trên máy tính đã xong).
 
 - [ ] FR-1.1 Camera sau với preview trực tiếp (`camera`, `CameraPreview`) ✅ 🟦 (webcam laptop làm camera của emulator) ⚠
 - [ ] FR-1.2 Nút flash 4 trạng thái (tắt / tự động / luôn bật / đèn pin), icon theo trạng thái, máy không có flash thì vô hiệu nút ✅ ⚠ (chưa thử đèn thật)
@@ -80,27 +110,6 @@ Chú thích: ✅ có test tự động trên máy tính · 🟦 đã chạy th�
 - NFR-2 / NFR-3 Hiệu năng và vòng đời tài nguyên: đã rà soát (xem `docs/PHASE_LOG.md`, Phase 10) ✅
 - NFR-4 Cấu trúc thư mục bắt buộc ✅ · NFR-5 `flutter analyze` 0 issue, `dart format` ✅
 - NFR-6 APK release đã ký ✅ · chạy trên **điện thoại thật** ⚠ **chưa**
-
-## Ảnh chụp màn hình
-
-> Ảnh chụp trên **emulator** Android 13 (camera là webcam laptop); **chưa chụp trên điện thoại thật**. Dữ liệu là giao dịch mẫu.
-
-| Tổng quan (sáng) | Tổng quan (tối) | Biểu đồ cột tuần (tối) | Lịch sử (tối) |
-|---|---|---|---|
-| ![Tổng quan sáng](docs/screenshots/dashboard_light.png) | ![Tổng quan tối](docs/screenshots/dashboard_dark.png) | ![Biểu đồ cột tuần](docs/screenshots/dashboardgraph.png) | ![Lịch sử](docs/screenshots/history.png) |
-| Tổng tháng và donut theo danh mục | Giao diện tối, màu danh mục sáng hơn để đủ tương phản | 7 cột T2 → CN, cột hôm nay nổi bật, legend màu/số tiền/% | Thumbnail hóa đơn, chip lọc theo danh mục |
-
-| Chỉnh vùng cắt | Chỉnh vùng cắt (gần hơn) | Review: cảnh báo | Review: danh mục và văn bản OCR |
-|---|---|---|---|
-| ![Chỉnh vùng cắt](docs/screenshots/scan.png) | ![Chỉnh vùng cắt gần hơn](docs/screenshots/cutpicturescan.png) | ![Review cảnh báo](docs/screenshots/review.png) | ![Review danh mục và OCR](docs/screenshots/review2.png) |
-| Sau khi chụp, app tự cắt theo khung và cho chỉnh tay (`image_cropper`) | Ảnh hóa đơn dùng thử để đo OCR (ảnh mờ, webcam) | Ô số tiền và ngày được đánh dấu bằng icon + chú thích, không chỉ bằng màu | Danh mục chỉ là gợi ý; "Xem văn bản OCR gốc" có thời gian OCR (8417 ms trên emulator) |
-
-| Donut: chạm một lát |
-|---|
-| ![Donut chạm một lát](docs/screenshots/donut_selected.png) |
-| Lát "Ăn uống" nổi bật (dày hơn, lệch ra) và hiện chi tiết 728.000 đ · 52,5% |
-
-Ảnh nằm trong [`docs/screenshots/`](docs/screenshots/) (hướng dẫn chụp: [docs/screenshots/README.md](docs/screenshots/README.md)).
 
 ## Kiến trúc
 
@@ -166,7 +175,7 @@ Phiên bản thực tế (theo `pubspec.lock`):
 ## Chạy và build
 
 ```bash
-git clone https://github.com/lddatitvku0202/vku-expense-ocr.git   # repo dự kiến, xem docs/HANDOVER.md
+git clone https://github.com/lddatitvku0202/vku-expense-ocr.git
 cd vku-expense-ocr
 flutter pub get                 # tải gói
 flutter run                     # chạy bản debug trên thiết bị/emulator đã kết nối
@@ -232,20 +241,13 @@ flutter test integration_test/camera_smoke_test.dart -d <thiết bị>  # previe
 
 ## Hạn chế
 
-- **Chưa kiểm tra trên điện thoại Android thật**: độ nét và lấy nét camera, flash, độ khớp vùng cắt với khung, độ mượt animation, độ chính xác chạm trên màn thật, thời gian OCR thật. Danh sách việc cần kiểm tra nằm trong `CLAUDE.md` (mục "Việc còn nợ") và `docs/TEST_REPORT.md`.
+- **Chưa kiểm tra trên điện thoại Android thật**: độ nét và lấy nét camera, flash, độ khớp vùng cắt với khung, độ mượt animation, độ chính xác chạm trên màn thật, thời gian OCR thật. Checklist kiểm tra thủ công nằm trong `docs/TEST_REPORT.md`.
 - **Nhận dạng tên cửa hàng còn yếu** (7/19 trên hóa đơn thật): logo kiểu chữ đặc biệt bị OCR đọc sai, ảnh không có tên cửa hàng. Người dùng luôn kiểm tra lại ở màn Review.
 - OCR cũng mất dấu `/` trong ngày hoặc đọc sai số trên ảnh mờ; hóa đơn tổng 0 đ (giảm giá toàn bộ) không lưu được vì đề yêu cầu số tiền dương.
 - Chỉ nhận dạng **chữ Latin** (tiếng Việt có dấu được chuẩn hóa khi so khớp); không có model cho chữ Hán/Nhật/Hàn để APK không phình thêm.
 - APK release lớn (≈ 89 MiB) vì đóng gói model ML Kit và nhiều kiến trúc CPU.
 - Chỉ nhắm tới Android; thư mục iOS có cấu hình quyền nhưng chưa build/thử.
 - Biểu đồ cột không có trục giá trị; Lịch sử chưa có tìm kiếm.
-
-## Tải APK
-
-> 🔗 **Tải `app-release.apk`:** https://github.com/lddatitvku0202/vku-expense-ocr/releases/download/v1.0.0/app-release.apk
-> 📦 **Trang Release v1.0.0:** https://github.com/lddatitvku0202/vku-expense-ocr/releases/tag/v1.0.0
->
-> Cài đặt: cho phép "cài ứng dụng không rõ nguồn gốc" trên điện thoại, mở file APK. Lần đầu mở tab **Quét** app sẽ xin quyền camera.
 
 ## Công cụ phát triển (không cần để build hay chạy app)
 
@@ -260,9 +262,7 @@ flutter test integration_test/camera_smoke_test.dart -d <thiết bị>  # previe
 | File | Nội dung |
 |---|---|
 | [CHANGELOG.md](CHANGELOG.md) | Thay đổi theo phase |
-| [docs/REPORT.md](docs/REPORT.md) | Báo cáo kỹ thuật ngắn (nguồn của PDF 2–4 trang) |
-| [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | Kịch bản video demo 2–3 phút (điện thoại thật hoặc emulator + webcam) |
-| [docs/HANDOVER.md](docs/HANDOVER.md) | Việc tác giả cần tự làm: máy thật, ảnh, video, PDF, GitHub, Release, nộp bài |
+| [docs/REPORT.pdf](docs/REPORT.pdf) · [docs/REPORT.md](docs/REPORT.md) | Báo cáo kỹ thuật ngắn (PDF 2–4 trang và bản nguồn) |
 | [docs/PHASE_LOG.md](docs/PHASE_LOG.md) | Nhật ký học tập từng phase: đã làm gì, vì sao, khái niệm cần hiểu |
 | [docs/TEST_REPORT.md](docs/TEST_REPORT.md) | Kết quả kiểm thử, ca biên, checklist thủ công trên thiết bị |
 | [docs/REGEX_TABLE.md](docs/REGEX_TABLE.md) | Mọi regex của parser: mục đích, ví dụ khớp/không khớp, giới hạn |
