@@ -15,6 +15,7 @@
 | 8 | 514 | 514 / 0 | 93.1% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị**. `integration_test/app_flow_test.dart` đã viết, **chưa chạy** |
 | 9 | 582 | 582 / 0 | 94.2% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu) |
 | 10 | 706 | 706 / 0 | 94.5% dòng | ✔ | ✔ 0 issue | ✔ | ⚠ **Chưa test trên thiết bị** (không bật emulator theo yêu cầu) |
+| 11A | 713 | 713 / 0 | 94.5% dòng | ✔ | ✔ 0 issue | ✔ debug · ✔ release | 🟦 **release APK trên emulator** (1 lần, xem mục Phase 11A). ⚠ **Chưa test trên điện thoại thật** |
 
 ## Độ chính xác parser trên bộ fixture
 
@@ -403,6 +404,54 @@ Lần đầu thử đột biến thứ ba bằng cách đổi `baseline` thành 
 - Test "Thử lại" của Lịch sử tìm thẻ thứ tư (Fahasa) chưa được `ListView.builder` dựng ở 360×640 → kiểm tra thẻ mới nhất đang hiện.
 - `test/screens/dashboard_screen_test.dart` thiếu `settingsStoreProvider` vì Dashboard giờ đọc chế độ giao diện → thêm override, assertion giữ nguyên.
 
+## Phase 11A — Release
+
+### APK release đã ký
+
+| Mục | Kết quả |
+|---|---|
+| Lệnh | `flutter build apk --release` |
+| File | `build/app/outputs/flutter-apk/app-release.apk` (không commit) |
+| Kích thước | **93.590.266 byte = 89,3 MiB** (APK "fat": nhiều kiến trúc CPU + model ML Kit đóng gói) |
+| SHA-256 của APK | `119bda5f0f33ea38bf967334f295c500a0a539e876305ebeaa28219aa19e4bde` |
+| `apksigner verify --print-certs` | `Verifies`; 1 signer; chủ thể `CN=Le Duy Dat, OU=23SE1, O=VKU, L=Da Nang, C=VN`; RSA 2048; chỉ có chữ ký **v2** (đủ cho minSdk 24) |
+| Dấu vân tay SHA-256 của chứng chỉ | `59:AF:14:29:9B:CE:AF:98:56:E3:C1:9E:C9:8B:9F:AD:C1:FB:16:85:DB:C7:A0:0E:58:2A:D1:CC:C2:9B:D1:04` — **trùng** với `keytool -list -v` của keystore |
+| Repo sạch | `git status` không có keystore / `key.properties` / `.apk`; `git ls-files` không có file nào như vậy (`test/core/release_config_test.dart`) |
+| Test cấu hình release | 7 test: đọc `key.properties`, file bí mật bị `.gitignore`, không có mật khẩu trong gradle, `docs/SIGNING.md`, rule R8 |
+
+### Lỗi R8 tìm thấy khi build và chạy bản release
+
+| # | Hiện tượng | Nguyên nhân | Sửa |
+|---|---|---|---|
+| 1 | Build release dừng ở `minifyReleaseWithR8`: *Missing classes detected* (`ChineseTextRecognizerOptions`, `Devanagari…`, `Japanese…`, `Korean…`) | `google_mlkit_text_recognition` tham chiếu các script mà app cố ý không đóng gói (D-013) và không bao giờ gọi (luôn Latin) | `-dontwarn` cho bốn gói trong `android/app/proguard-rules.pro` (D-075) |
+| 2 | Build thứ hai dừng: AGP 9 không còn nhận `getDefaultProguardFile("proguard-android.txt")` | Thông báo của AGP | Dùng `proguard-android-optimize.txt` |
+| 3 | **Bản release cài được, giao diện chạy, nhưng OCR thất bại**: màn "Không đọc được hóa đơn". Bản debug không bị. Logcat: `ComponentDiscovery: Could not instantiate …CommonComponentRegistrar / VisionCommonRegistrar / TextRegistrar` (`NoSuchMethodException: <init> []`) rồi `NullPointerException` ở `InputImage.fromFilePath` | ML Kit nạp các registrar bằng reflection từ tên trong manifest; R8 thấy không ai gọi nên loại constructor. Đã giải mã stack bằng `retrace` và `mapping.txt` của chính bản build | `-keep class * implements com.google.firebase.components.ComponentRegistrar { <init>(); }` (D-076); build lại |
+
+Lỗi số 3 **không thể thấy bằng test trên máy tính hay bản debug**; chỉ lộ ra khi chạy APK release.
+
+### Release APK trên emulator
+
+Nhãn: **release APK trên emulator**. Ngày 10/10/2026. AVD `vku_test_api33` (Android 13, x86_64, **chỉ 2 GB RAM**), camera sau = webcam laptop (`webcam0`). Cài bằng `adb install` (gỡ bản debug cũ vì khác chữ ký), cấp quyền camera bằng `adb shell pm grant`. Một lần chạy cả luồng; riêng **bước OCR chạy lại một lần sau khi sửa lỗi R8 số 3**.
+
+| Bước | Kết quả |
+|---|---|
+| Mở app | ✔ Màn Tổng quan: tháng 10/2026, 0 đ, "Chưa có giao dịch trong tháng này", donut ở trạng thái rỗng, menu giao diện, nút "Thêm thủ công" |
+| Thêm giao dịch thủ công | ✔ Tên "Quan com Test"; Next chuyển sang ô số tiền, bàn phím số; gõ 1250000 → hiện **1.250.000**; chọn "Ăn uống"; Lưu. Dashboard: **1.250.000 đ, 1 giao dịch**, donut đầy màu Ăn uống, tổng ở giữa donut (SQLite thật) |
+| Tab Quét (preview webcam) | ✔ Camera mở không lỗi (`Camera open completed … errorCode=null`), preview hiển thị trong khung căn chỉnh, có nút chụp, nút thư viện, nút flash. *Không bấm nút chụp:* webcam đang hướng vào người, chỉ kiểm tra preview |
+| Chọn ảnh hóa đơn từ thư viện | ✔ Bộ chọn tệp mở; chọn ảnh WinMart (nhấn giữ → SELECT) |
+| Màn chỉnh vùng cắt (`image_cropper`) | ✔ `UCropActivity` ("Chỉnh vùng cắt") mở được trong bản release; xác nhận cắt |
+| OCR thật, lần 1 (trước khi sửa R8) | ✘ "Không đọc được hóa đơn" — lỗi số 3 ở trên |
+| OCR thật, lần 2 (sau khi sửa) | ✔ Cùng ảnh → màn Review: cửa hàng **WinMart**, tổng **73.300** (hóa đơn in "Tổng tiền thanh toán 73,300"), ngày **14/04/2025**, danh mục gợi ý **Ăn uống**; "Thời gian OCR: **11319 ms** · 21 dòng" |
+| Lưu từ Review, xem biểu đồ | ✔ Lưu thành công; Dashboard lùi về tháng 4/2025: **73.300 đ, 1 giao dịch**, donut cập nhật |
+| Dữ liệu bền | ✔ Giao dịch thủ công vẫn còn sau khi cài đè APK (`adb install -r`) |
+| Logcat sau khi sửa (3.722 dòng, cả phiên) | `FATAL EXCEPTION`: **0** · lỗi `AndroidRuntime`: **0** · buffer `crash`: **0 dòng** · `E MethodChannel`: **0** · "Could not instantiate": **0** · tiến trình app còn sống |
+
+**Chưa kiểm tra trong lần này (không được coi là đã test):** bấm nút chụp, flash, chạm lấy nét, từ chối/cấp lại quyền, biểu đồ cột tuần, màn Lịch sử (thumbnail, vuốt xóa, Undo), chế độ tối, màn sửa, chế độ máy bay, độ mượt animation, thời gian OCR thật (11,3 s là số trên emulator 2 GB RAM, **không đại diện** cho điện thoại).
+
+**Ghi chú môi trường:** emulator 2 GB RAM, bộ nhớ đã swap nên System UI nhiều lần báo "isn't responding" và chặn cửa sổ ứng dụng; xử lý bằng bấm "Wait" và khởi động lại System UI (`adb shell am crash com.android.systemui`). Ứng dụng không bị ảnh hưởng. Ảnh chụp màn hình có hình người (webcam) nên chỉ lưu ngoài repo; ảnh hóa đơn thử được đẩy vào emulator rồi xóa; emulator đã tắt.
+
+**Phát hiện thêm (không phải lỗi build):** manifest release có quyền `INTERNET` + `ACCESS_NETWORK_STATE` do `transport-backend-cct` (telemetry ML Kit) kéo vào, trong khi NFR-1 yêu cầu không gọi mạng. Mã trong `lib/` không có đoạn gọi mạng. Ghi là độ lệch **B-002** trong `CLAUDE.md`, chờ quyết định.
+
 ## Checklist test thủ công trên thiết bị
 
 > Đánh dấu `[x]` khi bạn đã tự kiểm tra trên máy Android thật. Ghi tên máy và phiên bản Android.
@@ -537,3 +586,16 @@ Thiết bị: `__________` · Android `____`
 - [ ] Xoay ngang từng màn: không overflow.
 - [ ] Ngăn ứng dụng của điện thoại hiển thị tên **"VKU Expense OCR"** dưới biểu tượng.
 - [ ] Ngắt dữ liệu rồi bật chế độ máy bay: app vẫn dùng bình thường (NFR-1).
+
+### Phase 11A — Bản release trên điện thoại thật
+
+Thiết bị: `__________` · Android `____`
+
+- [ ] Cài `app-release.apk` (đã ký) lên điện thoại; app mở bình thường, tên dưới biểu tượng là "VKU Expense OCR".
+- [ ] **Quét một hóa đơn thật bằng camera** (nút chụp) → màn chỉnh vùng cắt → màn Review có dữ liệu đọc được. *(Lỗi R8 từng làm bước OCR thất bại ở bản release; cần xác nhận trên máy thật.)*
+- [ ] Chọn một ảnh hóa đơn từ thư viện → OCR đọc được.
+- [ ] Ghi lại **thời gian OCR thật** (ms) ở mục "Xem văn bản OCR gốc" để đưa vào báo cáo.
+- [ ] Lưu → Dashboard và Lịch sử cập nhật; thumbnail hiện ở Lịch sử; vuốt xóa rồi Undo.
+- [ ] Bật chế độ máy bay → quét và lưu vẫn hoạt động (NFR-1).
+- [ ] Đóng hẳn app, mở lại → dữ liệu vẫn còn.
+- [ ] Các checklist Phase 6–10 phía trên (camera, flash, lấy nét, biểu đồ, giao diện tối).

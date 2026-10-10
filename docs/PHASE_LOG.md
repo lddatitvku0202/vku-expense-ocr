@@ -1205,3 +1205,103 @@ d673162 perf(core): compile the amount regexes once
 fd0aa1f test(ui): add failing tests for theme menu, contrast, layout and states
 docs(phase-10): record phase 10 results   (commit cuối của phase)
 ```
+
+---
+
+## Phase 11A — Release
+
+**Trạng thái:** ✅ hoàn tất phần 11A (merge vào `main`, **chưa** tag `v1.0.0`). Phần 11B (báo cáo PDF, kịch bản demo, ảnh chụp, link APK, thử trên điện thoại thật) còn lại.
+
+### Mục tiêu phase
+
+Có một **APK release đã ký** cài được lên điện thoại, kiểm tra nó thật sự chạy (không chỉ build được), và hoàn thiện `README.md` và `CHANGELOG.md`.
+
+FR/NFR liên quan: NFR-6 (APK release đã ký), NFR-5, Deliverables (GitHub sạch, README).
+
+### Lịch sử Git
+
+| # | Commit | Ghi chú |
+|---|---|---|
+| 1 | `test(release): add failing tests for the release signing set-up` | 🔴 test đọc `key.properties`, file bí mật bị bỏ qua, không mật khẩu trong gradle |
+| 2 | `build(android): sign the release APK with a keystore kept outside the repo` | 🟢 + `docs/SIGNING.md` |
+| 3 | `fix(android): let R8 build the release APK without the unused ML Kit scripts` | build release hết dừng ở R8 |
+| 4 | `fix(android): keep the ML Kit component registrars in the release build` | **sửa lỗi OCR chỉ có ở bản release** |
+| 5, 6 | `docs(...)` | README, CHANGELOG, tài liệu |
+
+### Đã làm gì
+
+| Việc | Chi tiết |
+|---|---|
+| Keystore | `keytool` tạo `%USERPROFILE%\vku-keys\upload-keystore.jks` (PKCS12, RSA 2048, alias `upload`) **ngoài repo**; mật khẩu ngẫu nhiên 28 ký tự chỉ có trong `android/key.properties` (đã `.gitignore`). |
+| Cấu hình gradle | `build.gradle.kts` đọc `key.properties`; thiếu thì ký bằng khóa debug kèm cảnh báo (D-073). |
+| R8 | Bật tường minh, thêm `android/app/proguard-rules.pro` với hai nhóm rule (D-075, D-076). |
+| Xác minh | `apksigner verify --print-certs` + so dấu vân tay với `keytool`. |
+| Chạy thử | APK release trên emulator, một lần cho cả luồng. |
+| Tài liệu | `docs/SIGNING.md`, `README.md`, `CHANGELOG.md`, `docs/screenshots/README.md`. |
+
+### Bài học lớn của phase: "build được" chưa có nghĩa là "chạy đúng"
+
+Bản release **cài được, mở được, giao diện đúng, nhưng OCR không đọc được**, trong khi bản debug đọc tốt. 713 test trên máy tính đều xanh và không thể thấy lỗi này. Chuỗi điều tra:
+
+1. Màn hình báo "Không đọc được hóa đơn" nhưng app không crash.
+2. `adb logcat`: `MethodChannel#google_mlkit_text_recognizer: NullPointerException … InputImage.fromFilePath`.
+3. Tên lớp trong stack bị R8 làm rối (`r53.<init>`). Giải mã bằng `retrace` với `mapping.txt` của đúng bản build đó → thấy `zzmj.<init>` trong `mlkit_vision_common`.
+4. Dấu vết sớm hơn ở log khởi động: `ComponentDiscovery: Could not instantiate …CommonComponentRegistrar` với `NoSuchMethodException: <init> []`.
+5. Kết luận: R8 loại constructor của các lớp chỉ được gọi bằng reflection → thêm một keep rule.
+6. Build lại, chạy lại **cùng ảnh**: đọc đúng WinMart, 73.300, 14/04/2025.
+
+### Vì sao làm vậy
+
+- **Ký ngoài repo:** keystore và mật khẩu mà lộ lên GitHub thì ai cũng có thể ký app giả mạo với chữ ký của bạn. Vì vậy `.gitignore` + một test kiểm tra không file nào bị theo dõi.
+- **Fallback khóa debug khi thiếu keystore:** giảng viên clone repo vẫn build được. Đổi lại phải cảnh báo rõ để không phát hành nhầm (có mục kiểm tra trong `docs/SIGNING.md`).
+- **Không tắt R8 để "cho chạy":** tắt minify sẽ hết lỗi nhưng đó là hạ cấp để né lỗi (brief 2.1). Sửa bằng keep rule đúng chỗ, giữ được thu nhỏ mã.
+- **Không tự gỡ quyền `INTERNET`:** NFR-1 là yêu cầu đóng băng; thay đổi có kèm rủi ro (ML Kit) cần kiểm chứng lại nên để người quyết định (B-002).
+- **Lựa chọn đã cân nhắc:** `-keep class com.google.mlkit.** { *; }` sẽ giải quyết lỗi nhưng giữ cả thư viện, APK to hơn và che mất nguyên nhân thật. Chỉ giữ constructor của các registrar là đủ.
+
+### Khái niệm cần hiểu
+
+- **Keystore và chữ ký APK:** keystore chứa khóa riêng; mỗi APK được ký bằng khóa đó và Android dùng chữ ký để biết "bản cập nhật này cùng tác giả với bản đã cài". Mất keystore thì không cập nhật đè được bản đã phát hành.
+- **R8 (minify, shrink, obfuscate):** công cụ của Android thu nhỏ mã: loại lớp/phương thức không ai gọi, đổi tên cho ngắn. Nó phân tích bằng cách theo dõi lời gọi trong mã. Với **reflection** (gọi theo tên chuỗi) nó không thấy lời gọi nên có thể loại nhầm; keep rule bảo R8 "giữ lại phần này".
+- **`-dontwarn`:** bảo R8 đừng báo lỗi vì thiếu lớp này (an toàn khi mã tham chiếu tới lớp đó không bao giờ chạy).
+- **`mapping.txt` và `retrace`:** bảng ánh xạ tên gốc ↔ tên sau khi làm rối. Có nó mới đọc được stack trace của bản release.
+- **Chữ ký v1/v2:** v2 ký cả file APK, bắt buộc từ Android 7.0. App có minSdk 24 nên chỉ cần v2.
+
+### Kết quả kiểm thử
+
+| Bước | Kết quả |
+|---|---|
+| `dart format --set-exit-if-changed lib test integration_test tool` | ✔ 0 thay đổi |
+| `flutter analyze` | ✔ No issues found |
+| `flutter test` | ✔ **713/713** (706 cũ + 7 test cấu hình release) |
+| Độ phủ | **94,5%** dòng |
+| `flutter build apk --release` | ✔ 89,3 MiB; `apksigner` khớp keystore |
+| Release trên emulator | ✔ sau khi sửa R8: thêm thủ công, preview webcam, thư viện → `image_cropper` → OCR đọc đúng, lưu, biểu đồ cập nhật; logcat 0 lỗi nghiêm trọng. Chi tiết: `docs/TEST_REPORT.md` |
+| Điện thoại thật | ⚠ **Chưa** |
+
+### Hạn chế đã biết
+
+- Chưa chạy trên điện thoại thật; chưa bấm nút chụp, flash, lấy nét, Lịch sử, chế độ tối trên bản release.
+- Emulator chỉ có 2 GB RAM nên System UI treo nhiều lần; thời gian OCR 11,3 s không đại diện cho máy thật.
+- Manifest release có quyền `INTERNET` do ML Kit (B-002), chờ quyết định.
+- APK "fat" 89,3 MiB; có thể giảm bằng `--split-per-abi` nếu cần (chưa đo).
+
+### Cách tự kiểm tra bằng tay
+
+1. Build và xác minh:
+   ```powershell
+   flutter build apk --release
+   & "$env:ANDROID_HOME\build-tools\37.0.0\apksigner.bat" verify --print-certs build\app\outputs\flutter-apk\app-release.apk
+   ```
+2. Thử xem lỗi R8 trông thế nào: tạm xóa khối `-keep class * implements ...ComponentRegistrar` trong `android/app/proguard-rules.pro`, build release, cài và quét một ảnh: OCR sẽ báo "Không đọc được hóa đơn". Hoàn tác bằng `git checkout -- android/app/proguard-rules.pro`.
+3. Cài lên điện thoại thật và làm checklist "Phase 11A" trong `docs/TEST_REPORT.md`.
+
+### Danh sách commit
+
+```
+bc9fbe6 docs: complete the README and add the changelog and screenshot guide
+4431def fix(android): keep the ML Kit component registrars in the release build
+f49704b fix(android): let R8 build the release APK without the unused ML Kit scripts
+dbeb592 build(android): sign the release APK with a keystore kept outside the repo
+1a6508b test(release): add failing tests for the release signing set-up
+docs(phase-11a): record phase 11A results   (commit cuối của phase)
+```
