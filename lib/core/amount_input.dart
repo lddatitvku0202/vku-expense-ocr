@@ -8,6 +8,7 @@ abstract final class AmountInput {
   static final RegExp _currency = RegExp(r'vn[dđ]|đ', caseSensitive: false);
   static final RegExp _space = RegExp(r'\s+');
   static final RegExp _digitsOnly = RegExp(r'^\d+$');
+  static final RegExp _separators = RegExp('[.,]');
 
   /// Grouped thousands with an optional 1–2 digit decimal part written
   /// with the *other* separator, e.g. "150.000,00" or "123,100.00" (POS
@@ -26,7 +27,7 @@ abstract final class AmountInput {
     if (_digitsOnly.hasMatch(cleaned)) return int.tryParse(cleaned);
     final match = _grouped.firstMatch(cleaned);
     if (match == null) return null;
-    return int.tryParse(match.group(1)!.replaceAll(RegExp('[.,]'), ''));
+    return int.tryParse(match.group(1)!.replaceAll(_separators, ''));
   }
 
   /// Thousands separated by dots, Vietnamese style: 1250000 → "1.250.000".
@@ -52,6 +53,7 @@ class VndAmountInputFormatter extends TextInputFormatter {
 
   static final RegExp _nonDigit = RegExp(r'\D');
   static final RegExp _typed = RegExp(r'^[\d.]*$');
+  static final RegExp _leadingZeros = RegExp('^0+');
 
   @override
   TextEditingValue formatEditUpdate(
@@ -91,7 +93,7 @@ class VndAmountInputFormatter extends TextInputFormatter {
     int? digitsBeforeCursor,
     TextEditingValue oldValue,
   ) {
-    var trimmed = digits.replaceFirst(RegExp('^0+'), '');
+    var trimmed = digits.replaceFirst(_leadingZeros, '');
     final removedZeros = digits.length - trimmed.length;
     if (trimmed.isEmpty && digits.isNotEmpty) trimmed = '0';
     if (trimmed.length > AmountInput.maxDigits) return oldValue;

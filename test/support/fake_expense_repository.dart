@@ -25,6 +25,10 @@ class FakeExpenseRepository implements ExpenseRepository {
   /// Makes every [getAll] throw while set.
   Exception? failGetAll;
 
+  /// When set, [getAll] waits for it first (a loading state that can be
+  /// released by the test).
+  Future<void>? getAllGate;
+
   int insertCalls = 0;
   int updateCalls = 0;
   int deleteCalls = 0;
@@ -44,6 +48,7 @@ class FakeExpenseRepository implements ExpenseRepository {
 
   @override
   Future<List<Expense>> getAll() async {
+    if (getAllGate case final gate?) await gate;
     if (failGetAll case final error?) throw error;
     return _sorted(_rows.values);
   }
