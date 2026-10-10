@@ -2,7 +2,19 @@
 
 Thay đổi theo phase. Mỗi phase là một nhánh `phase/<số>-<tên>` được merge vào `main` bằng `--no-ff` và gắn tag `phase-<số>`. Chi tiết (đã làm gì, vì sao, kết quả kiểm thử) nằm trong [docs/PHASE_LOG.md](docs/PHASE_LOG.md); số liệu kiểm thử trong [docs/TEST_REPORT.md](docs/TEST_REPORT.md).
 
-## [Chưa phát hành] — Phase 11A: Release (nhánh `phase/11a-release`)
+## [1.0.0] — Phase 11B: Báo cáo và hoàn tất (2026-10-10)
+
+### Thêm
+- `docs/REPORT.md`: bản nguồn báo cáo kỹ thuật ngắn theo template của khoa (trạng thái FR/NFR trung thực, độ chính xác OCR lần đầu và sau sửa, bảng "cố ý làm hỏng → test đỏ", các lỗi thật test đã bắt, bằng chứng không có quyền mạng, hạn chế). Xuất ra 3 trang, chữ 10pt.
+- `tool/report/md_to_pdf.py`: xuất Markdown thành PDF bằng Microsoft Edge (máy không có pandoc), in số trang và cảnh báo nếu ngoài 2–4 trang.
+- `docs/DEMO_SCRIPT.md`: kịch bản video 2–3 phút theo cảnh, hai phương án quay (điện thoại thật / emulator + webcam), dữ liệu mẫu, lưu ý quyền riêng tư.
+- `docs/HANDOVER.md`: danh sách việc tác giả tự làm theo thứ tự ưu tiên (sao lưu keystore, kiểm tra trên điện thoại thật, đo OCR, ảnh, video, PDF, GitHub, Release, nộp bài).
+
+### Rà soát cuối
+- Quét toàn bộ lịch sử git (111 commit): không có keystore, `.apk`, ảnh hóa đơn, `ground_truth.csv`, mật khẩu hay khóa riêng.
+- Đối chiếu README, REPORT, CLAUDE.md, TEST_REPORT: số liệu và trạng thái xác minh thống nhất.
+
+## Phase 11A — Release (2026-10-10, nhánh `phase/11a-release`)
 
 ### Thêm
 - Ký APK release bằng keystore riêng nằm ngoài repo, cấu hình đọc từ `android/key.properties` (đã `.gitignore`); `docs/SIGNING.md`.
