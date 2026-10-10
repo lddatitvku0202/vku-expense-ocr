@@ -7,6 +7,10 @@ import 'package:vku_expense_ocr/models/expense_category.dart';
 import 'package:vku_expense_ocr/screens/dashboard/dashboard_screen.dart';
 import 'package:vku_expense_ocr/state/expense_providers.dart';
 import 'package:vku_expense_ocr/state/storage_providers.dart';
+import 'package:vku_expense_ocr/widgets/charts/donut_chart.dart';
+import 'package:vku_expense_ocr/widgets/charts/donut_chart_painter.dart';
+import 'package:vku_expense_ocr/widgets/charts/weekly_bar_chart.dart';
+import 'package:vku_expense_ocr/widgets/charts/weekly_bar_painter.dart';
 
 import '../support/fake_expense_repository.dart';
 import '../support/fake_image_storage.dart';
@@ -37,10 +41,13 @@ void main() {
   Future<ProviderContainer> pumpDashboard(
     WidgetTester tester, {
     Size physicalSize = const Size(1080, 2400),
+    double textScale = 1,
   }) async {
     tester.view
       ..physicalSize = physicalSize
       ..devicePixelRatio = 3;
+    tester.platformDispatcher.textScaleFactorTestValue = textScale;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     addTearDown(tester.view.reset);
     final router = GoRouter(
       routes: [
@@ -137,6 +144,91 @@ void main() {
     expect(weekly.left, greaterThan(donut.right - 1));
     expect(tester.takeException(), isNull);
   });
+
+  DonutChartPainter donut(WidgetTester tester) =>
+      tester.widget<CustomPaint>(find.byKey(DonutChart.paintKey)).painter!
+          as DonutChartPainter;
+  WeeklyBarPainter bars(WidgetTester tester) =>
+      tester.widget<CustomPaint>(find.byKey(WeeklyBarChart.paintKey)).painter!
+          as WeeklyBarPainter;
+
+  testWidgets('the charts show the selected month and week (FR-6.1, FR-6.3)', (
+    tester,
+  ) async {
+    await pumpDashboard(tester);
+
+    expect(donut(tester).totalLabel, '1.250.000 đ');
+    expect(donut(tester).segments[0].fraction, 1, reason: 'all food');
+    // Week of 05/10: 150.000 on Fri 02/10 is the week before.
+    expect(bars(tester).values, [0, 0, 0, 0, 1100000, 0, 0]);
+    expect(bars(tester).todayIndex, 4);
+  });
+
+  testWidgets(
+    'adding, editing and deleting update both charts and replay them',
+    (tester) async {
+      final c = await pumpDashboard(tester);
+      final notifier = c.read(expenseListProvider.notifier);
+
+      final added = await notifier.add(
+        Expense(
+          merchant: 'Fahasa',
+          amount: 250000,
+          date: DateTime(2026, 10, 6),
+          category: ExpenseCategory.study,
+          createdAt: _now,
+          updatedAt: _now,
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(donut(tester).progress, lessThan(1), reason: 'donut replays');
+      expect(bars(tester).progress, lessThan(1), reason: 'bars replay');
+      await tester.pumpAndSettle();
+      expect(donut(tester).segments[1].fraction, closeTo(0.1667, 1e-3));
+      expect(bars(tester).values[1], 250000);
+
+      await notifier.edit(added.copyWith(amount: 50000));
+      await tester.pumpAndSettle();
+      expect(bars(tester).values[1], 50000);
+
+      await notifier.remove(added.id!);
+      await tester.pump(ExpenseListNotifier.undoWindow);
+      await tester.pumpAndSettle();
+      expect(bars(tester).values[1], 0);
+      expect(donut(tester).segments[1].fraction, 0);
+    },
+  );
+
+  testWidgets('week buttons move the weekly chart, not beyond this week', (
+    tester,
+  ) async {
+    await pumpDashboard(tester);
+    expect(
+      tester.widget<IconButton>(find.byKey(WeeklyBarChart.nextKey)).onPressed,
+      isNull,
+    );
+
+    await tester.ensureVisible(find.byKey(WeeklyBarChart.previousKey));
+    await tester.tap(find.byKey(WeeklyBarChart.previousKey));
+    await tester.pumpAndSettle();
+    expect(find.text('28/09 – 04/10/2026'), findsOneWidget);
+    expect(bars(tester).values, [0, 0, 45000, 0, 150000, 0, 0]);
+  });
+
+  for (final (name, size) in [
+    ('320 dp portrait', const Size(960, 1920)),
+    ('landscape', const Size(2400, 1080)),
+  ]) {
+    testWidgets('$name with 1.5x system text: no overflow (FR-8.2)', (
+      tester,
+    ) async {
+      await pumpDashboard(tester, physicalSize: size, textScale: 1.5);
+      expect(tester.takeException(), isNull);
+      await tester.drag(find.byType(Scrollable).first, const Offset(0, -2000));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('"Thêm thủ công" opens the Review form without a photo', (
     tester,
