@@ -310,10 +310,10 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] Widget test: hiển thị dữ liệu parse sẵn; trường `missing` được đánh dấu; validator chặn số tiền ≤ 0, tên rỗng, ngày tương lai, chưa chọn danh mục; submit hợp lệ gọi `add` (repository giả); chế độ sửa gọi `update`.
 
 ### Phase 8 — Lịch sử & Dashboard (khung)
-- [ ] `widgets/expense_summary_card.dart` (bài lab Week 7, có thumbnail), `screens/history/` (ListView.builder, lọc danh mục, Dismissible + Undo, chạm để sửa `/expense/:id`), Dashboard hiển thị tổng tháng và các vị trí dành cho biểu đồ.
-- [ ] FAB hoặc nút "Thêm thủ công".
-- [ ] Widget test: danh sách hiển thị đúng thứ tự; vuốt xóa → biến mất → Undo → quay lại; lọc danh mục; trạng thái rỗng.
-- [ ] `integration_test/app_flow_test.dart`: luồng thêm thủ công → xuất hiện trong lịch sử → tổng trên dashboard đổi (chạy khi có thiết bị).
+- [x] `widgets/expense_summary_card.dart` (bài lab Week 7, có thumbnail), `screens/history/` (ListView.builder, lọc danh mục, Dismissible + Undo, chạm để sửa `/expense/:id`), Dashboard hiển thị tổng tháng và các vị trí dành cho biểu đồ.
+- [x] FAB hoặc nút "Thêm thủ công".
+- [x] Widget test: danh sách hiển thị đúng thứ tự; vuốt xóa → biến mất → Undo → quay lại; lọc danh mục; trạng thái rỗng.
+- [ ] `integration_test/app_flow_test.dart`: luồng thêm thủ công → xuất hiện trong lịch sử → tổng trên dashboard đổi (chạy khi có thiết bị). → **đã viết, CHƯA chạy** (chưa có thiết bị; không bật emulator ở Phase 8), xem Việc còn nợ.
 
 ### Phase 9 — Biểu đồ CustomPainter
 - [ ] `widgets/charts/donut_chart_painter.dart` + `donut_chart.dart` (StatefulWidget, `SingleTickerProviderStateMixin`, `AnimationController` + `CurvedAnimation`, chạy lại khi dữ liệu đổi trong `didUpdateWidget`, hit-test chạm, legend).
@@ -383,9 +383,9 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [ ] FR-6.4 — bằng chứng: _chưa có_
 - [ ] FR-6.5 — một phần: `categoryTotalsProvider`, `weeklyTotalsProvider`, `monthTotalProvider` dẫn xuất từ `expenseListProvider`, cập nhật khi thêm/sửa/xóa/undo (`expense_list_notifier_test.dart`); biểu đồ + animation chạy lại → Phase 9
 - [ ] FR-6.6 — bằng chứng: _chưa có_
-- [ ] FR-7.1 — một phần: `StatefulShellRoute.indexedStack` + `NavigationBar` 3 tab (`test/app_router_test.dart`); nội dung Dashboard → Phase 8–9
+- [ ] FR-7.1 — một phần: `StatefulShellRoute.indexedStack` + `NavigationBar` 3 tab (`test/app_router_test.dart`); Dashboard có tổng tháng + nút chuyển tháng (`test/screens/dashboard_screen_test.dart`); donut và cột tuần → Phase 9
 - [x] FR-7.2 — bằng chứng: `lib/core/router.dart` (`/expense/:id`, `/review` + `extra`), `test/app_router_test.dart` (path param, extra, id sai → trang lỗi)
-- [ ] FR-7.3 — bằng chứng: _chưa có_
+- [x] FR-7.3 — bằng chứng: `HistoryScreen` (`ListView.builder`, `ExpenseSummaryCard` theo lab Week 7 có thumbnail, `Dismissible` + `ValueKey(id)`, lọc theo danh mục) (`test/screens/history_screen_test.dart`, `test/widgets/expense_summary_card_test.dart`). Chưa thử trên máy thật
 - [ ] FR-8.1 — một phần: `AppTheme` M3 light/dark từ seed `0xFF2C4570` (`test/core/app_theme_test.dart`); `themeModeProvider` lưu/đọc lại qua `shared_preferences`, `MaterialApp.themeMode` theo nó (`test/state/theme_mode_provider_test.dart`, `test/app_theme_mode_test.dart`); nút chuyển → Phase 10
 - [ ] FR-8.2 — bằng chứng: _chưa có_
 - [ ] FR-8.3 — một phần: `Formatters.vnd` / `Formatters.date` (`test/core/formatters_test.dart`), `SafeArea` ở các màn hiện có; áp dụng toàn app → Phase 7–10
@@ -411,7 +411,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 | 5 — State management | ✅ Xong | tag `phase-5` | format ✔ · analyze 0 · test 383/383 · coverage 95.0% · build debug ✔ | Test bằng `ProviderContainer` + repository/storage giả, `fakeAsync` cho Undo; **chưa chạy trên thiết bị** (không bật emulator theo yêu cầu) |
 | 6 — Camera capture | ✅ Xong (FR-1: code + test máy tính xong, CHƯA xác minh trên điện thoại thật) | tag `phase-6` | format ✔ · analyze 0 · test 438/438 · coverage 91.5% · build debug ✔ · smoke test **emulator + webcam** 1 lần pass (preview → chụp → cắt → OCR → /review) | `image_cropper`, flash, lấy nét, quyền, vòng đời chưa thử trên máy thật; xem checklist trong Việc còn nợ |
 | 7 — Review & Verification | ✅ Xong | tag `phase-7` | format ✔ · analyze 0 · test 489/489 · coverage 92.8% · build debug ✔ | Widget test trên máy tính; **chưa thử trên thiết bị** (không bật emulator theo yêu cầu). Màn debug OCR Phase 3 đã gỡ |
-| 8 — Lịch sử & Dashboard | ⬜ Chưa bắt đầu | — | — | |
+| 8 — Lịch sử & Dashboard | ✅ Xong | tag `phase-8` | format ✔ · analyze 0 · test 514/514 · coverage 93.1% · build debug ✔ | Widget test trên máy tính; `integration_test/app_flow_test.dart` đã viết, **chưa chạy** (chưa có thiết bị). Chưa thử trên máy thật |
 | 9 — Biểu đồ CustomPainter | ⬜ Chưa bắt đầu | — | — | |
 | 10 — UI/UX polish | ⬜ Chưa bắt đầu | — | — | |
 | 11 — Release & Deliverables | ⬜ Chưa bắt đầu | — | — | |
@@ -440,7 +440,8 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
   - [ ] Chuyển app rồi quay lại (và đổi tab rồi quay lại): camera vẫn chạy, không màn đen, không crash.
   - [ ] Chạy `flutter test integration_test/camera_smoke_test.dart -d <máy>` với một hóa đơn thật trước camera.
 - [ ] **Phase 7 — màn Review trên điện thoại thật:** bàn phím số cho ô số tiền và nút Next chuyển ô; form cuộn được khi bàn phím mở; bộ chọn ngày hiện tiếng Việt và không cho chọn ngày tương lai; phóng to ảnh hóa đơn; lưu thật (ảnh + thumbnail vào `receipts/`, DB); nút back Android hỏi trước khi bỏ thay đổi.
-- [ ] Checklist test thủ công trên thiết bị của Phase 0–7 trong `docs/TEST_REPORT.md`.
+- [ ] **Phase 8:** chạy `flutter test integration_test/app_flow_test.dart -d <máy>` (thêm thủ công → Lịch sử → tổng Dashboard → vuốt xóa → Undo) khi có thiết bị.
+- [ ] Checklist test thủ công trên thiết bị của Phase 0–8 trong `docs/TEST_REPORT.md`.
 
 ---
 
@@ -504,6 +505,11 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 | D-054 | Giao dịch mới lưu ngày đã chọn lúc 00:00; khi sửa mà **không đổi ngày** thì giữ nguyên giờ cũ | Biểu đồ và tổng chỉ cần ngày. Giữ giờ khi sửa để thứ tự trong Lịch sử không bị xáo trộn. |
 | D-055 | Gỡ màn debug OCR (Phase 3) và route `/debug/ocr`; `OcrTextPanel` dùng lại trong Review, thời gian OCR có thể null | Brief yêu cầu không để code chết. Chế độ sửa không có thời gian OCR (DB không lưu), chỉ hiện số dòng. Test của màn debug bị xóa cùng màn; nội dung tương đương được test ở màn Review và màn camera. |
 | D-056 | Hủy: `PopScope(canPop: !_dirty)` + hộp thoại "Bỏ thay đổi?"; chưa sửa gì thì quay về ngay | Giữ cử chỉ back dự đoán của Android khi form chưa sửa. FR-4.8 chỉ yêu cầu hỏi khi đã sửa. |
+| D-057 | SnackBar Undo dùng `duration: ExpenseListNotifier.undoWindow` (một hằng số duy nhất) và gọi `holdForUndo(id)`; SnackBar đóng mà không bấm Undo → `commitDeletion` | Hẹn giờ của notifier bắt đầu lúc xóa, còn SnackBar chỉ bắt đầu đếm sau khi trượt vào (~250 ms). Nếu không giữ, ảnh có thể bị xóa trong khi nút "Hoàn tác" vẫn hiện. Hẹn giờ 5 s của notifier vẫn là lưới an toàn khi không có giao diện giữ. |
+| D-058 | `SnackBar(persist: false)` | Trong Flutter 3.47, SnackBar có nút hành động mặc định `persist = true` (không tự đóng); khi đó lần xóa không bao giờ được chốt. Test "hết thời gian thì xóa hẳn" phát hiện điều này. |
+| D-059 | Xóa liên tiếp: SnackBar mới thay SnackBar cũ, lần xóa trước được chốt ngay (kể cả ảnh); Undo chỉ áp dụng cho lần xóa mới nhất | Chỉ một SnackBar hiện được một lúc; giữ lần xóa cũ khi không còn nút Undo cho nó sẽ để lại ảnh không ai dọn. |
+| D-060 | Chip lọc Lịch sử dùng `Wrap`, không cuộn ngang | Sáu chip trên màn 360 dp: cuộn ngang sẽ giấu các chip cuối (test chạm hụt cũng vì vậy). |
+| D-061 | Dashboard không cho chuyển sang tháng tương lai; `integration_test/app_flow_test.dart` dùng file DB và thư mục ảnh riêng | Tháng tương lai không thể có chi tiêu. Test luồng chạy trên máy thật không được đụng dữ liệu của người dùng. |
 
 ---
 
