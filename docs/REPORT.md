@@ -52,7 +52,7 @@ Chú thích: ✅ hoàn thành, có test tự động trên máy tính · 🟨 co
 |---|---|---|---|
 | ![Tổng quan sáng](screenshots/dashboard_light.png) | ![Tổng quan tối](screenshots/dashboard_dark.png) | ![Chỉnh vùng cắt](screenshots/scan.png) | ![Review](screenshots/review.png) |
 
-*Ảnh chụp trên **emulator** Android 13 (camera là webcam laptop), **không phải điện thoại thật**. Tổng quan: tổng tháng, donut theo danh mục (6 giao dịch mẫu); giao diện sáng và tối. Review: ô số tiền và ngày có icon + chú thích "Không chắc chắn — hãy kiểm tra lại", "Không đọc được ngày — đã điền tạm hôm nay". Thêm ảnh biểu đồ cột tuần, Lịch sử, văn bản OCR gốc: `docs/screenshots/`.*
+*Ảnh chụp trên **emulator** Android 13 (camera là webcam laptop), **không phải điện thoại thật**. Tổng quan: tổng tháng, donut theo danh mục (6 giao dịch mẫu); giao diện sáng và tối. Review: ô số tiền và ngày có icon + chú thích "Không chắc chắn — hãy kiểm tra lại", "Không đọc được ngày — đã điền tạm hôm nay". Thêm ảnh donut khi chạm một lát (`donut_selected.png`), biểu đồ cột tuần, Lịch sử, văn bản OCR gốc: `docs/screenshots/`.*
 
 **Độ chính xác trên hóa đơn thật.** Bộ **22 ảnh hóa đơn sưu tầm** (19 `main` + 3 `edge`), nằm ngoài repo; đáp án khóa bằng SHA-256 trước khi chấm; chạy ML Kit thật trên **emulator** (không phải điện thoại).
 

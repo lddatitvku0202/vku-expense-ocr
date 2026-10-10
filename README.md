@@ -95,6 +95,11 @@ Chú thích: ✅ có test tự động trên máy tính · 🟦 đã chạy th�
 | ![Chỉnh vùng cắt](docs/screenshots/scan.png) | ![Chỉnh vùng cắt gần hơn](docs/screenshots/cutpicturescan.png) | ![Review cảnh báo](docs/screenshots/review.png) | ![Review danh mục và OCR](docs/screenshots/review2.png) |
 | Sau khi chụp, app tự cắt theo khung và cho chỉnh tay (`image_cropper`) | Ảnh hóa đơn dùng thử để đo OCR (ảnh mờ, webcam) | Ô số tiền và ngày được đánh dấu bằng icon + chú thích, không chỉ bằng màu | Danh mục chỉ là gợi ý; "Xem văn bản OCR gốc" có thời gian OCR (8417 ms trên emulator) |
 
+| Donut: chạm một lát |
+|---|
+| ![Donut chạm một lát](docs/screenshots/donut_selected.png) |
+| Lát "Ăn uống" nổi bật (dày hơn, lệch ra) và hiện chi tiết 728.000 đ · 52,5% |
+
 Ảnh nằm trong [`docs/screenshots/`](docs/screenshots/) (hướng dẫn chụp: [docs/screenshots/README.md](docs/screenshots/README.md)).
 
 ## Kiến trúc
