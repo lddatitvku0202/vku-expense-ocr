@@ -54,11 +54,15 @@ class ReviewScreen extends ConsumerWidget {
             loading: () => const _Message(
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (error, stack) => const _Message(
+            error: (error, stack) => _Message(
               child: StateMessage(
                 icon: Icons.error_outline,
                 title: 'Không tải được giao dịch',
-                message: 'Hãy quay lại và thử lần nữa.',
+                message: 'Hãy thử lại hoặc quay lại.',
+                action: FilledButton(
+                  onPressed: () => ref.invalidate(expenseListProvider),
+                  child: const Text('Thử lại'),
+                ),
               ),
             ),
             data: (expenses) {
@@ -502,7 +506,8 @@ class _ReviewFormState extends ConsumerState<_ReviewForm> {
     initialValue: _category,
     validator: ExpenseValidators.category,
     builder: (field) {
-      final scheme = Theme.of(context).colorScheme;
+      final theme = Theme.of(context);
+      final scheme = theme.colorScheme;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -515,7 +520,10 @@ class _ReviewFormState extends ConsumerState<_ReviewForm> {
               for (final category in ExpenseCategory.values)
                 ChoiceChip(
                   key: Key('category-${category.name}'),
-                  avatar: Icon(category.icon, color: category.color),
+                  avatar: Icon(
+                    category.icon,
+                    color: category.colorOn(theme.brightness),
+                  ),
                   label: Text(category.label),
                   selected: field.value == category,
                   onSelected: (_) {

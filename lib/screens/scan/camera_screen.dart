@@ -46,6 +46,17 @@ class CameraScreen extends ConsumerStatefulWidget {
   ConsumerState<CameraScreen> createState() => _CameraScreenState();
 }
 
+/// Colours drawn over the live camera picture. A viewfinder is always a
+/// dark, moving image, so these stay the same in the light and the dark
+/// theme: white marks on a dark scrim are readable over any scene, while
+/// the theme's colours (dark text in the light theme) would not be.
+abstract final class _Viewfinder {
+  static const Color background = Colors.black;
+  static const Color scrim = Colors.black54;
+  static const Color mark = Colors.white;
+  static const Color focusRing = Colors.amber;
+}
+
 enum _Status { starting, ready, released, denied, noCamera, failed }
 
 class _CameraScreenState extends ConsumerState<CameraScreen>
@@ -497,7 +508,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                 behavior: HitTestBehavior.opaque,
                 onTapUp: (details) => _focusAt(details.localPosition, viewport),
                 child: ColoredBox(
-                  color: Colors.black,
+                  color: _Viewfinder.background,
                   child: camera != null && _status == _Status.ready
                       ? ClipRect(
                           child: FittedBox(
@@ -519,8 +530,8 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                   key: CameraScreen.frameOverlayKey,
                   painter: ReceiptFramePainter(
                     frame: frame,
-                    scrimColor: Colors.black54,
-                    borderColor: Colors.white,
+                    scrimColor: _Viewfinder.scrim,
+                    borderColor: _Viewfinder.mark,
                   ),
                 ),
               ),
@@ -535,7 +546,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: _Viewfinder.mark),
                 ),
               ),
             ),
@@ -564,7 +575,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
             if (_working || processing)
               Positioned.fill(
                 child: ColoredBox(
-                  color: Colors.black54,
+                  color: _Viewfinder.scrim,
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -573,7 +584,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                         const SizedBox(height: 12),
                         Text(
                           processing ? 'Đang đọc hóa đơn…' : 'Đang xử lý ảnh…',
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: _Viewfinder.mark),
                         ),
                       ],
                     ),
@@ -633,12 +644,12 @@ class _ShutterBar extends StatelessWidget {
                 height: 72,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
+                  border: Border.all(color: _Viewfinder.mark, width: 4),
                 ),
                 padding: const EdgeInsets.all(5),
                 child: const DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: _Viewfinder.mark,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -672,7 +683,7 @@ class _FocusRing extends StatelessWidget {
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.amber, width: 2),
+          border: Border.all(color: _Viewfinder.focusRing, width: 2),
         ),
       ),
     );

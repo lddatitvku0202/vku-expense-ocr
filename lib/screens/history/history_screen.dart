@@ -211,7 +211,11 @@ class _FilterChips extends StatelessWidget {
           for (final category in ExpenseCategory.values)
             ChoiceChip(
               key: Key('history-filter-${category.name}'),
-              avatar: Icon(category.icon, color: category.color, size: 18),
+              avatar: Icon(
+                category.icon,
+                color: category.colorOn(Theme.of(context).brightness),
+                size: 18,
+              ),
               label: Text(category.label),
               selected: selected == category,
               onSelected: (_) => onSelected(category),

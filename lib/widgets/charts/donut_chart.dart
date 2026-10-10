@@ -126,7 +126,7 @@ class _DonutChartState extends State<DonutChart>
 
     final segments = <DonutSegment>[
       for (final c in ExpenseCategory.values)
-        (fraction: totals.shareOf(c), color: c.color),
+        (fraction: totals.shareOf(c), color: c.colorOn(theme.brightness)),
     ];
     final selected = _selected;
     return Column(
@@ -178,12 +178,16 @@ class _DonutChartState extends State<DonutChart>
             key: DonutChart.detailKey,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: selected.color.withValues(alpha: 0.12),
+              color: selected.colorOn(theme.brightness).withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(selected.icon, color: selected.color, size: 20),
+                Icon(
+                  selected.icon,
+                  color: selected.colorOn(theme.brightness),
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -246,7 +250,7 @@ class _LegendRow extends StatelessWidget {
               width: 12,
               height: 12,
               decoration: BoxDecoration(
-                color: category.color,
+                color: category.colorOn(Theme.of(context).brightness),
                 shape: BoxShape.circle,
               ),
             ),

@@ -25,6 +25,7 @@ class ExpenseSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final category = expense.category;
+    final color = category.colorOn(theme.brightness);
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -34,8 +35,8 @@ class ExpenseSummaryCard extends StatelessWidget {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: category.color.withValues(alpha: 0.15),
-                child: Icon(category.icon, color: category.color),
+                backgroundColor: color.withValues(alpha: 0.15),
+                child: Icon(category.icon, color: color),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -59,10 +60,22 @@ class ExpenseSummaryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                Formatters.vnd(expense.amount),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+              // A huge amount (or large system text) shrinks instead of
+              // pushing the row past the card; the name keeps the rest.
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * 0.32,
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    Formatters.vnd(expense.amount),
+                    maxLines: 1,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
               if (expense.thumbPath case final path?) ...[
