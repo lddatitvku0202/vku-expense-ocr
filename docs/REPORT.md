@@ -3,7 +3,7 @@
 **Course:** Cross-Platform Mobile App Development (VKU)
 **Mini-Project Title:** Mini-Project 3 — VKU Expense OCR (quản lý chi tiêu bằng OCR on-device)
 **Team / Student Name:** Lê Duy Đạt (cá nhân)
-**Submission Date:** [DD/MM/YYYY — điền ngày nộp]
+**Submission Date:** 10/10/2026
 
 ---
 
@@ -12,8 +12,8 @@
   1. Lê Duy Đạt — Student ID: 23IT048 — Class: 23SE1 — Role: Sinh viên thực hiện duy nhất (thiết kế, lập trình, kiểm thử, tài liệu) — Contribution: 100%
 * **🔗 Live Demo URL (APK):** https://github.com/lddatitvku0202/vku-expense-ocr/releases/download/v1.0.0/app-release.apk
 * **📦 Release page:** https://github.com/lddatitvku0202/vku-expense-ocr/releases/tag/v1.0.0
-* **💻 GitHub Repository:** https://github.com/lddatitvku0202/vku-expense-ocr *(dự kiến, repo chưa được tạo/đẩy lên)*
-* **🎥 Video Demo (Optional):** [CHƯA CÓ — điền link video 2–3 phút]
+* **💻 GitHub Repository:** https://github.com/lddatitvku0202/vku-expense-ocr
+* **🎥 Video Demo (Optional):** https://drive.google.com/drive/folders/1PMlcqcNGBwDHN4cwJROZhz4Tvt7bmq43?usp=drive_link
 
 ---
 
@@ -48,11 +48,15 @@ Chú thích: ✅ hoàn thành, có test tự động trên máy tính · 🟨 co
 ---
 
 ## 4. EMPIRICAL EVIDENCE & SCREENSHOTS
-| Tổng quan (sáng) | Tổng quan (tối) | Chỉnh vùng cắt sau khi quét | Review: cảnh báo (tối) |
+| Tổng quan (sáng) | Tổng quan (tối) | Biểu đồ cột tuần (tối) | Lịch sử (tối) |
 |---|---|---|---|
-| ![Tổng quan sáng](screenshots/dashboard_light.png) | ![Tổng quan tối](screenshots/dashboard_dark.png) | ![Chỉnh vùng cắt](screenshots/scan.png) | ![Review](screenshots/review.png) |
+| ![Tổng quan sáng](screenshots/dashboard_light.png) | ![Tổng quan tối](screenshots/dashboard_dark.png) | ![Cột tuần](screenshots/dashboardgraph.png) | ![Lịch sử](screenshots/history.png) |
 
-*Ảnh chụp trên **emulator** Android 13 (camera là webcam laptop), **không phải điện thoại thật**. Tổng quan: tổng tháng, donut theo danh mục (6 giao dịch mẫu); giao diện sáng và tối. Review: ô số tiền và ngày có icon + chú thích "Không chắc chắn — hãy kiểm tra lại", "Không đọc được ngày — đã điền tạm hôm nay". Thêm ảnh donut khi chạm một lát (`donut_selected.png`), biểu đồ cột tuần, Lịch sử, văn bản OCR gốc: `docs/screenshots/`.*
+| Donut: chạm một lát (tối) | Chỉnh vùng cắt sau khi quét | Review: cảnh báo (tối) | Review: danh mục + văn bản OCR |
+|---|---|---|---|
+| ![Donut](screenshots/donut_selected.png) | ![Chỉnh vùng cắt](screenshots/scan.png) | ![Review](screenshots/review.png) | ![Review OCR](screenshots/review2.png) |
+
+*Ảnh chụp trên **emulator** Android 13 (camera là webcam laptop), **không phải điện thoại thật**; dữ liệu là giao dịch mẫu. Tổng quan sáng/tối: tổng tháng và donut theo danh mục (6 giao dịch). Review: ô số tiền và ngày có icon + chú thích "Không chắc chắn — hãy kiểm tra lại" / "Không đọc được ngày — đã điền tạm hôm nay"; "Xem văn bản OCR gốc" hiện thời gian OCR (8417 ms trên emulator).*
 
 **Độ chính xác trên hóa đơn thật.** Bộ **22 ảnh hóa đơn sưu tầm** (19 `main` + 3 `edge`), nằm ngoài repo; đáp án khóa bằng SHA-256 trước khi chấm; chạy ML Kit thật trên **emulator** (không phải điện thoại).
 
