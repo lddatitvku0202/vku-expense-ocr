@@ -86,4 +86,57 @@ void main() {
       isTrue,
     );
   });
+
+  group('offline by construction (NFR-1)', () {
+    final manifest = File('android/app/src/main/AndroidManifest.xml')
+        .readAsStringSync();
+
+    /// The `<uses-permission ...>` element naming [permission], or null.
+    String? element(String permission) => RegExp(
+      '<uses-permission[^>]*android:name="android\.permission\.$permission"[^>]*>',
+    ).firstMatch(manifest)?.group(0);
+
+    test('the main manifest removes INTERNET and ACCESS_NETWORK_STATE', () {
+      // ML Kit's data-transport library adds both; the app never uses the
+      // network, so the merged release manifest must not carry them.
+      for (final permission in ['INTERNET', 'ACCESS_NETWORK_STATE']) {
+        expect(element(permission), isNotNull, reason: permission);
+        expect(
+          element(permission),
+          contains('tools:node="remove"'),
+          reason: permission,
+        );
+      }
+    });
+
+    test('the permissions the app really needs are still there', () {
+      expect(element('CAMERA'), isNotNull);
+      expect(element('CAMERA'), isNot(contains('tools:node="remove"')));
+      expect(element('RECORD_AUDIO'), contains('tools:node="remove"'));
+    });
+
+    test('the tools namespace is declared for the remove markers', () {
+      expect(
+        manifest,
+        contains('xmlns:tools="http://schemas.android.com/tools"'),
+      );
+    });
+
+    test('no source code opens a network connection', () {
+      final files = Directory('lib')
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.dart'));
+      final network = RegExp(
+        r"HttpClient|dart:io.*Socket|package:http|package:dio|WebSocket|Uri\.parse\('https?:",
+      );
+      for (final file in files) {
+        expect(
+          network.hasMatch(file.readAsStringSync()),
+          isFalse,
+          reason: file.path,
+        );
+      }
+    });
+  });
 }
