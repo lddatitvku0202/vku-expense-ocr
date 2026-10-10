@@ -327,12 +327,12 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] Rà soát `const`, `dispose`, và tính toán trong `build()` theo NFR-2/NFR-3; ghi kết quả rà soát vào PHASE_LOG.
 
 ### Phase 11 — Release & Deliverables
-- [ ] **Ký APK**: cấu hình `android/app/build.gradle(.kts)` đọc `key.properties`. Nếu có `keytool`: tạo keystore tại `~/vku-keys/upload-keystore.jks` (ngoài repo) với mật khẩu ngẫu nhiên mạnh, ghi vào `android/key.properties` (đã gitignore). Thông báo rõ cho tôi đường dẫn file và yêu cầu **sao lưu**. Viết `docs/SIGNING.md` hướng dẫn tự tạo lại keystore.
-- [ ] `flutter build apk --release` → xác minh chữ ký (`apksigner verify --print-certs` hoặc `keytool -printcert -jarfile`), ghi kích thước APK và đường dẫn output.
-- [ ] `README.md` hoàn chỉnh: giới thiệu, tính năng (checklist FR), ảnh chụp (`docs/screenshots/`, để placeholder và hướng dẫn tôi chụp nếu không chụp được), kiến trúc (sơ đồ Mermaid pipeline + cấu trúc thư mục), công nghệ và phiên bản, yêu cầu môi trường, lệnh `flutter pub get` / `flutter run` / `flutter test` / `flutter build apk --release`, link tải APK (placeholder), hạn chế, tác giả (placeholder).
-- [ ] `docs/REPORT.md`: bản nguồn của báo cáo PDF 2–4 trang theo đúng cấu trúc yêu cầu: (1) checklist tính năng, (2) sơ đồ kiến trúc, (3) bảng regex OCR, (4) ảnh sáng/tối, (5) kết quả đo OCR và độ chính xác parser, (6) hạn chế và hướng phát triển. Nếu có `pandoc` thì xuất thử `docs/REPORT.pdf`; nếu không thì hướng dẫn tôi cách xuất.
-- [ ] `docs/DEMO_SCRIPT.md`: kịch bản quay video 2–3 phút theo từng cảnh, có mốc thời gian.
-- [ ] `CHANGELOG.md` tổng hợp theo phase.
+- [x] **Ký APK**: cấu hình `android/app/build.gradle(.kts)` đọc `key.properties`. Nếu có `keytool`: tạo keystore tại `~/vku-keys/upload-keystore.jks` (ngoài repo) với mật khẩu ngẫu nhiên mạnh, ghi vào `android/key.properties` (đã gitignore). Thông báo rõ cho tôi đường dẫn file và yêu cầu **sao lưu**. Viết `docs/SIGNING.md` hướng dẫn tự tạo lại keystore. → **Phase 11A xong**; keystore tại `%USERPROFILE%\vku-keys\upload-keystore.jks`, `docs/SIGNING.md`. **Việc của bạn: sao lưu keystore và `key.properties`.**
+- [x] `flutter build apk --release` → xác minh chữ ký (`apksigner verify --print-certs` hoặc `keytool -printcert -jarfile`), ghi kích thước APK và đường dẫn output. → **Phase 11A xong**: 89,3 MiB, `apksigner` khớp dấu vân tay keystore; chạy thử 1 lần trên emulator (`docs/TEST_REPORT.md`, "release APK trên emulator"); chưa trên điện thoại thật.
+- [x] `README.md` hoàn chỉnh: giới thiệu, tính năng (checklist FR), ảnh chụp (`docs/screenshots/`, để placeholder và hướng dẫn tôi chụp nếu không chụp được), kiến trúc (sơ đồ Mermaid pipeline + cấu trúc thư mục), công nghệ và phiên bản, yêu cầu môi trường, lệnh `flutter pub get` / `flutter run` / `flutter test` / `flutter build apk --release`, link tải APK (placeholder), hạn chế, tác giả (placeholder). → **Phase 11A xong** (ảnh chụp màn hình và link APK vẫn là placeholder).
+- [ ] `docs/REPORT.md` *(Phase 11B)*: bản nguồn của báo cáo PDF 2–4 trang theo đúng cấu trúc yêu cầu: (1) checklist tính năng, (2) sơ đồ kiến trúc, (3) bảng regex OCR, (4) ảnh sáng/tối, (5) kết quả đo OCR và độ chính xác parser, (6) hạn chế và hướng phát triển. Nếu có `pandoc` thì xuất thử `docs/REPORT.pdf`; nếu không thì hướng dẫn tôi cách xuất.
+- [ ] `docs/DEMO_SCRIPT.md` *(Phase 11B)*: kịch bản quay video 2–3 phút theo từng cảnh, có mốc thời gian.
+- [x] `CHANGELOG.md` tổng hợp theo phase. → **Phase 11A xong.**
 - [ ] Gate cuối: toàn bộ test pass, analyze 0, build release thành công. Merge, tag `v1.0.0`.
 
 ### Phase 12 — (Tùy chọn, chỉ khi Phase 0–11 đã hoàn tất) Platform Channel
@@ -375,7 +375,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] FR-5.1 — bằng chứng: `DatabaseService` (`lib/services/database_service.dart`), `test/services/database_service_test.dart` (kiểu cột, NOT NULL, AUTOINCREMENT, version 1, `onUpgrade` từ v1 giữ nguyên dữ liệu, thiếu bước migration thì rollback)
 - [x] FR-5.2 — bằng chứng: `ExpenseRepository` + `SqfliteExpenseRepository` (`lib/services/expense_repository.dart`), `test/services/sqflite_expense_repository_test.dart` (22 test: CRUD, thứ tự, biên đầu/cuối ngày, tổng theo danh mục)
 - [x] FR-5.3 — bằng chứng: `ImageStorageService.save` copy vào `<documents>/receipts/`, thumbnail JPEG 256px trong `Isolate.run` (`test/services/image_storage_service_test.dart`); trên Android thật: `integration_test/storage_test.dart` (chưa chạy, xem Việc còn nợ)
-- [ ] FR-5.4 — một phần (logic xong): `ExpenseListNotifier.remove/restore/commitDeletion` giữ ảnh trong `undoWindow` 5 s rồi mới xóa, restore giữ nguyên id (`test/state/expense_list_notifier_test.dart`, `fakeAsync`); dọn ảnh mồ côi khi khởi động (`app_startup_test.dart`); xóa file đã mất không crash (Phase 4). Còn SnackBar Undo → Phase 8
+- [x] FR-5.4 — bằng chứng: `ExpenseListNotifier.remove/restore/commitDeletion/holdForUndo` giữ ảnh trong cửa sổ Undo 5 s rồi mới xóa, restore giữ nguyên id, xóa file đã mất không crash, dọn ảnh mồ côi khi khởi động (`test/state/expense_list_notifier_test.dart`, `app_startup_test.dart`, Phase 4–5); SnackBar Undo dùng chung `ExpenseListNotifier.undoWindow`, Undo khôi phục bản ghi và ảnh, xóa liên tiếp chỉ hoàn tác được lần mới nhất (`test/screens/history_screen_test.dart`, Phase 8). Chưa thử trên máy thật
 - [x] FR-5.5 — bằng chứng: `lib/models/expense_category.dart` (switch expression), `test/models/expense_category_test.dart` (đủ 5 nhánh label/icon/màu, round-trip DB)
 - [x] FR-6.1 — bằng chứng: `DonutChartPainter` (`drawArc` stroke, quét 0 → 1, tổng ở giữa bằng `TextPainter`, rút gọn khi dài), `DonutChart` (`AnimationController` + `CurvedAnimation`, legend màu/tên/số tiền/%) (`test/widgets/charts/chart_widgets_test.dart`, `chart_painters_test.dart`). Chưa thử trên máy thật (độ mượt animation, độ chính xác khi chạm)
 - [x] FR-6.2 — bằng chứng: chạm lát → dày hơn + chi tiết, chạm lại/lỗ giữa/ngoài → bỏ chọn; hit-test `atan2` + vòng khuyên (`chart_geometry_test.dart`, `test/widgets/charts/chart_widgets_test.dart`). Chưa thử trên máy thật (độ mượt animation, độ chính xác khi chạm)
@@ -390,12 +390,12 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 - [x] FR-8.2 — bằng chứng: 5 màn (Tổng quan, Camera kể cả khi bị từ chối quyền, Review với mọi cảnh báo, Lịch sử, Chi tiết/sửa) × 320×480, 360×640, 411×891, ngang 891×411 × chữ 1× và 1,5×, cuộn hết trang: không `RenderFlex overflowed` (`test/layout/screen_layout_test.dart`); ≥ 600 dp Dashboard đặt donut và cột cạnh nhau (`dashboard_screen_test.dart`). Chưa thử trên máy thật
 - [x] FR-8.3 — bằng chứng: `Formatters.vnd` (`NumberFormat.currency(locale: vi_VN, symbol: đ, decimalDigits: 0)`) và `Formatters.date` (`dd/MM/yyyy`) (`test/core/formatters_test.dart`) dùng ở card, Dashboard, biểu đồ, Review; `SafeArea` ở 4 màn chính. Chưa thử trên máy thật
 - [x] FR-8.4 — bằng chứng: loading / rỗng / lỗi (kèm "Thử lại") ở Tổng quan, Lịch sử, màn sửa và Camera (`test/screens/async_states_test.dart`); `AsyncValue.when` ở các màn. Chưa thử trên máy thật
-- [ ] NFR-1 — bằng chứng: _chưa có_
+- [ ] NFR-1 — một phần: mã của app không có đoạn nào gọi mạng (tìm trong `lib/`), model ML Kit đóng gói nên OCR chạy offline; **nhưng manifest release có quyền `INTERNET` + `ACCESS_NETWORK_STATE`** do `transport-backend-cct` (telemetry của ML Kit) kéo vào → độ lệch **B-002**, chờ quyết định. Chưa thử chế độ máy bay trên máy thật
 - [x] NFR-2 — bằng chứng: rà soát Phase 10 (`docs/PHASE_LOG.md`): `ListView.builder` + `cacheWidth`, `Isolate.run` cho parse/cắt ảnh/thumbnail, `select` giới hạn rebuild, regex/`NumberFormat` là `static final`, lint `prefer_const_*` bật và analyze 0 issue. Chưa thử trên máy thật
 - [x] NFR-3 — bằng chứng: rà soát Phase 10: mọi `TextEditingController`, `FocusNode`, `AnimationController`, `CurvedAnimation`, `Timer`, `CameraController`, `TextRecognizer` đều có `dispose/cancel/close` tương ứng; camera xử lý `AppLifecycleState` và ẩn tab (`test/screens/camera_screen_test.dart`). Chưa thử trên máy thật
 - [x] NFR-4 — bằng chứng: `lib/core`, `lib/models`, `lib/services`, `lib/state`, `lib/widgets`, `lib/screens` (Phase 1)
-- [ ] NFR-5 — bằng chứng: _chưa có_
-- [ ] NFR-6 — bằng chứng: _chưa có_
+- [x] NFR-5 — bằng chứng: `dart format --set-exit-if-changed` không đổi file nào, `flutter analyze` 0 issue (phiên cuối Phase 11A)
+- [ ] NFR-6 — một phần: APK release **đã ký** (`apksigner verify`: `CN=Le Duy Dat`, dấu vân tay khớp keystore), 89,3 MiB, cài và chạy trên **emulator** (Phase 11A). **Chưa chạy trên điện thoại Android thật**, nên chưa đánh dấu hoàn tất
 
 ---
 
@@ -414,7 +414,7 @@ Sinh viên VKU và thủ quỹ câu lạc bộ thường xuyên cầm hóa đơn
 | 8 — Lịch sử & Dashboard | ✅ Xong | tag `phase-8` | format ✔ · analyze 0 · test 514/514 · coverage 93.1% · build debug ✔ | Widget test trên máy tính; `integration_test/app_flow_test.dart` đã viết, **chưa chạy** (chưa có thiết bị). Chưa thử trên máy thật |
 | 9 — Biểu đồ CustomPainter | ✅ Xong | tag `phase-9` | format ✔ · analyze 0 · test 582/582 · coverage 94.2% · build debug ✔ | Không dùng thư viện chart (có test kiến trúc). Chưa thử trên máy thật |
 | 10 — UI/UX polish (bản rút gọn) | ✅ Xong | tag `phase-10` | format ✔ · analyze 0 · test 706/706 · coverage 94.5% · build debug ✔ | Theo yêu cầu rút gọn: không có vòng "cố ý làm hỏng code". Chưa thử trên máy thật |
-| 11 — Release & Deliverables | ⬜ Chưa bắt đầu | — | — | |
+| 11 — Release & Deliverables | 🟨 11A xong, 11B chưa | nhánh `phase/11a-release` (chưa tag `v1.0.0`) | format ✔ · analyze 0 · test 713/713 · coverage 94,5% · release APK build ✔, ký ✔ (89,3 MiB) · chạy thử release trên emulator ✔ sau khi sửa R8 | 11B (còn lại): `docs/REPORT.md`, `docs/DEMO_SCRIPT.md`, ảnh chụp, link APK, thử trên máy thật, tag `v1.0.0`. Độ lệch B-002 (quyền INTERNET) chờ quyết định |
 | 12 — Platform Channel (tùy chọn) | ⬜ Chưa bắt đầu | — | — | |
 
 Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · ✅ xong (gate xanh, đã merge, đã tag).
@@ -443,6 +443,10 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 - [ ] **Phase 8:** chạy `flutter test integration_test/app_flow_test.dart -d <máy>` (thêm thủ công → Lịch sử → tổng Dashboard → vuốt xóa → Undo) khi có thiết bị.
 - [ ] **Phase 9 — biểu đồ trên điện thoại thật:** animation donut và cột mượt (không giật khi mở tab, khi thêm/xóa giao dịch); chạm đúng lát/cột trên màn thật (cả lát nhỏ, gần ranh giới); chữ ở lỗ giữa không tràn với số tiền lớn và chữ hệ thống phóng to; TalkBack đọc mô tả biểu đồ.
 - [ ] **Phase 10 — giao diện trên điện thoại thật:** menu giao diện đổi sáng/tối/hệ thống và còn nguyên sau khi mở lại app; kiểm tra bằng mắt chữ và biểu đồ ở nền tối; cỡ chữ hệ thống lớn nhất trên cả 5 màn; tên "VKU Expense OCR" dưới biểu tượng app.
+- [ ] **Phase 11A:** sao lưu `%USERPROFILE%\vku-keys\upload-keystore.jks` và `android/key.properties` ra nơi an toàn (mất keystore thì không cập nhật được app đã phát hành).
+- [ ] **Phase 11A:** quyết định B-002 (gỡ quyền `INTERNET`/`ACCESS_NETWORK_STATE` khỏi bản release bằng `tools:node="remove"`; sau đó phải build lại và chạy lại OCR trên emulator để chắc ML Kit vẫn đọc được).
+- [ ] **Phase 11A:** cài `app-release.apk` lên điện thoại thật và chạy lại các checklist ở trên (camera, OCR thật, biểu đồ, chế độ máy bay).
+- [ ] **Phase 11A:** chụp ảnh màn hình vào `docs/screenshots/` (hướng dẫn trong thư mục), điền link tải APK vào `README.md`.
 - [ ] Checklist test thủ công trên thiết bị của Phase 0–10 trong `docs/TEST_REPORT.md`.
 
 ---
@@ -523,6 +527,11 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
 | D-070 | Màn camera giữ màu cố định (nền đen, lớp mờ, nét trắng, vòng lấy nét vàng) trong một lớp `_Viewfinder` có chú thích; test chặn màu cố định ở mọi file khác trừ theme, bảng màu danh mục, trình xem ảnh toàn màn | Trên khung hình video luôn tối, nét trắng nhìn rõ ở mọi cảnh; màu theo theme (chữ tối ở theme sáng) sẽ khó đọc. |
 | D-071 | Giữ `applicationId` và `namespace` = `vn.edu.vku.vku_expense_ocr`; chỉ đổi nhãn hiển thị (Android `android:label`, iOS `CFBundleDisplayName`) thành "VKU Expense OCR" | Id đã khớp tổ chức `vn.edu.vku`; đổi package chỉ thêm rủi ro cho build mà không cải thiện gì. |
 | D-072 | Số tiền trên card Lịch sử tối đa 32% bề rộng màn rồi co chữ (`FittedBox.scaleDown`), tên cửa hàng lấy phần còn lại | Test overflow ở 320–411 dp và chữ 1,5× phát hiện số tiền lớn đẩy hàng ra ngoài card. |
+| D-073 | Ký release đọc `android/key.properties`; **thiếu file này thì build vẫn chạy nhưng ký bằng khóa debug và in cảnh báo** | Người clone repo (giảng viên) vẫn build được `flutter build apk --release`. Rủi ro APK debug-signed bị phát hành nhầm được giảm bằng cảnh báo to và mục kiểm tra trong `docs/SIGNING.md`. |
+| D-074 | Keystore PKCS12 (alias `upload`, RSA 2048, 10.000 ngày) tại `%USERPROFILE%\vku-keys\`, mật khẩu ngẫu nhiên 28 ký tự chữ-số chỉ có trong `key.properties` | Ngoài repo; không dùng ký tự đặc biệt để khỏi sai khi ghi file `.properties`. APK chỉ có chữ ký v2 (đủ cho minSdk 24). |
+| D-075 | R8 bật tường minh (`isMinifyEnabled`, `isShrinkResources`) với `proguard-android-optimize.txt` + `proguard-rules.pro`; **`-dontwarn` cho 4 script ML Kit không đóng gói** | AGP 9 không còn nhận `proguard-android.txt`. Plugin `google_mlkit_text_recognition` tham chiếu các lớp Trung/Nhật/Hàn/Devanagari mà ta không đóng gói (D-013) và không bao giờ gọi (luôn Latin); build release dừng vì "Missing classes" nếu thiếu rule. |
+| D-076 | `-keep class * implements com.google.firebase.components.ComponentRegistrar { <init>(); }` | **Lỗi chỉ có ở bản release, test trên máy tính không thấy:** ML Kit nạp `CommonComponentRegistrar`, `VisionCommonRegistrar`, `TextRegistrar` bằng reflection từ tên trong manifest; R8 loại constructor → `NoSuchMethodException` và lần OCR đầu bị `NullPointerException` ở `InputImage.fromFilePath`. Giải mã bằng `retrace` + `mapping.txt`. Sau sửa, cùng ảnh đọc đúng. |
+| D-077 | README ghi trạng thái xác minh bằng ba ký hiệu: ✅ có test máy tính, 🟦 đã chạy trên emulator (bản release), ⚠ chưa xác minh trên máy thật; FR-1 giữ `[ ]` như CLAUDE.md | Không để README nói "đã xong" nhiều hơn những gì đã kiểm chứng. |
 
 ---
 
@@ -557,3 +566,12 @@ Chú thích: ⬜ chưa bắt đầu · 🟨 đang làm · 🟥 bị chặn · �
   2. Tải file zip stable từ https://docs.flutter.dev/get-started/install/windows/mobile, giải nén vào `D:\flutter`, rồi làm tiếp như phương án 1 từ dòng `SetEnvironmentVariable`.
   3. Claude Code tự chạy phương án 1 (tải khoảng 1–2 GB vào `D:\flutter`, sửa biến PATH của user) nếu bạn đồng ý.
 - **Trạng thái:** đã làm xong phần không cần Flutter của Phase 0 (git, `CLAUDE.md`, `docs/`, `.gitignore`, `.gitattributes`, README khung). Phần `flutter create`, lint và Quality Gate chờ B-001.
+
+### B-002 — Quyền `INTERNET` trong bản release (độ lệch với NFR-1, đang chờ quyết định, phát hiện 2026-10-10)
+
+- **Mô tả:** NFR-1 yêu cầu "hoàn toàn offline; không gọi mạng". Manifest release gộp có `android.permission.INTERNET` và `ACCESS_NETWORK_STATE`, do thư viện `com.google.android.datatransport:transport-backend-cct` 2.3.3 (Google Data Transport, ML Kit dùng để gửi số liệu dùng ẩn danh) thêm vào. Mã trong `lib/` **không có** đoạn nào gọi mạng; model nhận dạng đóng gói trong APK nên OCR chạy offline.
+- **Đã làm:** tra `manifest-merger-release-report.txt`, tìm trong `lib/`. **Chưa đổi gì** vì NFR-1 là yêu cầu đóng băng.
+- **Phương án:**
+  1. **(Đề xuất)** Gỡ hai quyền bằng `tools:node="remove"` trong `android/app/src/main/AndroidManifest.xml`. Không có quyền mạng thì telemetry của ML Kit không gửi được (thư viện được thiết kế để thất bại im lặng). Sau đó build lại release và chạy lại luồng OCR trên emulator để xác nhận vẫn đọc được. Mạnh hơn nữa: `adb shell dumpsys netstats` / chế độ máy bay khi quét.
+  2. Giữ nguyên, ghi rõ trong báo cáo rằng quyền mạng do thư viện kéo vào và app không dùng mạng.
+- **Trạng thái:** chờ bạn chọn phương án.
