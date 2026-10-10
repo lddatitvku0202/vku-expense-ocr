@@ -51,4 +51,29 @@ void main() {
     expect(doc, contains('key.properties'));
     expect(doc, contains('apksigner'));
   });
+
+  test(
+    'R8 keeps working: rules for the ML Kit scripts the app does not bundle',
+    () {
+      final rules = File('android/app/proguard-rules.pro').readAsStringSync();
+      for (final script in ['chinese', 'devanagari', 'japanese', 'korean']) {
+        expect(
+          rules,
+          contains('-dontwarn com.google.mlkit.vision.text.$script.**'),
+        );
+      }
+      expect(gradle, contains('proguard-rules.pro'));
+      expect(gradle, contains('isMinifyEnabled = true'));
+    },
+  );
+
+  test('only the Latin text recognition model is bundled (D-013)', () {
+    final gradleFiles = [
+      gradle,
+      File('pubspec.yaml').readAsStringSync(),
+    ].join();
+    for (final script in ['chinese', 'devanagari', 'japanese', 'korean']) {
+      expect(gradleFiles, isNot(contains('text-recognition-$script')));
+    }
+  });
 }
