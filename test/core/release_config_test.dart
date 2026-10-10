@@ -93,7 +93,7 @@ void main() {
 
     /// The `<uses-permission ...>` element naming [permission], or null.
     String? element(String permission) => RegExp(
-      '<uses-permission[^>]*android:name="android\.permission\.$permission"[^>]*>',
+      '<uses-permission[^>]*android:name="android\\.permission\\.$permission"[^>]*>',
     ).firstMatch(manifest)?.group(0);
 
     test('the main manifest removes INTERNET and ACCESS_NETWORK_STATE', () {
