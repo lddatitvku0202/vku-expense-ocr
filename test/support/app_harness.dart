@@ -83,9 +83,9 @@ List<Expense> stressExpenses() {
 
 /// A scan whose every field needs review: banner, icons and captions all
 /// show, the widest the Review form gets.
-ScanResult worstCaseScan() => ScanResult(
+ScanResult worstCaseScan() => const ScanResult(
   imagePath: '/cache/scan/receipt.jpg',
-  receipt: const ParsedReceipt(
+  receipt: ParsedReceipt(
     merchant: 'HICANOS toEFEF',
     total: 245000,
     rawText: 'HICANOS toEFEF\nTong 245.000',
@@ -94,8 +94,8 @@ ScanResult worstCaseScan() => ScanResult(
     dateConfidence: FieldConfidence.missing,
     categoryConfidence: FieldConfidence.missing,
   ),
-  rows: const ['HICANOS toEFEF', 'Tong 245.000'],
-  ocrDuration: const Duration(milliseconds: 4200),
+  rows: ['HICANOS toEFEF', 'Tong 245.000'],
+  ocrDuration: Duration(milliseconds: 4200),
 );
 
 /// Result of [pumpApp].

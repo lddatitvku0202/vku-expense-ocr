@@ -14,6 +14,7 @@ class FakeReceiptCamera implements ReceiptCamera {
     this.previewAspectRatio = 9 / 16,
     this.initializeError,
     this.flashError,
+    this.initializeGate,
   });
 
   @override
@@ -29,6 +30,9 @@ class FakeReceiptCamera implements ReceiptCamera {
   /// Thrown by [setFlash] for any mode but off (a device without flash).
   final CameraFailure? flashError;
 
+  /// When set, [initialize] waits for it (a camera that is still opening).
+  final Future<void>? initializeGate;
+
   bool initialized = false;
   bool disposed = false;
   final List<CaptureFlash> flashModes = [];
@@ -38,6 +42,7 @@ class FakeReceiptCamera implements ReceiptCamera {
 
   @override
   Future<void> initialize() async {
+    if (initializeGate case final gate?) await gate;
     if (initializeError case final error?) throw error;
     initialized = true;
   }

@@ -99,7 +99,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Không tải được lịch sử'), findsNothing);
       expect(find.byType(HistoryScreen), findsOneWidget);
-      expect(find.text('Fahasa'), findsOneWidget);
+      expect(find.text('CGV Cinemas'), findsOneWidget);
     });
   });
 
@@ -141,13 +141,18 @@ void main() {
 
   group('Camera', () {
     testWidgets('starting: a spinner while the camera opens', (tester) async {
+      final gate = Completer<void>();
       await pumpApp(
         tester,
         location: AppRoutes.scan,
-        cameraSource: FakeCameraSource(FakeReceiptCamera.new),
+        cameraSource: FakeCameraSource(
+          () => FakeReceiptCamera(initializeGate: gate.future),
+        ),
         settle: false,
       );
+      await tester.pump();
       expect(find.byType(CircularProgressIndicator), findsWidgets);
+      gate.complete();
       await tester.pumpAndSettle();
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
